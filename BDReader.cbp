@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="BDReader" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/BDReader" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/BDReader" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add directory="include" />
+		</Compiler>
+		<Linker>
+			<Add library="libmupdf.a" />
+			<Add library="libmupdf-js-none.a" />
+			<Add library="libjbig2dec.a" />
+			<Add library="libjpeg.a" />
+			<Add library="libopenjpeg.a" />
+			<Add library="libz.a" />
+			<Add library="m" />
+			<Add library="libopencv_core" />
+			<Add library="libopencv_highgui" />
+			<Add library="libopencv_imgproc" />
+			<Add library="fltk" />
+			<Add library="Xft" />
+			<Add library="Xinerama" />
+			<Add directory="lib" />
+		</Linker>
+		<Unit filename="include/Document.h" />
+		<Unit filename="include/Fl_OpenCV.h" />
+		<Unit filename="include/MainWindow.h" />
+		<Unit filename="include/Page.h" />
+		<Unit filename="src/Document.cpp" />
+		<Unit filename="src/Fl_OpenCV.cxx" />
+		<Unit filename="src/MainWindow.cpp" />
+		<Unit filename="src/Page.cpp" />
+		<Unit filename="src/main.cpp" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<lib_finder disable_auto="1" />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

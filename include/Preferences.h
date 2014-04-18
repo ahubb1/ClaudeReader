@@ -1,0 +1,41 @@
+#ifndef PREFERENCES_H
+#define PREFERENCES_H
+
+#include "Document.h"
+
+class Preferences
+{
+    public:
+        Preferences();
+        ~Preferences();
+
+        int Load(char prefFile[255]);
+        void Apply(Document *doc);
+        void Save(Document *doc);
+
+
+        READINGMODE GetReadingMode() { return ReadingMode; }
+        void SetReadingMode(READINGMODE val) { ReadingMode = val; }
+        bool GetPagePreview() { return PagePreview; }
+        void SetPagePreview(bool val) { PagePreview = val; }
+        int GetBkgColor() { return BkgColor; }
+        void SetBkgColor(int val) { BkgColor = val; }
+        char *GetLastDoc() { return LastDoc; }
+        //void SetLastDoc[1024](char val) { LastDoc[1024] = val; }
+        int GetLastDocPageNb() { return LastDocPageNb; }
+        void SetLastDocPageNb(int val) { LastDocPageNb = val; }
+        char *GetRecentDocs(int i) { return RecentDocs[i]; }
+        //void SetRecentDocs[5][1024](char val) { RecentDocs[5][1024] = val; }
+    protected:
+    private:
+        char Filename[255];
+        READINGMODE ReadingMode;
+        bool PagePreview;
+        int BkgColor;
+        char LastDoc[1024];
+        int LastDocPageNb;
+        int NbRecentDocs;
+        char RecentDocs[5][1024];
+};
+
+#endif // PREFERENCES_H
