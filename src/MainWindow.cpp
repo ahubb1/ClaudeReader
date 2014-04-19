@@ -25,7 +25,7 @@ void StatusBarUpdate(void * param)
 }
 
 
-//Catch the mouse wheel events
+//! Catch the mouse wheel events
 int MouseWheelEvents(int p)
 {
     if(Fl::event()==FL_MOUSEWHEEL)
@@ -44,7 +44,7 @@ int MouseWheelEvents(int p)
 
 }
 
-//!< The timer callback function used to check the mouse wheel movements
+//! The timer callback function used to check the mouse wheel movements
 void Timer_cb(void* param)
 {
     MainWindow *mw=(MainWindow*)param;
@@ -77,6 +77,7 @@ void Timer_cb(void* param)
 
 
 //---------------------------------File menu----------------------------------
+//! Open a document and load it (through a call to Init())
 void Open_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
@@ -112,7 +113,7 @@ void Open_cb(Fl_Widget* widget, void * param)
     mw->Init(tmpFilename);
 }
 
-
+//! Exit the program calling the window callback
 void Quit_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
@@ -167,6 +168,7 @@ void Fullscreen_cb(Fl_Widget* widget, void * param)
 
 }
 
+//! Switch to page reading mode
 void PageMode_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
@@ -175,6 +177,7 @@ void PageMode_cb(Fl_Widget* widget, void * param)
     mw->Display->SetImage(mw->Doc->Render());
     StatusBarUpdate(mw);
 }
+//! Switch to strip reading mode
 void StripMode_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
@@ -183,6 +186,7 @@ void StripMode_cb(Fl_Widget* widget, void * param)
     mw->Display->SetImage(mw->Doc->Render());
     StatusBarUpdate(mw);
 }
+//! Switch to case reading mode
 void CaseMode_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
@@ -192,6 +196,7 @@ void CaseMode_cb(Fl_Widget* widget, void * param)
     StatusBarUpdate(mw);
 }
 
+//! Actvate/deactivate the page preview
 void PagePreview_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
@@ -209,6 +214,7 @@ void PagePreview_cb(Fl_Widget* widget, void * param)
     StatusBarUpdate(mw);
 }
 
+//! Go to next page (through Doc)
 void PreviousPage_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
@@ -226,6 +232,7 @@ void PreviousPage_cb(Fl_Widget* widget, void * param)
         StatusBarUpdate(mw);
     }
 }
+//! Go to previous page (through Doc)
 void NextPage_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
@@ -243,6 +250,7 @@ void NextPage_cb(Fl_Widget* widget, void * param)
         StatusBarUpdate(mw);
     }
 }
+//! Go to next case (through Doc)
 void PreviousCase_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
@@ -251,6 +259,7 @@ void PreviousCase_cb(Fl_Widget* widget, void * param)
     StatusBarUpdate(mw);
     mw->Display->SetImage(mw->Doc->Render());
 }
+//! Go to previous case (through Doc)
 void NextCase_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
@@ -307,10 +316,12 @@ void ActivateMenus(void * param)
 
 
 //----------------------------------Help menu----------------------------------
+//! Show a help information window
 void Help_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
 
+    //Load the text from the "help" file
     char HelpText[2048];
     FILE* helpfile=fopen("help", "r");
     int i=0;
@@ -321,13 +332,15 @@ void Help_cb(Fl_Widget* widget, void * param)
     HelpText[--i]='\0';
     fclose(helpfile);
 
+    //Display it on a message window
     fl_message(HelpText);
 }
-
+//! Show the about information window
 void About_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
 
+    //Load the text from the "about" file
     char AboutText[2048];
     FILE* aboutfile=fopen("about", "r");
     int i=0;
@@ -338,15 +351,43 @@ void About_cb(Fl_Widget* widget, void * param)
     AboutText[--i]='\0';
     fclose(aboutfile);
 
+    //Display it on a message window
     fl_message(AboutText);
 }
 
 //-----------------------------------------------------------------------------
 
+//! Update widgets according to preferences values
+void UpdateWidgets(void * param)
+{
+    MainWindow *mw=(MainWindow*)param;
+
+    //The reading mode
+    if(mw->Pref->GetReadingMode()==PAGE)
+    {
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Page mode"))->setonly();
+    }
+    if(mw->Pref->GetReadingMode()==CASE)
+    {
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Case mode"))->setonly();
+    }
+
+    //Preview page
+    if(mw->Pref->GetPagePreview())
+    {
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Page preview"))->set();
+    }
+    else
+    {
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Page preview"))->clear();
+    }
+
+    //Recent docs
+    //TODO or not...current behaviour is ok
+}
 
 
-
-//! On closing the window, save the parameters close everything (delete is called in main)
+//! On closing the window (and thus exiting the program), save the parameters in preferences file and close everything (delete is called in main())
 void Window_cb(Fl_Widget* widget, void * param)
 {
      MainWindow *mw=(MainWindow*)param;
@@ -357,6 +398,10 @@ void Window_cb(Fl_Widget* widget, void * param)
      //Close the window
      mw->window->hide();
 }
+
+
+
+
 
 //! Constructor: create the widgets and build the window and call the Init() with NULL parameters (no document)
 MainWindow::MainWindow()
@@ -441,6 +486,7 @@ MainWindow::MainWindow()
     window->end();
 
     //Init
+    UpdateWidgets(this);
     Doc=NULL;
     sprintf(Filename, "\0");
     Init(Filename);
@@ -482,9 +528,10 @@ void MainWindow::Init(char *filename)
         //Set to first page
         Doc->LoadPage(1);
 
-        //Apply the preferences to the document
+        //Apply the preferences to the document and the window widgets
         Pref->Load("preferences");
         Pref->Apply(Doc);
+        UpdateWidgets((void*)this);
 
         //Update the widget values according to these preferences
         //TODO

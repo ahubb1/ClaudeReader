@@ -1,8 +1,8 @@
 # depslib dependency file v1.0
-1397921564 source:/home/vincent/Perso/BDReader/BDReader/src/MainWindow.cpp
+1397923496 source:/home/vincent/Perso/BDReader/BDReader/src/MainWindow.cpp
 	"MainWindow.h"
 
-1397920525 /home/vincent/Perso/BDReader/BDReader/include/MainWindow.h
+1397922660 /home/vincent/Perso/BDReader/BDReader/include/MainWindow.h
 	<FL/Fl.H>
 	<FL/Fl_Window.H>
 	<FL/Fl_Menu_Bar.H>
@@ -376,10 +376,10 @@
 	<vector>
 	<algorithm>
 
-1397814747 /home/vincent/Perso/BDReader/BDReader/include/Preferences.h
+1397922594 /home/vincent/Perso/BDReader/BDReader/include/Preferences.h
 	"Document.h"
 
-1397817609 source:/home/vincent/Perso/BDReader/BDReader/src/Preferences.cpp
+1397923312 source:/home/vincent/Perso/BDReader/BDReader/src/Preferences.cpp
 	"Preferences.h"
 
 1397837284 /home/vincent/Perso/BDReader/BDReader/icon32.xbm

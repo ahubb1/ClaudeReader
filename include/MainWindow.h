@@ -72,6 +72,7 @@ class MainWindow
 
 
         //Info/status/update
+        friend void UpdateWidgets(void * param);
         friend void ActivateMenus(void * param);
         friend void ActivateNavigationMenus(void *param, bool val);
 
