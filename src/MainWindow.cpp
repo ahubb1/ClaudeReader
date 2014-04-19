@@ -2,14 +2,14 @@
 
 
 
-//Timer retrieving information from the input program (vision)
+/*Timer retrieving information from the input program (vision)
 void Timer_cb(void* param)
 {
       MainWindow *mw=(MainWindow*)param;
 
       //Repeat...
       Fl::repeat_timeout(0.01, Timer_cb, (void*)mw);
-}
+}*/
 
 
 void StatusBarUpdate(void * param)
@@ -55,7 +55,6 @@ int MouseWheelEvents(int p)
 
 
 //---------------------------------File menu----------------------------------
-
 void Open_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
@@ -71,7 +70,7 @@ void Open_cb(Fl_Widget* widget, void * param)
         //Check if filename not null or not a .tss file
         if(tmpFilename[0]=='\0' || strstr (tmpFilename, ".pdf" )==NULL)
         {
-            fl_alert("Invalid filename !");
+            //fl_alert("Invalid filename !");
             return;
         }
     }
@@ -103,7 +102,6 @@ void Quit_cb(Fl_Widget* widget, void * param)
 
 
 //----------------------------------View menu----------------------------------
-
 void Fullscreen_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
@@ -166,17 +164,23 @@ void PreviousPage_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
 
+    ActivateNavigationMenus(mw, false);
+    //Et vider la pile de touches ???
     mw->Doc->PreviousPage();
     mw->Display->SetImage(mw->Doc->Render());
     StatusBarUpdate(mw);
+    ActivateNavigationMenus(mw, true);
 }
 void NextPage_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
 
+    ActivateNavigationMenus(mw, false);
+    //Et vider la pile de touches ???
     mw->Doc->NextPage();
     mw->Display->SetImage(mw->Doc->Render());
     StatusBarUpdate(mw);
+    ActivateNavigationMenus(mw, true);
 }
 void PreviousCase_cb(Fl_Widget* widget, void * param)
 {
@@ -195,6 +199,37 @@ void NextCase_cb(Fl_Widget* widget, void * param)
     StatusBarUpdate(mw);
 }
 
+
+//! Actvate or deactivate (depending on bool val), the navigation menu items (Next, Previous...)
+void ActivateNavigationMenus(void *param, bool val)
+{
+    MainWindow *mw=(MainWindow*)param;
+
+    //Browse all the menu items
+    Fl_Menu_Item *items=(Fl_Menu_Item *)mw->MenuBar->menu();
+    for(int i=0; i<mw->MenuBar->size(); i++)
+    {
+        //Check if they are navigation ones
+        if(items[i].label()!=NULL &&
+          (strcmp(items[i].label(), "Next page")==0 ||
+           strcmp(items[i].label(), "Previous page")==0 ||
+           strcmp(items[i].label(), "Next case")==0 ||
+           strcmp(items[i].label(), "Previous case")==0)
+          )
+        {
+            //Then activate or deactivate it
+            if(val)
+            {
+                items[i].activate();
+            }
+            else
+            {
+                items[i].deactivate();
+            }
+
+        }
+    }
+}
 
 void ActivateMenus(void * param)
 {
@@ -250,7 +285,7 @@ void About_cb(Fl_Widget* widget, void * param)
 
 
 
-//On closing the window, save the parameters close everything (delete is called in main)
+//! On closing the window, save the parameters close everything (delete is called in main)
 void Window_cb(Fl_Widget* widget, void * param)
 {
      MainWindow *mw=(MainWindow*)param;
@@ -262,6 +297,7 @@ void Window_cb(Fl_Widget* widget, void * param)
      mw->window->hide();
 }
 
+//! Constructor: create the widgets and build the window and call the Init() with NULL parameters (no document)
 MainWindow::MainWindow()
 {
     //Load user preferences
@@ -330,14 +366,16 @@ MainWindow::MainWindow()
          //Handle mouse wheel events
          Fl::add_handler(MouseWheelEvents);
 
-         //TODO: gerer des preferences et des options (et documents recents). Option background color (blanc ou noir), affichage page entiere a chaque nouvelle page
-         //(TODO: gerer zoom/naviagtion)
-         //TODO: gerer molette: navigation page et aussi chgt case ou page
+         //TODO: gerer molette: chgt case ou page
          //TODO: tempo pour verifier qu'une nouvelle page/case a ete chargee
          //(TODO: meilleur decoupage des pages par defaut: recherche lignes horizontales (si 4 trouvees, les utiliser, sinon decoupage a 10%))
-         //TODO: Manage PagePreview in Page/Document
-         //TODO: Manage background color
+         //TODO: Option background color (blanc ou noir)
          //TODO: Remember the page nb for each recent documents in preferences
+         //TODO: FUITE MEMOIRE
+         //TODO: Meilleur gestion chgt des pages...
+         //TODO: Gerer les bds en suites d'images (folders) (et cbr ?)
+         //TODO: Version windows avec installateur
+         //TODO: Deb package (donc Makefile) pour Linux
     window->end();
 
     //Init
@@ -346,6 +384,7 @@ MainWindow::MainWindow()
     Init(Filename);
 }
 
+//! Destructor
 MainWindow::~MainWindow()
 {
    if(Doc)
@@ -408,5 +447,5 @@ void MainWindow::Init(char *filename)
     window->show();
 
     //Timer initializaton
-    Fl::add_timeout(0.1, Timer_cb, (void*)this);
+    //Fl::add_timeout(0.1, Timer_cb, (void*)this);
 }

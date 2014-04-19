@@ -341,11 +341,6 @@ void Page::DetectCases()
     else
     {
         //If less than 2 cases
-        /*arbitrarly divide the page in three strips (TO IMPROVE) TODO: detect horizontal lines and use it if possible
-        Cases.push_back(Rect(0, 0, src.cols, src.rows/3.+0.05*src.rows));
-        Cases.push_back(Rect(0, src.rows/3.-0.05*src.rows, src.cols, src.rows/3.+0.1*src.rows));
-        Cases.push_back(Rect(0, 2.*src.rows/3.+1-0.05*src.rows, src.cols, src.rows/3.-1+0.05*src.rows));
-        NbCases=Cases.size();*/
         //OU ALORS: on cre des cases de 1/3 ou 1/4, mais decalee de 10% de la page pour avoir une lecture progressive
         for(int i=0; i<8; i++)
         {

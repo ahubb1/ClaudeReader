@@ -45,7 +45,7 @@ class MainWindow
         void Init(char *filename);
 
 
-        friend void Timer_cb(void*);                                                  //!< Timer callback function
+        //friend void Timer_cb(void*);                                                  //!< Timer callback function
         friend void Window_cb(Fl_Widget* widget, void * param);                       //!< Window callback function (when closing)
 
         friend int MouseWheelEvents(int p);
@@ -69,7 +69,10 @@ class MainWindow
         friend void Help_cb(Fl_Widget* widget, void * param);
         friend void About_cb(Fl_Widget* widget, void * param);
 
+
+        //Info/status/update
         friend void ActivateMenus(void * param);
+        friend void ActivateNavigationMenus(void *param, bool val);
 
         friend void StatusBarUpdate(void * param);
 
