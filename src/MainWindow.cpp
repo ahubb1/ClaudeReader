@@ -16,7 +16,7 @@ void StatusBarUpdate(void * param)
 {
       MainWindow *mw=(MainWindow*)param;
 
-      //Get number of pages... lbala
+      //Get number of pages... blabla
       char text[1024];
       if(mw->Doc->GetReadingMode()==CASE)
       {
@@ -26,8 +26,9 @@ void StatusBarUpdate(void * param)
       {
             sprintf(text, "Page %d/%d", mw->Doc->GetCurrentPageNb(), mw->Doc->GetNumberOfPages());
       }
-
       mw->StatusBar->copy_label(text);
+      mw->StatusBar->redraw();
+      Fl::wait(100);
 }
 
 
@@ -164,39 +165,47 @@ void PreviousPage_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
 
-    ActivateNavigationMenus(mw, false);
-    //Et vider la pile de touches ???
-    mw->Doc->PreviousPage();
-    mw->Display->SetImage(mw->Doc->Render());
+    int p=mw->Doc->PreviousPage();
     StatusBarUpdate(mw);
-    ActivateNavigationMenus(mw, true);
+    Fl::wait(10);
+    //Si c'est bien toujours a la page demandee, la chargee, sinon sortir
+    if(p==mw->Doc->GetCurrentPageNb())
+    {
+        mw->Doc->LoadPage();
+        mw->Display->SetImage(mw->Doc->Render());
+        StatusBarUpdate(mw);
+    }
 }
 void NextPage_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
 
-    ActivateNavigationMenus(mw, false);
-    //Et vider la pile de touches ???
-    mw->Doc->NextPage();
-    mw->Display->SetImage(mw->Doc->Render());
+    int p=mw->Doc->NextPage();
     StatusBarUpdate(mw);
-    ActivateNavigationMenus(mw, true);
+    Fl::wait(10);
+    //Si c'est bien toujours a la page demandee, la chargee, sinon sortir
+    if(p==mw->Doc->GetCurrentPageNb())
+    {
+        mw->Doc->LoadPage();
+        mw->Display->SetImage(mw->Doc->Render());
+        StatusBarUpdate(mw);
+    }
 }
 void PreviousCase_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
 
     mw->Doc->PreviousCase();
-    mw->Display->SetImage(mw->Doc->Render());
     StatusBarUpdate(mw);
+    mw->Display->SetImage(mw->Doc->Render());
 }
 void NextCase_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
 
     mw->Doc->NextCase();
-    mw->Display->SetImage(mw->Doc->Render());
     StatusBarUpdate(mw);
+    mw->Display->SetImage(mw->Doc->Render());
 }
 
 

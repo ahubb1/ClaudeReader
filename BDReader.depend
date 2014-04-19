@@ -37,10 +37,10 @@
 	<FL/fl_draw.H>
 	"Fl_OpenCV.h"
 
-1397817333 source:/home/vincent/Perso/BDReader/BDReader/src/Document.cpp
+1397882075 source:/home/vincent/Perso/BDReader/BDReader/src/Document.cpp
 	"Document.h"
 
-1397812973 /home/vincent/Perso/BDReader/BDReader/include/Document.h
+1397881774 /home/vincent/Perso/BDReader/BDReader/include/Document.h
 	<Page.h>
 
 1397350089 /home/vincent/Perso/BDReader/BDReader/include/mupdf/fitz.h
@@ -336,7 +336,7 @@
 	<stlplus3/ntree.hpp>
 	<opencv2/opencv.hpp>
 
-1397818860 source:/home/vincent/Perso/BDReader/BDReader/src/Page.cpp
+1397879969 source:/home/vincent/Perso/BDReader/BDReader/src/Page.cpp
 	"Page.h"
 
 1389021098 /home/vincent/Perso/BDReader/BDReader/include/ntree.tpp

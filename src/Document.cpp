@@ -29,6 +29,10 @@ Document::~Document()
 	fz_free_context(FzCtx);
 }
 
+int Document::LoadPage()
+{
+    LoadPage(ActivePage);
+}
 
 int Document::LoadPage(int p)
 {
@@ -60,6 +64,7 @@ void Document::NextCase()
     if(CurrentPage->NextCase()<0)
     {
         NextPage();
+        LoadPage();
     }
 }
 
@@ -68,16 +73,34 @@ void Document::PreviousCase()
     if(CurrentPage->PreviousCase()<0)
     {
         PreviousPage();
+        LoadPage();
     }
 }
 
-
+//! Increment the active page by one, if possible (in the range 0 NbPages)
+//! /return: The new active page, -1 if new page is negative, -2 if new page is superir to NbPages
 int Document::NextPage()
 {
-    return LoadPage(ActivePage+1);
+    if((ActivePage+1)<0)
+       return -1;
+
+    if((ActivePage+1)>NbPages)
+       return -2;
+
+    ActivePage++;
+    return ActivePage;
 }
 
+//! Decrement the active page by one, if possible (in the range 0 NbPages)
+//! /return: The new active page, -1 if new page is negative, -2 if new page is superir to NbPages
 int Document::PreviousPage()
 {
-    return LoadPage(ActivePage-1);
+    if((ActivePage-1)<0)
+       return -1;
+
+    if((ActivePage-1)>NbPages)
+       return -2;
+
+    ActivePage--;
+    return ActivePage;
 }

@@ -11,6 +11,7 @@ class Document
         Document(char *filename);
         ~Document();
 
+        int LoadPage();
         int LoadPage(int p);
         void NextCase();
         void PreviousCase();
