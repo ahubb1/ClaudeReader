@@ -48,4 +48,5 @@ fz_rect *image_bound_page(image_document *doc, image_page *page, fz_rect *rect);
 void image_free_page(image_document *doc, image_page *page);
 void image_run_page(image_document *doc, image_page *page, fz_device *dev, const fz_matrix *ctm, fz_cookie *cookie);
 
+
 #endif

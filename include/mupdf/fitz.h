@@ -1,9 +1,6 @@
 #ifndef MUDPF_FITZ_H
 #define MUDPF_FITZ_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #include "mupdf/fitz/system.h"
 #include "mupdf/fitz/context.h"
@@ -57,8 +54,5 @@ extern "C" {
 #include "mupdf/fitz/output-pcl.h"
 #include "mupdf/fitz/output-svg.h"
 
-#ifdef __cplusplus
-}
-#endif
 
 #endif

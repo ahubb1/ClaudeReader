@@ -1,6 +1,6 @@
 /**
  * \file MainWindow.h
- * \brief Declaration file of the MainWindow class.
+ * \brief Declaration file of the MainWindow class (managing the windows and widgets).
  * \author Vincent Crocher
  * \version 0.1
  * \date April 2014
@@ -35,6 +35,7 @@
 #include "icon32.xbm"
 
 
+
 //! The main window and all it widgets (buttons, sliders...). Also the main "document" of the program.
 class MainWindow
 {
@@ -45,10 +46,10 @@ class MainWindow
         void Init(char *filename);
 
 
-        //friend void Timer_cb(void*);                                                  //!< Timer callback function
         friend void Window_cb(Fl_Widget* widget, void * param);                       //!< Window callback function (when closing)
 
-        friend int MouseWheelEvents(int p);
+        friend int MouseWheelEvents(int p);                                           //!< Handler of the mouse wheel events
+        friend void Timer_cb(void*);                                                  //!< The timer callback function used to check the mouse wheel movements
 
         //File menu
         friend void Open_cb(Fl_Widget* widget, void * param);
@@ -87,9 +88,9 @@ class MainWindow
 
 
         //Other param
-            char Filename[1024];   //! Filename of the currently open pdf
-            Preferences *Pref;      //! User preferences
-            Document *Doc;          //! Pdf document
+            char Filename[1024];   //!< Local copy of the filename of the currently open pdf
+            Preferences *Pref;      //!< User preferences
+            Document *Doc;          //!< Pdf document
 };
 
 

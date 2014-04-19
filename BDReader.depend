@@ -1,8 +1,8 @@
 # depslib dependency file v1.0
-1397879223 source:/home/vincent/Perso/BDReader/BDReader/src/MainWindow.cpp
+1397921564 source:/home/vincent/Perso/BDReader/BDReader/src/MainWindow.cpp
 	"MainWindow.h"
 
-1397876147 /home/vincent/Perso/BDReader/BDReader/include/MainWindow.h
+1397920525 /home/vincent/Perso/BDReader/BDReader/include/MainWindow.h
 	<FL/Fl.H>
 	<FL/Fl_Window.H>
 	<FL/Fl_Menu_Bar.H>
@@ -22,12 +22,12 @@
 	"Document.h"
 	"icon32.xbm"
 
-1397309326 source:/home/vincent/Perso/BDReader/BDReader/src/main.cpp
+1397920466 source:/home/vincent/Perso/BDReader/BDReader/src/main.cpp
 	<stdio.h>
 	<stdlib.h>
 	"MainWindow.h"
 
-1397440206 /home/vincent/Perso/BDReader/BDReader/include/Fl_OpenCV.h
+1397911789 /home/vincent/Perso/BDReader/BDReader/include/Fl_OpenCV.h
 	<FL/Fl_Widget.H>
 	<FL/fl_ask.H>
 	<opencv2/opencv.hpp>
@@ -37,13 +37,13 @@
 	<FL/fl_draw.H>
 	"Fl_OpenCV.h"
 
-1397882075 source:/home/vincent/Perso/BDReader/BDReader/src/Document.cpp
+1397911211 source:/home/vincent/Perso/BDReader/BDReader/src/Document.cpp
 	"Document.h"
 
-1397881774 /home/vincent/Perso/BDReader/BDReader/include/Document.h
+1397911087 /home/vincent/Perso/BDReader/BDReader/include/Document.h
 	<Page.h>
 
-1397350089 /home/vincent/Perso/BDReader/BDReader/include/mupdf/fitz.h
+1397908225 /home/vincent/Perso/BDReader/BDReader/include/mupdf/fitz.h
 	"mupdf/fitz/system.h"
 	"mupdf/fitz/context.h"
 	"mupdf/fitz/crypt.h"
@@ -331,12 +331,13 @@
 	"mupdf/fitz/device.h"
 	"mupdf/fitz/output.h"
 
-1397817377 /home/vincent/Perso/BDReader/BDReader/include/Page.h
+1397911074 /home/vincent/Perso/BDReader/BDReader/include/Page.h
+	<FL/Fl.H>
 	<mupdf/fitz.h>
 	<stlplus3/ntree.hpp>
 	<opencv2/opencv.hpp>
 
-1397879969 source:/home/vincent/Perso/BDReader/BDReader/src/Page.cpp
+1397912106 source:/home/vincent/Perso/BDReader/BDReader/src/Page.cpp
 	"Page.h"
 
 1389021098 /home/vincent/Perso/BDReader/BDReader/include/ntree.tpp
@@ -384,4 +385,7 @@
 1397837284 /home/vincent/Perso/BDReader/BDReader/icon32.xbm
 
 1397837284 /home/vincent/Perso/BDReader/BDReader/include/icon32.xbm
+
+1397908262 /home/vincent/Perso/BDReader/BDReader/include/mupdf/img.h
+	"mupdf/fitz.h"
 

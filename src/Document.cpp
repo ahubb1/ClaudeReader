@@ -49,7 +49,7 @@ int Document::LoadPage(int p)
         return 0;
     }
 
-    if(p<0)
+    if(p<1)
        return -1;
 
     if(p>NbPages)
@@ -81,7 +81,7 @@ void Document::PreviousCase()
 //! /return: The new active page, -1 if new page is negative, -2 if new page is superir to NbPages
 int Document::NextPage()
 {
-    if((ActivePage+1)<0)
+    if((ActivePage+1)<1)
        return -1;
 
     if((ActivePage+1)>NbPages)
@@ -95,7 +95,7 @@ int Document::NextPage()
 //! /return: The new active page, -1 if new page is negative, -2 if new page is superir to NbPages
 int Document::PreviousPage()
 {
-    if((ActivePage-1)<0)
+    if((ActivePage-1)<1)
        return -1;
 
     if((ActivePage-1)>NbPages)

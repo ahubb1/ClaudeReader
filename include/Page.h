@@ -1,7 +1,12 @@
 #ifndef PAGE_H
 #define PAGE_H
 
+#include <FL/Fl.H>          //For fl::wait
+extern "C" {
 #include <mupdf/fitz.h>
+//#include <mupdf/img.h>
+}
+
 #include <stlplus3/ntree.hpp>
 #include <opencv2/opencv.hpp>
 
@@ -34,6 +39,7 @@ class Page
 
     protected:
     private:
+        clock_t begin_t;    //TODO A ENLEVER
         vector<Rect> Cases;
         int NbCases;
         int PageNb;

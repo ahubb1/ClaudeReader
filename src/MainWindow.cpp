@@ -1,17 +1,10 @@
 #include "MainWindow.h"
 
+//To store the mouse wheel movements
+int mouseWheel=0;
 
 
-/*Timer retrieving information from the input program (vision)
-void Timer_cb(void* param)
-{
-      MainWindow *mw=(MainWindow*)param;
-
-      //Repeat...
-      Fl::repeat_timeout(0.01, Timer_cb, (void*)mw);
-}*/
-
-
+//! Update the status bar text according to current state (document current page...)
 void StatusBarUpdate(void * param)
 {
       MainWindow *mw=(MainWindow*)param;
@@ -33,16 +26,14 @@ void StatusBarUpdate(void * param)
 
 
 //Catch the mouse wheel events
-//TODO: pas de parametres.... donc pas de mw....
 int MouseWheelEvents(int p)
 {
     if(Fl::event()==FL_MOUSEWHEEL)
     {
-        //printf("Hop %d\n", Fl::event_dy());
-        if(abs(Fl::event_dy()>0))
-        {
-            return 0;
-        }
+        //Just add the movement to the global memory of mouse wheel movements
+        mouseWheel+=Fl::event_dy();
+        //it should be catched by the timer later on
+        //Say fltk the event as been managed
         return 1;
     }
     else
@@ -51,6 +42,36 @@ int MouseWheelEvents(int p)
         return 0;
     }
 
+}
+
+//!< The timer callback function used to check the mouse wheel movements
+void Timer_cb(void* param)
+{
+    MainWindow *mw=(MainWindow*)param;
+
+    //If some movement has been detected
+    if(mouseWheel!=0)
+    {
+        //if positive, go to next case
+        if(mouseWheel>0)
+        {
+            Fl_Menu_Item* nextcb=(Fl_Menu_Item*)mw->MenuBar->find_item("&View/Next case");
+            if(nextcb && nextcb->active())
+                nextcb->do_callback((Fl_Widget*)mw->MenuBar);
+        }
+        //if negative, go to previous case
+        else
+        {
+            Fl_Menu_Item* previouscb=(Fl_Menu_Item*)mw->MenuBar->find_item("&View/Previous case");
+            if(previouscb && previouscb->active())
+                previouscb->do_callback((Fl_Widget*)mw->MenuBar);
+        }
+        //flush
+        mouseWheel=0;
+    }
+
+    //Repeat...
+    Fl::repeat_timeout(0.1, Timer_cb, (void*)mw);
 }
 
 
@@ -103,18 +124,45 @@ void Quit_cb(Fl_Widget* widget, void * param)
 
 
 //----------------------------------View menu----------------------------------
+//! Fullscreen menu callback: activate or deactivate the fullscreen mode
 void Fullscreen_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
-    //printf("%s\n", widget->label());
 
     if( mw->window->fullscreen_active() == 0)
     {
+        //Go in fullscreen mode
         mw->window->fullscreen();
+        mw->window->resizable(NULL);
+        Fl::wait(1);
+        //Hide the bars (but not really, just make them 0px width=> trick to keep the shortcuts and remember their size/position (only w() is forgot but it's the window one))
+        mw->MenuBar->resize(mw->MenuBar->x(), mw->MenuBar->y(), 0, mw->MenuBar->h());
+        mw->StatusBar->resize(mw->StatusBar->x(), mw->StatusBar->y(), 0, mw->StatusBar->h());
+        //Adapt the display size
+        mw->Display->resize(0, 0, mw->window->w(), mw->window->h());
+        Fl::wait(1);
+
+        //Add the ESC control as a fullscreen shortcut
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Fullscreen2"))->activate();
     }
     else
     {
+        //Go back from fullscreen
         mw->window->fullscreen_off();
+        mw->window->resizable(NULL);
+        Fl::wait(1);
+        //Show the bars again: redefine their width equal to the window one
+        mw->MenuBar->resize(mw->MenuBar->x(), mw->MenuBar->y(), mw->window->w(), 25);
+        mw->StatusBar->resize(mw->StatusBar->x(), mw->window->h()-20, mw->window->w(), 20);
+        //Re-adapt the display size
+        mw->Display->resize(0, 25, mw->window->w(), mw->window->h()-45);
+        mw->window->resizable(mw->Display);
+        //and let some time to update that
+        mw->window->redraw();
+        Fl::wait(1);
+
+        //Remove the ESC control as a fullscreen shortcut
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Fullscreen2"))->deactivate();
     }
 
 }
@@ -165,10 +213,12 @@ void PreviousPage_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
 
+    //Update the current page number
     int p=mw->Doc->PreviousPage();
     StatusBarUpdate(mw);
+    //wait some time
     Fl::wait(10);
-    //Si c'est bien toujours a la page demandee, la chargee, sinon sortir
+    //If still the same page asked, load it, otherwise do nothing
     if(p==mw->Doc->GetCurrentPageNb())
     {
         mw->Doc->LoadPage();
@@ -180,10 +230,12 @@ void NextPage_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
 
+    //Update the current page number
     int p=mw->Doc->NextPage();
     StatusBarUpdate(mw);
+    //wait some time
     Fl::wait(10);
-    //Si c'est bien toujours a la page demandee, la chargee, sinon sortir
+    //If still the same page asked, load it, otherwise do nothing
     if(p==mw->Doc->GetCurrentPageNb())
     {
         mw->Doc->LoadPage();
@@ -337,7 +389,7 @@ MainWindow::MainWindow()
                 { "Quit", FL_COMMAND + 'q', (Fl_Callback *)Quit_cb, this },
                 { 0 },
             { "&View",              0, 0, 0, FL_SUBMENU },
-                {"Fullscreen2", FL_Escape, (Fl_Callback *)Fullscreen_cb, this, FL_MENU_INVISIBLE },
+                {"Fullscreen2", FL_Escape, (Fl_Callback *)Fullscreen_cb, this, FL_MENU_INVISIBLE | FL_MENU_INACTIVE},
                 {"Fullscreen", FL_COMMAND + 'f', (Fl_Callback *)Fullscreen_cb, this, FL_MENU_DIVIDER },
                 { "Page mode", 'p', (Fl_Callback *)PageMode_cb, this, FL_MENU_RADIO|FL_MENU_INACTIVE },
                 //{ "Strip mode", 's', (Fl_Callback *)StripMode_cb, this, FL_MENU_RADIO|FL_MENU_INACTIVE },
@@ -372,10 +424,11 @@ MainWindow::MainWindow()
          //Make it resizable
          window->resizable(Display);
 
-         //Handle mouse wheel events
+         //Handle mouse wheel events (combine with the timer and a global variable mouseWheel...to be improved)
          Fl::add_handler(MouseWheelEvents);
+         //Timer initializaton
+         Fl::add_timeout(0.1, Timer_cb, (void*)this);
 
-         //TODO: gerer molette: chgt case ou page
          //TODO: tempo pour verifier qu'une nouvelle page/case a ete chargee
          //(TODO: meilleur decoupage des pages par defaut: recherche lignes horizontales (si 4 trouvees, les utiliser, sinon decoupage a 10%))
          //TODO: Option background color (blanc ou noir)
@@ -454,7 +507,4 @@ void MainWindow::Init(char *filename)
     //Show the main window
     Fl::visual(FL_RGB);
     window->show();
-
-    //Timer initializaton
-    //Fl::add_timeout(0.1, Timer_cb, (void*)this);
 }

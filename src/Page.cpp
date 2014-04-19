@@ -104,6 +104,7 @@ Page::Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, fz_conte
     NbPages=nb_pages;
     FzCtx=ctx;
     FzDoc=doc;
+    begin_t=clock();
 
 
     //Load it (numbering from 0, not 1)
@@ -114,22 +115,26 @@ Page::Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, fz_conte
     fz_matrix transform;
     fz_rotate(&transform, rotation);
     fz_pre_scale(&transform, zoom / 100.0f, zoom / 100.0f);
+    printf("-5- %d\n", clock()-begin_t);
 
     //Page bound
     fz_rect bounds;
     fz_bound_page(FzDoc, FzPage, &bounds);
     fz_transform_rect(&bounds, &transform);
+    printf("-4- %d\n", clock()-begin_t);
 
     //Prepare a pixmap
     fz_irect bbox;
     fz_round_rect(&bbox, &bounds);
     fz_pixmap *pix = fz_new_pixmap_with_bbox(FzCtx, fz_device_bgr(FzCtx), &bbox);
     fz_clear_pixmap_with_value(FzCtx, pix, 0xff);
+    printf("-3- %d\n", clock()-begin_t);
 
     fz_device *dev = fz_new_draw_device(FzCtx, pix);
-    fz_run_page(FzDoc, FzPage, dev, &transform, NULL);
+    fz_run_page_contents(FzDoc, FzPage, dev, &transform, NULL);
     fz_free_device(dev);
     fz_free_page(FzDoc, FzPage);
+    printf("-2- %d\n", clock()-begin_t);
 
     //Convert to opencv
     PageRenderCv=Mat::zeros(fz_pixmap_height(FzCtx, pix), fz_pixmap_width(FzCtx, pix), CV_8UC4);
@@ -137,9 +142,10 @@ Page::Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, fz_conte
 
     //Free the pixmap
     fz_drop_pixmap(FzCtx, pix);
+    printf("-1- %d\n", clock()-begin_t);
 
     //If we are not on special pages (first or last one)
-    if(PageNb>1 && (NbPages-PageNb)>1)
+    if(PageNb>1 && (NbPages-PageNb)>0)
     {
         //Detect the cases on the page
         DetectCases();
@@ -158,6 +164,7 @@ Page::~Page()
 
 void Page::DetectCases()
 {
+    printf("0- %d\n", clock()-begin_t);
     Mat src;
 
     cvtColor(PageRenderCv, src, CV_BGR2GRAY);
@@ -168,6 +175,7 @@ void Page::DetectCases()
     Mat conv=Mat::ones(5,5,CV_8UC1);
     dilate(src, src, conv);
     conv.release();
+    printf("1- %d\n", clock()-begin_t);
     //cvtColor(src, PageRenderCv, CV_GRAY2BGR);
 
 
@@ -193,6 +201,7 @@ void Page::DetectCases()
     vector<Vec4i> hierarchy;
 
     findContours( src, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE );
+    printf("2- %d\n", clock()-begin_t);
 
     //Remove according to ratio perimeter/area (keep only rectangles) ???
 
@@ -205,6 +214,7 @@ void Page::DetectCases()
 
     //Order them by area (smallest to largest)
     sort(CasesTmp.begin(), CasesTmp.end(), isSmaller);
+    printf("3- %d\n", clock()-begin_t);
 
 
     //Merge them when necessary
@@ -228,7 +238,7 @@ void Page::DetectCases()
         }
         currentIdx++;
     }
-
+    printf("4- %d\n", clock()-begin_t);
 
 
     //Remove the too small ones (noise)
@@ -240,6 +250,7 @@ void Page::DetectCases()
             i--;
         }
     }
+    printf("5- %d\n", clock()-begin_t);
 
     //Merge cases between 0.01 and 0.04 to their closest one
     for( int i = 0; i < CasesTmp.size(); i++ )
@@ -270,6 +281,7 @@ void Page::DetectCases()
             }
         }
     }
+    printf("6- %d\n", clock()-begin_t);
 
     //Check if parts of the page not covered !!!!!!!!!!!!!!!
     //et dans ce cas eraser le CasesTmp et donc faire un decoupage en strip
@@ -332,6 +344,8 @@ void Page::DetectCases()
                 Cases.push_back(*i);
             }
 
+        printf("7- %d\n", clock()-begin_t);
+
         //Save the nb of cases
         NbCases=Cases.size();
 
@@ -352,6 +366,7 @@ void Page::DetectCases()
     //Release some memory
     CasesTmp.clear();
     src.release();
+    printf("8- %d\n", clock()-begin_t);
 }
 
 

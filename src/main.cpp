@@ -1,6 +1,6 @@
 /**
  * \file main.cpp
- * \brief Main file of the program containing the main function.
+ * \brief Main file of the program containing the main function and creating a MainWindow object.
  * \author Vincent Crocher
  * \version 0.1
  * \date April 2014
@@ -13,7 +13,6 @@
 #include <stdlib.h>
 
 #include "MainWindow.h"
-
 
 
 int main()
