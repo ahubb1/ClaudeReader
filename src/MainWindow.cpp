@@ -325,16 +325,19 @@ void Help_cb(Fl_Widget* widget, void * param)
     //Load the text from the "help" file
     char HelpText[2048];
     FILE* helpfile=fopen("help", "r");
-    int i=0;
-    while(!feof(helpfile))
+    if(helpfile)
     {
-        HelpText[i++]=fgetc(helpfile);
-    }
-    HelpText[--i]='\0';
-    fclose(helpfile);
+        int i=0;
+        while(!feof(helpfile))
+        {
+            HelpText[i++]=fgetc(helpfile);
+        }
+        HelpText[--i]='\0';
+        fclose(helpfile);
 
-    //Display it on a message window
-    fl_message(HelpText);
+        //Display it on a message window
+        fl_message(HelpText);
+    }
 }
 //! Show the about information window
 void About_cb(Fl_Widget* widget, void * param)
@@ -344,16 +347,23 @@ void About_cb(Fl_Widget* widget, void * param)
     //Load the text from the "about" file
     char AboutText[2048];
     FILE* aboutfile=fopen("about", "r");
-    int i=0;
-    while(!feof(aboutfile))
+    if(aboutfile)
     {
-        AboutText[i++]=fgetc(aboutfile);
-    }
-    AboutText[--i]='\0';
-    fclose(aboutfile);
+        int i=0;
+        while(!feof(aboutfile))
+        {
+            AboutText[i++]=fgetc(aboutfile);
+        }
+        AboutText[--i]='\0';
+        fclose(aboutfile);
 
-    //Display it on a message window
-    fl_message(AboutText);
+        //Display it on a message window
+        fl_message(AboutText);
+    }
+    else
+    {
+        fl_message("BDReader\n A comics BDReader\n\n Vincent Crocher - 2014. (See License.txt).");
+    }
 }
 
 //-----------------------------------------------------------------------------

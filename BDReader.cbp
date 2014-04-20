@@ -35,6 +35,7 @@
 				<Option projectLinkerOptionsRelation="1" />
 				<Option projectLibDirsRelation="1" />
 				<Linker>
+					<Add option="-static-libgcc" />
 					<Add library="libmupdf.a" />
 					<Add library="libmupdf-js-none.a" />
 					<Add library="libjpeg.a" />
