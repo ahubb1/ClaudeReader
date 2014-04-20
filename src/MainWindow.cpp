@@ -481,7 +481,6 @@ MainWindow::MainWindow()
          //Apply the platic theme/skin
          Fl::scheme("plastic");
 
-         //TODO: PAGE PREVIEW REVERSED  !
          //TODO: tempo pour verifier qu'une nouvelle page/case a ete chargee
          //TODO: Option background color (blanc ou noir)
          //TODO: Remember the page nb for each recent documents in preferences and the window size

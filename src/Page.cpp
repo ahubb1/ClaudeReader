@@ -196,8 +196,10 @@ Page::Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, fz_conte
         //Detect the cases on the page
         DetectCases();
     }
+    //If we are, no case detection and thus only case -1 exists
     else
     {
+        ActiveCase=-1;
         Loaded=true;
     }
 }
