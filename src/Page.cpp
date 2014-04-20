@@ -218,179 +218,198 @@ void Page::DetectCases()
     Mat src;
 
     cvtColor(PageRenderCv, src, CV_BGR2GRAY);
-    //To binary
-    inRange(src, 20, 240, src);
-    //Canny(src, src, 100, 200); //Keep it ?
-    //Enlarge the contours
-    Mat conv=Mat::ones(5,5,CV_8UC1);
-    dilate(src, src, conv);
-    conv.release();
-    printf("1- %d\n", clock()-begin_t);
-    //cvtColor(src, PageRenderCv, CV_GRAY2BGR);
 
-
-    /*Test strip
-    Sobel( src, src, CV_8U, 0, 2, 3, 1, 0, BORDER_DEFAULT );//Emphasize horizontal lines
-    Mat convH=Mat::zeros(11, 11, CV_8UC1);
-    convH.col(5)=Mat::ones(11,1,CV_8UC1);
-    dilate(src, src, convH);
-    dilate(src, src, convH);
-    Mat conv=Mat::ones(13,13,CV_8UC1);
-    erode(src, src, conv);
-
-    vector<Vec4i> lines;
-    HoughLinesP(src, lines, 25, CV_PI/180*10, 80, 0.8*PageRenderCv.cols, PageRenderCv.cols/10 );
-    for( size_t i = 0; i < lines.size(); i++ )
+    //Only if we are in case or page mode
+    if(ReadingMode==CASE || ReadingMode==PAGE)
     {
-        Vec4i l = lines[i];
-        line( PageRenderCv, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0,0,255), 3, CV_AA);
-    }*/
+        //To binary
+        inRange(src, 20, 240, src);
+        //Canny(src, src, 100, 200); //Keep it ?
+        //Enlarge the contours
+        Mat conv=Mat::ones(5,5,CV_8UC1);
+        dilate(src, src, conv);
+        conv.release();
+        printf("1- %d\n", clock()-begin_t);
+        //cvtColor(src, PageRenderCv, CV_GRAY2BGR);
 
-    //Contours detection
-    vector<vector <Point> > contours;
-    vector<Vec4i> hierarchy;
 
-    findContours( src, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE );
-    printf("2- %d\n", clock()-begin_t);
+        /*Test strip
+        Sobel( src, src, CV_8U, 0, 2, 3, 1, 0, BORDER_DEFAULT );//Emphasize horizontal lines
+        Mat convH=Mat::zeros(11, 11, CV_8UC1);
+        convH.col(5)=Mat::ones(11,1,CV_8UC1);
+        dilate(src, src, convH);
+        dilate(src, src, convH);
+        Mat conv=Mat::ones(13,13,CV_8UC1);
+        erode(src, src, conv);
 
-    //Remove according to ratio perimeter/area (keep only rectangles) ???
-
-    //Rectangle bounding box for each contour found
-    vector<Rect> CasesTmp;
-    for( int i = contours.size()-1; i >-1; i-- )
-    {
-       CasesTmp.push_back(boundingRect( contours[i] ));
-       //rectangle(PageRenderCv, CasesTmp[i], cvScalar(0, 255, 0), 8);
-    }
-    printf("3- %d %d\n", clock()-begin_t, CasesTmp.size());
-
-    //Sort the cases by size and merge them if overlaping
-    SortAndMerge(&CasesTmp, 0);
-
-    printf("4- %d %d\n", clock()-begin_t, CasesTmp.size());
-
-    //Remove the too small ones (noise)
-    for( int i = 0; i < CasesTmp.size(); i++ )
-    {
-        if((CasesTmp[i].width*CasesTmp[i].height)<(0.01*src.rows*src.cols))
+        vector<Vec4i> lines;
+        HoughLinesP(src, lines, 25, CV_PI/180*10, 80, 0.8*PageRenderCv.cols, PageRenderCv.cols/10 );
+        for( size_t i = 0; i < lines.size(); i++ )
         {
-            CasesTmp.erase(CasesTmp.begin()+i);
-            i--;
+            Vec4i l = lines[i];
+            line( PageRenderCv, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0,0,255), 3, CV_AA);
+        }*/
+
+
+        //Contours detection
+        vector<vector <Point> > contours;
+        vector<Vec4i> hierarchy;
+
+        findContours( src, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE );
+        printf("2- %d\n", clock()-begin_t);
+
+        //Remove according to ratio perimeter/area (keep only rectangles) ???
+
+        //Rectangle bounding box for each contour found
+        vector<Rect> CasesTmp;
+        for( int i = contours.size()-1; i >-1; i-- )
+        {
+           CasesTmp.push_back(boundingRect( contours[i] ));
+           //rectangle(PageRenderCv, CasesTmp[i], cvScalar(0, 255, 0), 8);
         }
-    }
-    printf("5- %d %d\n", clock()-begin_t, CasesTmp.size());
+        printf("3- %d %d\n", clock()-begin_t, CasesTmp.size());
 
-    //Merge cases between 0.01 and 0.04 to their closest one
-    for( int i = 0; i < CasesTmp.size(); i++ )
-    {
-        if((CasesTmp[i].width*CasesTmp[i].height)<(0.04*src.rows*src.cols))
+        //Sort the cases by size and merge them if overlaping
+        SortAndMerge(&CasesTmp, 0);
+
+        printf("4- %d %d\n", clock()-begin_t, CasesTmp.size());
+
+        //Remove the too small ones (noise)
+        for( int i = 0; i < CasesTmp.size(); i++ )
         {
-            //Find the closest one
-            int mind=src.rows*src.cols; //init to some huge number
-            int closest=-1;
-            for( int k = 0; k < CasesTmp.size(); k++ )
+            if((CasesTmp[i].width*CasesTmp[i].height)<(0.01*src.rows*src.cols))
             {
-                if(i!=k)
-                {
-                    int d=Distance(CasesTmp[i], CasesTmp[k]);
-                    if(d<mind)
-                    {
-                        mind=d;
-                        closest=k;
-                    }
-                }
-            }
-            //Merge
-            if(closest!=-1)
-            {
-                Merge(&CasesTmp[closest], CasesTmp[i]);
                 CasesTmp.erase(CasesTmp.begin()+i);
                 i--;
             }
         }
-    }
-    printf("6- %d %d\n", clock()-begin_t, CasesTmp.size());
+        printf("5- %d %d\n", clock()-begin_t, CasesTmp.size());
 
-    //Sort the cases by size and merge them if overlaping: done again because sizes and overlapping could have changed
-    SortAndMerge(&CasesTmp, 0);
-
-    printf("7- %d %d\n", clock()-begin_t, CasesTmp.size());
-
-    //Check if parts of the page not covered !!!!!!!!!!!!!!!
-        //compute the "within area": the extreme total area covered by the detected cases
-
-        //sum the cases areas
-
-        //compare the two values: if two large difference, it means that there are some internal part not covered by a case
-    //et dans ce cas eraser le CasesTmp et donc faire un decoupage en strip
-
-    //Check if we have more than one case
-    if(CasesTmp.size()>1)
-    {
-        //Reorder it in a BD style (TopLeft to Bottom Right)
-        //Create a cases tree to reprensent the page organization
-        ntree<Rect> CasesTree;
-
-        //Create (and fill) the tree
-            //First the root node: a band on the left of the page
-            CasesTree.insert(Rect(0, 0, src.cols*.1, src.rows));
-            ntree<Rect>::prefix_iterator currentParentPre=CasesTree.prefix_begin();
-
-            while (CasesTmp.size()>0)
+        //Merge cases between 0.01 and 0.04 to their closest one
+        for( int i = 0; i < CasesTmp.size(); i++ )
+        {
+            if((CasesTmp[i].width*CasesTmp[i].height)<(0.04*src.rows*src.cols))
             {
-                //Use the prefix iterator (updated at the end of the loop) as a simple iterator
-                ntree<Rect>::iterator currentParent=currentParentPre.simplify();
-
-                //Get all the ones at the same vertical level (same value +10% of page width) and lower than parent
-                //and order them
-                for( int i = 0; i < CasesTmp.size(); i++ )
+                //Find the closest one
+                int mind=src.rows*src.cols; //init to some huge number
+                int closest=-1;
+                for( int k = 0; k < CasesTmp.size(); k++ )
                 {
-                    //If just on the right and lower or equal to the parent
-                    int currentParentRight=currentParent->x+currentParent->width+0.1*src.cols;
-                    int currentParentBottom=currentParent->y+currentParent->height+0.1*src.cols;
-                    if( CasesTmp[i].x<currentParentRight && (CasesTmp[i].y+CasesTmp[i].height)<currentParentBottom)
+                    if(i!=k)
                     {
-                        //Order them according to their height in the page (lower first)
-                        int k=0;
-                        int nb_children=CasesTree.children(currentParent);
-                        //look for the right position
-                        while(k<nb_children && (CasesTmp[i].y+CasesTmp[i].height>=CasesTree.child(currentParent, k)->y+CasesTree.child(currentParent, k)->height)) //tant qu'il y'a des feuilles a ce niveau de l'arbre et que la bottom val est + petite, on avance dans l'arbre a ce niveau
+                        int d=Distance(CasesTmp[i], CasesTmp[k]);
+                        if(d<mind)
                         {
-                            k++;
+                            mind=d;
+                            closest=k;
                         }
-                        //Insert the case at it's right "position" in the child list
-                        CasesTree.insert(currentParent, k, CasesTmp[i]);
-                        //Remove it from the tmp list
-                        CasesTmp.erase(CasesTmp.begin()+i);
-                        i--;
+                    }
+                }
+                //Merge
+                if(closest!=-1)
+                {
+                    Merge(&CasesTmp[closest], CasesTmp[i]);
+                    CasesTmp.erase(CasesTmp.begin()+i);
+                    i--;
+                }
+            }
+        }
+        printf("6- %d %d\n", clock()-begin_t, CasesTmp.size());
+
+        //Sort the cases by size and merge them if overlaping: done again because sizes and overlapping could have changed
+        SortAndMerge(&CasesTmp, 0);
+
+        printf("7- %d %d\n", clock()-begin_t, CasesTmp.size());
+
+        //Check if parts of the page not covered !!!!!!!!!!!!!!!
+            //compute the "within area": the extreme total area covered by the detected cases
+
+            //sum the cases areas
+
+            //compare the two values: if two large difference, it means that there are some internal part not covered by a case
+        //et dans ce cas eraser le CasesTmp et donc faire un decoupage en strip
+
+        //Check if we have more than one case
+        if(CasesTmp.size()>1)
+        {
+            //Reorder it in a BD style (TopLeft to Bottom Right)
+            //Create a cases tree to reprensent the page organization
+            ntree<Rect> CasesTree;
+
+            //Create (and fill) the tree
+                //First the root node: a band on the left of the page
+                CasesTree.insert(Rect(0, 0, src.cols*.1, src.rows));
+                ntree<Rect>::prefix_iterator currentParentPre=CasesTree.prefix_begin();
+
+                while (CasesTmp.size()>0)
+                {
+                    //Use the prefix iterator (updated at the end of the loop) as a simple iterator
+                    ntree<Rect>::iterator currentParent=currentParentPre.simplify();
+
+                    //Get all the ones at the same vertical level (same value +10% of page width) and lower than parent
+                    //and order them
+                    for( int i = 0; i < CasesTmp.size(); i++ )
+                    {
+                        //If just on the right and lower or equal to the parent
+                        int currentParentRight=currentParent->x+currentParent->width+0.1*src.cols;
+                        int currentParentBottom=currentParent->y+currentParent->height+0.1*src.cols;
+                        if( CasesTmp[i].x<currentParentRight && (CasesTmp[i].y+CasesTmp[i].height)<currentParentBottom)
+                        {
+                            //Order them according to their height in the page (lower first)
+                            int k=0;
+                            int nb_children=CasesTree.children(currentParent);
+                            //look for the right position
+                            while(k<nb_children && (CasesTmp[i].y+CasesTmp[i].height>=CasesTree.child(currentParent, k)->y+CasesTree.child(currentParent, k)->height)) //tant qu'il y'a des feuilles a ce niveau de l'arbre et que la bottom val est + petite, on avance dans l'arbre a ce niveau
+                            {
+                                k++;
+                            }
+                            //Insert the case at it's right "position" in the child list
+                            CasesTree.insert(currentParent, k, CasesTmp[i]);
+                            //Remove it from the tmp list
+                            CasesTmp.erase(CasesTmp.begin()+i);
+                            i--;
+                        }
+                    }
+
+                    //Go to the next node in prefix mode: deeper if possible, neighbour otherwise, up otherwise
+                    currentParentPre++;
+                    //Test if we have reached the end of the tree... (not supposed to happen if some cases left in CasesTmp)
+                    if(currentParentPre==CasesTree.prefix_end())
+                    {
+                        break;
                     }
                 }
 
-                //Go to the next node in prefix mode: deeper if possible, neighbour otherwise, up otherwise
-                currentParentPre++;
-                //Test if we have reached the end of the tree... (not supposed to happen if some cases left in CasesTmp)
-                if(currentParentPre==CasesTree.prefix_end())
+
+                //Copy the cases from the tree to a list, in the right order (except the first one which is a fake case)
+                for (ntree<Rect>::prefix_iterator i = ++CasesTree.prefix_begin(); i != CasesTree.prefix_end(); i++)
                 {
-                    break;
+                    Cases.push_back(*i);
                 }
-            }
 
+            printf("8- %d\n", clock()-begin_t);
 
-            //Copy the cases from the tree to a list, in the right order (except the first one which is a fake case)
-            for (ntree<Rect>::prefix_iterator i = ++CasesTree.prefix_begin(); i != CasesTree.prefix_end(); i++)
+            //Save the nb of cases
+            NbCases=Cases.size();
+
+            //Free some memory
+            CasesTree.empty();
+        }
+        //If less than 2 cases (or the detection has failed)
+        else
+        {
+            //Creation of cases of 40% of the page which are sliding down=> arbitrary strips to allow a continuous lecture
+            for(int i=0; i<13; i++)
             {
-                Cases.push_back(*i);
+                Cases.push_back(Rect(0, i*src.rows/20., src.cols, src.rows*.4-1));
             }
+            NbCases=Cases.size();
+        }
+        //Release some memory
+        CasesTmp.clear();
+    } //if CASE or PAGE mode
 
-        printf("8- %d\n", clock()-begin_t);
-
-        //Save the nb of cases
-        NbCases=Cases.size();
-
-        //Free some memory
-        CasesTree.empty();
-    }
-    //If less than 2 cases (or the detection has failed)
+    //If in STRIP mode
     else
     {
         //Creation of cases of 40% of the page which are sliding down=> arbitrary strips to allow a continuous lecture
@@ -402,7 +421,6 @@ void Page::DetectCases()
     }
 
     //Release some memory
-    CasesTmp.clear();
     src.release();
     printf("9- %d\n", clock()-begin_t);
 
