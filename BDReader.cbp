@@ -18,13 +18,38 @@
 			<Target title="Release">
 				<Option output="bin/Release/BDReader" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Release/" />
-				<Option type="1" />
+				<Option type="0" />
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O2" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
+				</Linker>
+			</Target>
+			<Target title="Win32">
+				<Option output="bin/Win32/BDReader.exe" prefix_auto="1" extension_auto="0" />
+				<Option object_output="obj/Win32/" />
+				<Option type="0" />
+				<Option compiler="mingw32" />
+				<Option projectLinkerOptionsRelation="1" />
+				<Option projectLibDirsRelation="1" />
+				<Linker>
+					<Add library="libmupdf.a" />
+					<Add library="libmupdf-js-none.a" />
+					<Add library="libjpeg.a" />
+					<Add library="libopenjpeg.a" />
+					<Add library="libjbig2dec.a" />
+					<Add library="libfreetype.a" />
+					<Add library="libfonts.a" />
+					<Add library="z" />
+					<Add library="opencv_core246" />
+					<Add library="opencv_highgui246" />
+					<Add library="opencv_imgproc246" />
+					<Add library="fltk_gl" />
+					<Add library="fltk_jpeg" />
+					<Add library="fltk_images" />
+					<Add library="fltk" />
 				</Linker>
 			</Target>
 		</Build>
@@ -35,10 +60,9 @@
 		<Linker>
 			<Add library="libmupdf.a" />
 			<Add library="libmupdf-js-none.a" />
-			<Add library="libjbig2dec.a" />
 			<Add library="libjpeg.a" />
 			<Add library="libopenjpeg.a" />
-			<Add library="libz.a" />
+			<Add library="libjbig2dec.a" />
 			<Add library="m" />
 			<Add library="libopencv_core" />
 			<Add library="libopencv_highgui" />
@@ -52,10 +76,12 @@
 		<Unit filename="include/Fl_OpenCV.h" />
 		<Unit filename="include/MainWindow.h" />
 		<Unit filename="include/Page.h" />
+		<Unit filename="include/Preferences.h" />
 		<Unit filename="src/Document.cpp" />
 		<Unit filename="src/Fl_OpenCV.cxx" />
 		<Unit filename="src/MainWindow.cpp" />
 		<Unit filename="src/Page.cpp" />
+		<Unit filename="src/Preferences.cpp" />
 		<Unit filename="src/main.cpp" />
 		<Extensions>
 			<code_completion />

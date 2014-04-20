@@ -11,7 +11,7 @@ Preferences::~Preferences()
 }
 
 //! Load preferences from the given file
-int Preferences::Load(char prefFilename[255])
+int Preferences::Load(const char prefFilename[255])
 {
     //First remember the preferences file filename
     sprintf(Filename, "%s", prefFilename);
@@ -54,6 +54,8 @@ int Preferences::Load(char prefFilename[255])
         //Close the file
         fclose(prefFile);
     }
+
+    return 0;
 }
 
 //! Apply the loaded parameters to the document

@@ -320,7 +320,7 @@ void ActivateMenus(void * param)
 //! Show a help information window
 void Help_cb(Fl_Widget* widget, void * param)
 {
-    MainWindow *mw=(MainWindow*)param;
+    //MainWindow *mw=(MainWindow*)param;
 
     //Load the text from the "help" file
     char HelpText[2048];
@@ -339,7 +339,7 @@ void Help_cb(Fl_Widget* widget, void * param)
 //! Show the about information window
 void About_cb(Fl_Widget* widget, void * param)
 {
-    MainWindow *mw=(MainWindow*)param;
+    //MainWindow *mw=(MainWindow*)param;
 
     //Load the text from the "about" file
     char AboutText[2048];
@@ -416,9 +416,12 @@ MainWindow::MainWindow()
     window=new Fl_Double_Window(600, 600, "BDReader");
 
     //Set an icon
-    fl_open_display();
-    Pixmap p = XCreateBitmapFromData(fl_display, DefaultRootWindow(fl_display), (char *)icon32_bits, icon32_width, icon32_height);
-    window->icon((char *)p);
+    //Probleme with windows compile (not declared): version prolem of fltk
+    #ifndef WINDOWS
+        fl_open_display();
+        Pixmap p = XCreateBitmapFromData(fl_display, DefaultRootWindow(fl_display), (char *)icon32_bits, icon32_width, icon32_height);
+        window->icon((char *)p);
+    #endif
 
     window->begin();
 
@@ -481,7 +484,6 @@ MainWindow::MainWindow()
          //Apply the platic theme/skin
          Fl::scheme("plastic");
 
-         //TODO: tempo pour verifier qu'une nouvelle page/case a ete chargee
          //TODO: Option background color (blanc ou noir)
          //TODO: Remember the page nb for each recent documents in preferences and the window size
          //TODO: FUITE MEMOIRE
@@ -494,7 +496,7 @@ MainWindow::MainWindow()
     //Init
     UpdateWidgets(this);
     Doc=NULL;
-    sprintf(Filename, "\0");
+    sprintf(Filename, "%s", "\0");
     Init(Filename);
 }
 

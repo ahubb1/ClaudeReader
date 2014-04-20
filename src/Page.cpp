@@ -277,7 +277,7 @@ void Page::DetectCases()
         printf("4- %d %d\n", clock()-begin_t, CasesTmp.size());
 
         //Remove the too small ones (noise)
-        for( int i = 0; i < CasesTmp.size(); i++ )
+        for(unsigned int i = 0; i < CasesTmp.size(); i++ )
         {
             if((CasesTmp[i].width*CasesTmp[i].height)<(0.01*src.rows*src.cols))
             {
@@ -288,14 +288,14 @@ void Page::DetectCases()
         printf("5- %d %d\n", clock()-begin_t, CasesTmp.size());
 
         //Merge cases between 0.01 and 0.04 to their closest one
-        for( int i = 0; i < CasesTmp.size(); i++ )
+        for(unsigned int i = 0; i < CasesTmp.size(); i++ )
         {
             if((CasesTmp[i].width*CasesTmp[i].height)<(0.04*src.rows*src.cols))
             {
                 //Find the closest one
                 int mind=src.rows*src.cols; //init to some huge number
                 int closest=-1;
-                for( int k = 0; k < CasesTmp.size(); k++ )
+                for(unsigned int k = 0; k < CasesTmp.size(); k++ )
                 {
                     if(i!=k)
                     {
@@ -350,7 +350,7 @@ void Page::DetectCases()
 
                     //Get all the ones at the same vertical level (same value +10% of page width) and lower than parent
                     //and order them
-                    for( int i = 0; i < CasesTmp.size(); i++ )
+                    for(unsigned int i = 0; i < CasesTmp.size(); i++ )
                     {
                         //If just on the right and lower or equal to the parent
                         int currentParentRight=currentParent->x+currentParent->width+0.1*src.cols;

@@ -31,7 +31,7 @@ Document::~Document()
 
 int Document::LoadPage()
 {
-    LoadPage(ActivePage);
+    return LoadPage(ActivePage);
 }
 
 int Document::LoadPage(int p)
