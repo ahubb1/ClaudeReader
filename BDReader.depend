@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1397923496 source:/home/vincent/Perso/BDReader/BDReader/src/MainWindow.cpp
+1397926085 source:/home/vincent/Perso/BDReader/BDReader/src/MainWindow.cpp
 	"MainWindow.h"
 
 1397922660 /home/vincent/Perso/BDReader/BDReader/include/MainWindow.h
@@ -331,13 +331,13 @@
 	"mupdf/fitz/device.h"
 	"mupdf/fitz/output.h"
 
-1397911074 /home/vincent/Perso/BDReader/BDReader/include/Page.h
+1397973396 /home/vincent/Perso/BDReader/BDReader/include/Page.h
 	<FL/Fl.H>
 	<mupdf/fitz.h>
 	<stlplus3/ntree.hpp>
 	<opencv2/opencv.hpp>
 
-1397912106 source:/home/vincent/Perso/BDReader/BDReader/src/Page.cpp
+1397975266 source:/home/vincent/Perso/BDReader/BDReader/src/Page.cpp
 	"Page.h"
 
 1389021098 /home/vincent/Perso/BDReader/BDReader/include/ntree.tpp

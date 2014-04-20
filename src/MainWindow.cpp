@@ -70,6 +70,7 @@ void Timer_cb(void* param)
         mouseWheel=0;
     }
 
+    Fl::wait(50);
     //Repeat...
     Fl::repeat_timeout(0.1, Timer_cb, (void*)mw);
 }
@@ -357,6 +358,7 @@ void About_cb(Fl_Widget* widget, void * param)
 
 //-----------------------------------------------------------------------------
 
+
 //! Update widgets according to preferences values
 void UpdateWidgets(void * param)
 {
@@ -411,7 +413,7 @@ MainWindow::MainWindow()
     Pref->Load("preferences");
 
     //Main window creation
-    window=new Fl_Double_Window(1024, 640, "BDReader");
+    window=new Fl_Double_Window(600, 600, "BDReader");
 
     //Set an icon
     fl_open_display();
@@ -466,18 +468,24 @@ MainWindow::MainWindow()
          //Closing callback
          window->callback(Window_cb, (void*)this);
 
-         //Make it resizable
-         window->resizable(Display);
 
          //Handle mouse wheel events (combine with the timer and a global variable mouseWheel...to be improved)
          Fl::add_handler(MouseWheelEvents);
          //Timer initializaton
          Fl::add_timeout(0.1, Timer_cb, (void*)this);
 
+
+         //Make the window resizable around the Display
+         window->resizable(Display);
+
+         //Apply the platic theme/skin
+         Fl::scheme("plastic");
+
+         //TODO: PAGE PREVIEW REVERSED  !
          //TODO: tempo pour verifier qu'une nouvelle page/case a ete chargee
          //(TODO: meilleur decoupage des pages par defaut: recherche lignes horizontales (si 4 trouvees, les utiliser, sinon decoupage a 10%))
          //TODO: Option background color (blanc ou noir)
-         //TODO: Remember the page nb for each recent documents in preferences
+         //TODO: Remember the page nb for each recent documents in preferences and the window size
          //TODO: FUITE MEMOIRE
          //TODO: Meilleur gestion chgt des pages...
          //TODO: Gerer les bds en suites d'images (folders) (et cbr ?)

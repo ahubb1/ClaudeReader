@@ -81,6 +81,51 @@ int Distance(Rect A, Rect B)
     return min;
 }
 
+
+//Sort and merge
+void SortAndMerge(vector<Rect> *CasesTmp, int counter)
+{
+    //Remember the nb of time the function is called recursively
+    counter++;
+
+    //Enough cases left ?
+    if(CasesTmp->size()>1)
+    {
+
+        //Order them by area (smallest to largest)
+        sort(CasesTmp->begin(), CasesTmp->end(), isSmaller);
+
+        //Merge them when necessary
+        std::vector<Rect>::iterator current=CasesTmp->end();
+        int currentIdx=0;
+        while(current>=CasesTmp->begin())
+        {
+            current=CasesTmp->end()-currentIdx;
+            std::vector<Rect>::iterator i=current-1;
+            while(i>=CasesTmp->begin())
+            {
+                if(isIn(*i, *current) && (*i)!=(*current))
+                {
+                    Merge(&(*current), *i);
+                    i=CasesTmp->erase(i);
+                    //Not too much...
+                    if(counter<5)
+                    {
+                        SortAndMerge(CasesTmp, counter);
+                        return;
+                    }
+                    //i--;
+                }
+                i--;
+            }
+            currentIdx++;
+        }
+
+        //Re-order them by area (smallest to largest)=>their sizes could have changed due to merging
+        sort(CasesTmp->begin(), CasesTmp->end(), isSmaller);
+    }
+}
+
 //---------------------------------------------------------------------------
 
 
@@ -89,6 +134,7 @@ int Distance(Rect A, Rect B)
 Page::Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, fz_context *ctx, fz_document *doc)
 {
     //Init
+    Loaded=false;
     ReadingMode=rd_mode;
     PreviewPage=page_p;
     if(ReadingMode!=PAGE && PreviewPage)
@@ -150,6 +196,10 @@ Page::Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, fz_conte
         //Detect the cases on the page
         DetectCases();
     }
+    else
+    {
+        Loaded=true;
+    }
 }
 
 Page::~Page()
@@ -207,39 +257,17 @@ void Page::DetectCases()
 
     //Rectangle bounding box for each contour found
     vector<Rect> CasesTmp;
-    for( int i = contours.size()-1; i > -1; i-- )
+    for( int i = contours.size()-1; i >-1; i-- )
     {
        CasesTmp.push_back(boundingRect( contours[i] ));
+       //rectangle(PageRenderCv, CasesTmp[i], cvScalar(0, 255, 0), 8);
     }
+    printf("3- %d %d\n", clock()-begin_t, CasesTmp.size());
 
-    //Order them by area (smallest to largest)
-    sort(CasesTmp.begin(), CasesTmp.end(), isSmaller);
-    printf("3- %d\n", clock()-begin_t);
+    //Sort the cases by size and merge them if overlaping
+    SortAndMerge(&CasesTmp, 0);
 
-
-    //Merge them when necessary
-    //TODO: encore un probleme sur certaines pages
-    std::vector<Rect>::iterator current=CasesTmp.end();
-    int currentIdx=0;
-    while(current>=CasesTmp.begin())
-    {
-        current=CasesTmp.end()-currentIdx;
-        std::vector<Rect>::iterator i=current-1;
-        while(i>=CasesTmp.begin())
-        {
-            //printf("IsIn: %d %d\t", current->width, current->height);
-            if(isIn(*i, *current))
-            {
-                Merge(&(*current), *i);
-                i=CasesTmp.erase(i);
-                //i--;
-            }
-            i--;
-        }
-        currentIdx++;
-    }
-    printf("4- %d\n", clock()-begin_t);
-
+    printf("4- %d %d\n", clock()-begin_t, CasesTmp.size());
 
     //Remove the too small ones (noise)
     for( int i = 0; i < CasesTmp.size(); i++ )
@@ -250,7 +278,7 @@ void Page::DetectCases()
             i--;
         }
     }
-    printf("5- %d\n", clock()-begin_t);
+    printf("5- %d %d\n", clock()-begin_t, CasesTmp.size());
 
     //Merge cases between 0.01 and 0.04 to their closest one
     for( int i = 0; i < CasesTmp.size(); i++ )
@@ -281,9 +309,19 @@ void Page::DetectCases()
             }
         }
     }
-    printf("6- %d\n", clock()-begin_t);
+    printf("6- %d %d\n", clock()-begin_t, CasesTmp.size());
+
+    //Sort the cases by size and merge them if overlaping: done again because sizes and overlapping could have changed
+    SortAndMerge(&CasesTmp, 0);
+
+    printf("7- %d %d\n", clock()-begin_t, CasesTmp.size());
 
     //Check if parts of the page not covered !!!!!!!!!!!!!!!
+        //compute the "within area": the extreme total area covered by the detected cases
+
+        //sum the cases areas
+
+        //compare the two values: if two large difference, it means that there are some internal part not covered by a case
     //et dans ce cas eraser le CasesTmp et donc faire un decoupage en strip
 
     //Check if we have more than one case
@@ -344,7 +382,7 @@ void Page::DetectCases()
                 Cases.push_back(*i);
             }
 
-        printf("7- %d\n", clock()-begin_t);
+        printf("8- %d\n", clock()-begin_t);
 
         //Save the nb of cases
         NbCases=Cases.size();
@@ -352,13 +390,13 @@ void Page::DetectCases()
         //Free some memory
         CasesTree.empty();
     }
+    //If less than 2 cases (or the detection has failed)
     else
     {
-        //If less than 2 cases
-        //OU ALORS: on cre des cases de 1/3 ou 1/4, mais decalee de 10% de la page pour avoir une lecture progressive
-        for(int i=0; i<8; i++)
+        //Creation of cases of 40% of the page which are sliding down=> arbitrary strips to allow a continuous lecture
+        for(int i=0; i<13; i++)
         {
-            Cases.push_back(Rect(0, i*src.rows/10., src.cols, src.rows*.3-1));
+            Cases.push_back(Rect(0, i*src.rows/20., src.cols, src.rows*.4-1));
         }
         NbCases=Cases.size();
     }
@@ -366,7 +404,10 @@ void Page::DetectCases()
     //Release some memory
     CasesTmp.clear();
     src.release();
-    printf("8- %d\n", clock()-begin_t);
+    printf("9- %d\n", clock()-begin_t);
+
+    //Say the page is ready
+    Loaded=true;
 }
 
 
@@ -383,25 +424,30 @@ int Page::PreviousCase()
 
 int Page::SetActiveCase(int val)
 {
-    //Check if it's an existing case
-    if(val>=-1 && val<NbCases)
+    //Check if the page is ready to be displayed
+    if(Loaded)
     {
-        ActiveCase = val;
+        //Check if it's an existing case
+        if(val>=-1 && val<NbCases)
+        {
+            ActiveCase = val;
 
-        //Produce a new render
-        RenderCase();
+            //Produce a new render
+            RenderCase();
 
-        //Ok
-        return 0;
+            //Ok
+            return 0;
+        }
+
+        //No previous case
+        if(val<-1)
+            return -1;
+
+        //No next case
+        if(val>=NbCases)
+            return -2;
     }
-
-    //No previous case
-    if(val<-1)
-        return -1;
-
-    //No next case
-    if(val>=NbCases)
-        return -2;
+    return -3;
 }
 
 
@@ -410,18 +456,21 @@ Mat * Page::RenderCase()
     //Render the whole page
     if(ActiveCase==-1 || ReadingMode==PAGE)
     {
-        ImgRender=PageRenderCv;
-        //pour debug
+        //ImgRender=PageRenderCv;
+        ImgRender.release();
+        PageRenderCv.copyTo(ImgRender);
+        /*pour debug
         if(NbCases>0)
         {
-            rectangle(ImgRender, Cases[ActiveCase], cvScalar(0, 0, 255), 8);
-        }
+            rectangle(ImgRender, Cases[ActiveCase], cvScalar(0, 0, 0), 6);
+        }*/
     }
     //or the active case
     else
     {
-        ImgRender=PageRenderCv(Cases[ActiveCase]);
-        //rectangle(ImgRender, Cases[ActiveCase], cvScalar(0, 0, 255), 8);
+        //ImgRender=PageRenderCv(Cases[ActiveCase]);
+        ImgRender.release();
+        (PageRenderCv(Cases[ActiveCase])).copyTo(ImgRender);
     }
     return &ImgRender;
 }

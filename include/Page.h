@@ -47,6 +47,7 @@ class Page
         READINGMODE ReadingMode;
         bool PreviewPage;
         int ActiveCase;
+        bool Loaded;
         fz_context *FzCtx;
         fz_document *FzDoc;
         fz_page *FzPage;
