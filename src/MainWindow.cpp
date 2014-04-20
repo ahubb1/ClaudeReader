@@ -483,7 +483,6 @@ MainWindow::MainWindow()
 
          //TODO: PAGE PREVIEW REVERSED  !
          //TODO: tempo pour verifier qu'une nouvelle page/case a ete chargee
-         //(TODO: meilleur decoupage des pages par defaut: recherche lignes horizontales (si 4 trouvees, les utiliser, sinon decoupage a 10%))
          //TODO: Option background color (blanc ou noir)
          //TODO: Remember the page nb for each recent documents in preferences and the window size
          //TODO: FUITE MEMOIRE

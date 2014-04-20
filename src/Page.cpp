@@ -137,7 +137,7 @@ Page::Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, fz_conte
     Loaded=false;
     ReadingMode=rd_mode;
     PreviewPage=page_p;
-    if(ReadingMode!=PAGE && PreviewPage)
+    if(ReadingMode!=PAGE && !PreviewPage)
     {
         ActiveCase=0;
     }
