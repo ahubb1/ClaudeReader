@@ -15,7 +15,17 @@ Document::Document(char *filename)
     // Create a context to hold the exception stack and various caches.
 	FzCtx = fz_new_context(NULL, NULL, FZ_STORE_UNLIMITED);
 	// Open the PDF, XPS or CBZ document.
-	FzDoc = fz_open_document(FzCtx, Filename);
+	fz_try(FzCtx)
+	{
+	    FzDoc = fz_open_document(FzCtx, Filename);
+	}
+	fz_catch(FzCtx)
+	{
+	    FzDoc=NULL;
+	    NbPages = 0;
+	    return;
+	}
+
     // Retrieve the number of pages
 	NbPages = fz_count_pages(FzDoc);
 }
@@ -25,8 +35,10 @@ Document::~Document()
 {
     if(CurrentPage)
         delete CurrentPage;
-    fz_close_document(FzDoc);
-	fz_free_context(FzCtx);
+    if(FzDoc)
+        fz_close_document(FzDoc);
+    if(FzCtx)
+        fz_free_context(FzCtx);
 }
 
 int Document::LoadPage()

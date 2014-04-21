@@ -11,13 +11,20 @@ void StatusBarUpdate(void * param)
 
       //Get number of pages... blabla
       char text[1024];
-      if(mw->Doc->GetReadingMode()==CASE)
+      if(mw->Doc)
       {
-            sprintf(text, "Page %d/%d (Case %d/%d)", mw->Doc->GetCurrentPageNb(), mw->Doc->GetNumberOfPages(), mw->Doc->CurrentPage->GetActiveCase()+1, mw->Doc->CurrentPage->GetNbCases());
+          if(mw->Doc->GetReadingMode()==CASE)
+          {
+                sprintf(text, "Page %d/%d (Case %d/%d)", mw->Doc->GetCurrentPageNb(), mw->Doc->GetNumberOfPages(), mw->Doc->CurrentPage->GetActiveCase()+1, mw->Doc->CurrentPage->GetNbCases());
+          }
+          else
+          {
+                sprintf(text, "Page %d/%d", mw->Doc->GetCurrentPageNb(), mw->Doc->GetNumberOfPages());
+          }
       }
       else
       {
-            sprintf(text, "Page %d/%d", mw->Doc->GetCurrentPageNb(), mw->Doc->GetNumberOfPages());
+          sprintf(text, "\0");
       }
       mw->StatusBar->copy_label(text);
       mw->StatusBar->redraw();
@@ -50,7 +57,7 @@ void Timer_cb(void* param)
     MainWindow *mw=(MainWindow*)param;
 
     //If some movement has been detected
-    if(mouseWheel!=0)
+    if(mw->Doc && mouseWheel!=0)
     {
         //if positive, go to next case
         if(mouseWheel>0)
@@ -531,42 +538,74 @@ void MainWindow::Init(char *filename)
         //Save the filename
         sprintf(Filename, "%s", filename);
 
-        //Save pref and delete old doc if one
+        //If an active document was open, save the preferences
         if(Doc)
         {
             //Save preferences (especially add the doc to the recent docs)
             Pref->Save(Doc);
-            //Delete it
-            delete Doc;
         }
 
         //Create a document with the new filename
-        Doc=new Document(Filename);
+        Document *new_doc=new Document(Filename);
+        //Check if the document has been opened
+        if(new_doc->GetNumberOfPages()>0)
+        {
+            //Delete old doc if one
+            if(Doc)
+            {
+                //Delete it
+                delete Doc;
+            }
+            //use the new one
+            Doc=new_doc;
 
-        //Set to first page
-        Doc->LoadPage(1);
+            //Set to first page
+            Doc->LoadPage(1);
 
-        //Apply the preferences to the document and the window widgets
-        Pref->Load("preferences");
-        Pref->Apply(Doc);
-        UpdateWidgets((void*)this);
+            //Apply the preferences to the document and the window widgets
+            Pref->Load("preferences");
+            Pref->Apply(Doc);
+            UpdateWidgets((void*)this);
 
-        //Update the widget values according to these preferences
-        //TODO
+            //Update the widget values according to these preferences
+            //TODO
 
-        //Get the image to draw
-        Display->SetImage(Doc->Render());
+            //Get the image to draw
+            Display->SetImage(Doc->Render());
 
-        //Change the window title
-        char title[1060];
-        sprintf(title, "BDReader - %s", Filename);
-        window->label(title);
+            //Change the window title
+            char title[1060];
+            sprintf(title, "BDReader - %s", Filename);
+            window->label(title);
 
-        //Update status bar
-        StatusBarUpdate(this);
+            //Update status bar
+            StatusBarUpdate(this);
 
-        //Activate menus
-        ActivateMenus(this);
+            //Activate menus
+            ActivateMenus(this);
+        }
+        //if the document couldn't be openned
+        else
+        {
+            //Say it to the user
+            fl_alert("Wrong file format !");
+
+            //Check if we have an active document
+            if(!Doc)
+            {
+                //Update the window accordingly
+                //menus
+                ActivateNavigationMenus(this, false);
+                //display
+                Display->SetImage(NULL);
+                //window title
+                char title[1060];
+                sprintf(title, "BDReader");
+                window->label(title);
+                //and status bar
+                StatusBarUpdate(this);
+            }
+        }
     }
 
     //Show the main window
