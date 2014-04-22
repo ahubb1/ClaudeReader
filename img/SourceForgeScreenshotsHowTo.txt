@@ -1,0 +1,1 @@
+In order to be properly cropped on the summary page, the screenshots should all have the same ratio w/h: 1.33.
