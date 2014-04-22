@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
-	<ActiveTarget name="Win32" />
+	<ActiveTarget name="Debug" />
 	<File name="include/Document.h" open="1" top="0" tabpos="4">
-		<Cursor position="761" topLine="13" />
+		<Cursor position="605" topLine="13" />
 	</File>
 	<File name="include/Fl_OpenCV.h" open="0" top="0" tabpos="7">
 		<Cursor position="1045" topLine="51" />
@@ -10,25 +10,25 @@
 	<File name="include/MainWindow.h" open="1" top="0" tabpos="2">
 		<Cursor position="418" topLine="11" />
 	</File>
-	<File name="include/Page.h" open="1" top="0" tabpos="7">
-		<Cursor position="33" topLine="6" />
+	<File name="include/Page.h" open="1" top="0" tabpos="6">
+		<Cursor position="33" topLine="12" />
 	</File>
-	<File name="include/Preferences.h" open="1" top="0" tabpos="8">
+	<File name="include/Preferences.h" open="0" top="0" tabpos="8">
 		<Cursor position="179" topLine="0" />
 	</File>
 	<File name="src/Document.cpp" open="1" top="0" tabpos="5">
-		<Cursor position="23" topLine="0" />
+		<Cursor position="522" topLine="16" />
 	</File>
 	<File name="src/Fl_OpenCV.cxx" open="0" top="0" tabpos="8">
-		<Cursor position="778" topLine="35" />
+		<Cursor position="631" topLine="35" />
 	</File>
-	<File name="src/MainWindow.cpp" open="1" top="1" tabpos="3">
-		<Cursor position="11965" topLine="418" />
+	<File name="src/MainWindow.cpp" open="1" top="0" tabpos="3">
+		<Cursor position="2326" topLine="83" />
 	</File>
-	<File name="src/Page.cpp" open="1" top="0" tabpos="6">
-		<Cursor position="7060" topLine="15" />
+	<File name="src/Page.cpp" open="1" top="1" tabpos="7">
+		<Cursor position="4755" topLine="141" />
 	</File>
-	<File name="src/Preferences.cpp" open="1" top="0" tabpos="9">
+	<File name="src/Preferences.cpp" open="0" top="0" tabpos="9">
 		<Cursor position="132" topLine="10" />
 	</File>
 	<File name="src/main.cpp" open="1" top="0" tabpos="1">

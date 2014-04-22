@@ -52,6 +52,7 @@
 					<Add library="fltk_jpeg" />
 					<Add library="fltk_images" />
 					<Add library="fltk" />
+					<Add directory="lib/win32" />
 				</Linker>
 			</Target>
 		</Build>
@@ -72,7 +73,7 @@
 			<Add library="fltk" />
 			<Add library="Xft" />
 			<Add library="Xinerama" />
-			<Add directory="lib" />
+			<Add directory="lib/unix" />
 		</Linker>
 		<Unit filename="include/Document.h" />
 		<Unit filename="include/Fl_OpenCV.h" />
