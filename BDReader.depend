@@ -1,8 +1,8 @@
 # depslib dependency file v1.0
-1398223753 source:/home/vincent/Perso/BDReader/BDReader/src/MainWindow.cpp
+1398246272 source:/home/vincent/Perso/BDReader/BDReader/src/MainWindow.cpp
 	"MainWindow.h"
 
-1398156190 /home/vincent/Perso/BDReader/BDReader/include/MainWindow.h
+1398228515 /home/vincent/Perso/BDReader/BDReader/include/MainWindow.h
 	<FL/Fl.H>
 	<FL/Fl_Window.H>
 	<FL/Fl_Menu_Bar.H>
@@ -22,12 +22,12 @@
 	"Document.h"
 	"icon32.xbm"
 
-1398146769 source:/home/vincent/Perso/BDReader/BDReader/src/main.cpp
+1398228506 source:/home/vincent/Perso/BDReader/BDReader/src/main.cpp
 	<stdio.h>
 	<stdlib.h>
 	"MainWindow.h"
 
-1398220935 /home/vincent/Perso/BDReader/BDReader/include/Fl_OpenCV.h
+1398227716 /home/vincent/Perso/BDReader/BDReader/include/Fl_OpenCV.h
 	<FL/Fl_Widget.H>
 	<FL/fl_ask.H>
 	<opencv2/opencv.hpp>
@@ -37,10 +37,10 @@
 	<FL/fl_draw.H>
 	"Fl_OpenCV.h"
 
-1398223690 source:/home/vincent/Perso/BDReader/BDReader/src/Document.cpp
+1398248366 source:/home/vincent/Perso/BDReader/BDReader/src/Document.cpp
 	"Document.h"
 
-1397977307 /home/vincent/Perso/BDReader/BDReader/include/Document.h
+1398248377 /home/vincent/Perso/BDReader/BDReader/include/Document.h
 	<Page.h>
 
 1397908225 /home/vincent/Perso/BDReader/BDReader/include/mupdf/fitz.h
@@ -331,13 +331,13 @@
 	"mupdf/fitz/device.h"
 	"mupdf/fitz/output.h"
 
-1397973396 /home/vincent/Perso/BDReader/BDReader/include/Page.h
+1398233413 /home/vincent/Perso/BDReader/BDReader/include/Page.h
 	<FL/Fl.H>
 	<mupdf/fitz.h>
 	<stlplus3/ntree.hpp>
 	<opencv2/opencv.hpp>
 
-1398219604 source:/home/vincent/Perso/BDReader/BDReader/src/Page.cpp
+1398235229 source:/home/vincent/Perso/BDReader/BDReader/src/Page.cpp
 	"Page.h"
 
 1389021098 /home/vincent/Perso/BDReader/BDReader/include/ntree.tpp
@@ -376,10 +376,10 @@
 	<vector>
 	<algorithm>
 
-1397982922 /home/vincent/Perso/BDReader/BDReader/include/Preferences.h
+1398243609 /home/vincent/Perso/BDReader/BDReader/include/Preferences.h
 	"Document.h"
 
-1397984735 source:/home/vincent/Perso/BDReader/BDReader/src/Preferences.cpp
+1398244119 source:/home/vincent/Perso/BDReader/BDReader/src/Preferences.cpp
 	"Preferences.h"
 
 1397837284 /home/vincent/Perso/BDReader/BDReader/icon32.xbm

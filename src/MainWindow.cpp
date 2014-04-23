@@ -35,7 +35,7 @@ void StatusBarUpdate(void * param)
       {
           if(mw->Doc->GetReadingMode()==CASE)
           {
-                sprintf(text, "Page %d/%d (Case %d/%d)", mw->Doc->GetCurrentPageNb(), mw->Doc->GetNumberOfPages(), mw->Doc->CurrentPage->GetActiveCase()+1, mw->Doc->CurrentPage->GetNbCases());
+                sprintf(text, "Page %d/%d (Case %d/%d)", mw->Doc->GetCurrentPageNb(), mw->Doc->GetNumberOfPages(), mw->Doc->currentPage->GetActiveCase()+1, mw->Doc->currentPage->GetNbCases());
           }
           else
           {
@@ -259,8 +259,12 @@ void PreviousPage_cb(Fl_Widget* widget, void * param)
         {
             fl_alert("Unable to access the document. Try to reopen it.");
         }
+        //Update everything
         mw->Display->SetImage(mw->Doc->Render());
         StatusBarUpdate(mw);
+        Fl::check();
+        //and then preload the surrounding pages
+        mw->Doc->PreloadPages();
     }
 }
 //! Go to previous page (through Doc)
@@ -280,8 +284,12 @@ void NextPage_cb(Fl_Widget* widget, void * param)
         {
             fl_alert("Unable to access the document. Try to reopen it.");
         }
+        //Update everything
         mw->Display->SetImage(mw->Doc->Render());
         StatusBarUpdate(mw);
+        Fl::check();
+        //and then preload the surrounding pages
+        mw->Doc->PreloadPages();
     }
 }
 //! Go to next case (through Doc)
@@ -289,18 +297,32 @@ void PreviousCase_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
 
-    mw->Doc->PreviousCase();
+    int ret = mw->Doc->PreviousCase();
     StatusBarUpdate(mw);
     mw->Display->SetImage(mw->Doc->Render());
+
+    //If a new page has been loaded, preload
+    if(ret<0)
+    {
+        Fl::check();
+        mw->Doc->PreloadPages();
+    }
 }
 //! Go to previous case (through Doc)
 void NextCase_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
 
-    mw->Doc->NextCase();
+    int ret = mw->Doc->NextCase();
     StatusBarUpdate(mw);
     mw->Display->SetImage(mw->Doc->Render());
+
+    //If a new page has been loaded, preload
+    if(ret<0)
+    {
+        Fl::check();
+        mw->Doc->PreloadPages();
+    }
 }
 
 
@@ -335,6 +357,7 @@ void ActivateNavigationMenus(void *param, bool val)
     }
 }
 
+//! Activate all the menu items
 void ActivateMenus(void * param)
 {
       MainWindow *mw=(MainWindow*)param;
@@ -448,7 +471,7 @@ void Window_cb(Fl_Widget* widget, void * param)
 
 
 
-//! Constructor: create the widgets and build the window and call the Init() with NULL parameters (no document)
+//! Constructor: create the widgets, build the window and call the Init() with NULL parameters (no document)
 MainWindow::MainWindow()
 {
     //Load user preferences
@@ -529,7 +552,7 @@ MainWindow::MainWindow()
 
          //TODO: Option background color (blanc ou noir)
          //TODO: Remember the page nb for each recent documents in preferences and the window size
-         //TODO: Meilleur gestion chgt des pages...
+         //TODO: Improve the change of view modes (to previous and next pages)
          //TODO: Gerer les bds en suites d'images (folders) (et cbr ?)
          //TODO: Version windows avec installateur
          //TODO: Deb package (donc Makefile) pour Linux
@@ -577,23 +600,21 @@ void MainWindow::Init(char *filename)
         {
             //Delete old doc if one
             if(Doc)
-            {
-                //Delete it
                 delete Doc;
-            }
             //use the new one
             Doc=new_doc;
 
-            //Set to first page
+            //Load the first page
             Doc->LoadPage(1);
 
             //Apply the preferences to the document and the window widgets
             Pref->Load("preferences");
-            Pref->Apply(Doc);
+            if(Pref->Apply(Doc)==0)
+            {
+                //If no page has been loaded through the preference, preload the surrounding pages (of the first one)
+                Doc->PreloadPages();
+            }
             UpdateWidgets((void*)this);
-
-            //Update the widget values according to these preferences
-            //TODO
 
             //Get the image to draw
             Display->SetImage(Doc->Render());

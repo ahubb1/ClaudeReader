@@ -158,7 +158,9 @@ void SortAndMerge(vector<Rect> *CasesTmp, int counter)
 
 
 
-
+//! Constructor of the page.
+//!Initialize, load a page, render it and call the cases detection if needed (not a
+//!first or last page).
 Page::Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, fz_context *ctx, fz_document *doc)
 {
     //Init
@@ -179,6 +181,7 @@ Page::Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, fz_conte
     FzCtx=ctx;
     FzDoc=doc;
     begin_t=clock();
+    printf("%d - Created\n", PageNb);
 
 
     //Load it (numbering from 0, not 1)
@@ -189,26 +192,22 @@ Page::Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, fz_conte
     fz_matrix transform;
     fz_rotate(&transform, rotation);
     fz_pre_scale(&transform, zoom / 100.0f, zoom / 100.0f);
-    printf("-5- %d\n", clock()-begin_t);
 
     //Page bound
     fz_rect bounds;
     fz_bound_page(FzDoc, FzPage, &bounds);
     fz_transform_rect(&bounds, &transform);
-    printf("-4- %d\n", clock()-begin_t);
 
     //Prepare a pixmap
     fz_irect bbox;
     fz_round_rect(&bbox, &bounds);
     fz_pixmap *pix = fz_new_pixmap_with_bbox(FzCtx, fz_device_bgr(FzCtx), &bbox);
     fz_clear_pixmap_with_value(FzCtx, pix, 0xff);
-    printf("-3- %d\n", clock()-begin_t);
 
     fz_device *dev = fz_new_draw_device(FzCtx, pix);
     fz_run_page_contents(FzDoc, FzPage, dev, &transform, NULL);
     fz_free_device(dev);
     fz_free_page(FzDoc, FzPage);
-    printf("-2- %d\n", clock()-begin_t);
 
     //Convert to opencv
     PageRenderCv=Mat::zeros(fz_pixmap_height(FzCtx, pix), fz_pixmap_width(FzCtx, pix), CV_8UC4);
@@ -216,7 +215,6 @@ Page::Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, fz_conte
 
     //Free the pixmap
     fz_drop_pixmap(FzCtx, pix);
-    printf("-1- %d %d\n", clock()-begin_t);
 
     //If we are not on special pages (first or last one)
     if(PageNb>1 && (NbPages-PageNb)>0)
@@ -229,22 +227,26 @@ Page::Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, fz_conte
     {
         ActiveCase=-1;
         Loaded=true;
+        printf("%d - Loaded\n", PageNb);
     }
 }
 
+//! Destructor
 Page::~Page()
 {
     if(Cases.size()>0)
         Cases.clear();
     ImgRender.release();
     PageRenderCv.release();
+    printf("%d - Deleted\n", PageNb);
 }
 
 
-
+//! Detect and order the cases on the page.
+//!A real detection is done if in CASE or PAGE mode, or a strip cutting is done if
+//!in STRIP mode. If the cases detection failed, do a strip cutting.
 void Page::DetectCases()
 {
-    printf("0- %d\n", clock()-begin_t);
     Mat src;
 
     cvtColor(PageRenderCv, src, CV_BGR2GRAY);
@@ -259,8 +261,6 @@ void Page::DetectCases()
         Mat conv=Mat::ones(5,5,CV_8UC1);
         dilate(src, src, conv);
         conv.release();
-        printf("1- %d\n", clock()-begin_t);
-        //cvtColor(src, PageRenderCv, CV_GRAY2BGR);
 
 
         /*Test strip
@@ -284,9 +284,7 @@ void Page::DetectCases()
         //Contours detection
         vector<vector <Point> > contours;
         vector<Vec4i> hierarchy;
-
         findContours( src, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE );
-        printf("2- %d\n", clock()-begin_t);
 
         //Remove according to ratio perimeter/area (keep only rectangles) ???
 
@@ -297,12 +295,10 @@ void Page::DetectCases()
            CasesTmp.push_back(boundingRect( contours[i] ));
            //rectangle(PageRenderCv, CasesTmp[i], cvScalar(0, 255, 0), 8);
         }
-        printf("3- %d %d\n", clock()-begin_t, CasesTmp.size());
 
         //Sort the cases by size and merge them if overlaping
         SortAndMerge(&CasesTmp, 0);
 
-        printf("4- %d %d\n", clock()-begin_t, CasesTmp.size());
 
         //Remove the too small ones (noise)
         for(unsigned int i = 0; i < CasesTmp.size(); i++ )
@@ -313,7 +309,6 @@ void Page::DetectCases()
                 i--;
             }
         }
-        printf("5- %d %d\n", clock()-begin_t, CasesTmp.size());
 
         //Merge cases between 0.01 and 0.04 to their closest one
         for(unsigned int i = 0; i < CasesTmp.size(); i++ )
@@ -344,12 +339,10 @@ void Page::DetectCases()
                 }
             }
         }
-        printf("6- %d %d\n", clock()-begin_t, CasesTmp.size());
 
         //Sort the cases by size and merge them if overlaping: done again because sizes and overlapping could have changed
         SortAndMerge(&CasesTmp, 0);
 
-        printf("7- %d %d\n", clock()-begin_t, CasesTmp.size());
 
         //Check if parts of the page not covered !!!!!!!!!!!!!!!
             //compute the "within area": the extreme total area covered by the detected cases
@@ -417,8 +410,6 @@ void Page::DetectCases()
                     Cases.push_back(*i);
                 }
 
-            printf("8- %d\n", clock()-begin_t);
-
             //Save the nb of cases
             NbCases=Cases.size();
 
@@ -452,24 +443,33 @@ void Page::DetectCases()
 
     //Release some memory
     src.release();
-    printf("9- %d\n", clock()-begin_t);
 
     //Say the page is ready
     Loaded=true;
+    printf("%d - Loaded\n", PageNb);
 }
 
-
+//! Call SetActiveCase with ActiveCase+1 in parameter
+//! \return the return value of SetActiveCase
 int Page::NextCase()
 {
     return SetActiveCase(ActiveCase+1);
 }
 
+//! Call SetActiveCase with ActiveCase-1 in parameter
+//! \return the return value of SetActiveCase
 int Page::PreviousCase()
 {
     return SetActiveCase(ActiveCase-1);
 }
 
 
+//! Set a case as active and render it
+//! \param val: the case number (-1 for the whole page)
+//! \return 0 if the page is loaded and the case is valid (the case has been rendered)
+//! \return -1 if val if less than -1
+//! \return -2 if val if greater than the number of cases (int NbCases)
+//! \return -3 if the page is not loaded (no render done)
 int Page::SetActiveCase(int val)
 {
     //Check if the page is ready to be displayed
@@ -498,7 +498,9 @@ int Page::SetActiveCase(int val)
     return -3;
 }
 
-
+//! Update the case/page rendering according to ActiveCase value.
+//!The ImgRender cv::Mat is filled with the case image or the whole page if ReadingMode==PAGE.
+//! \return A pointer on the valid ImgRender cv::Mat
 Mat * Page::RenderCase()
 {
     //Render the whole page

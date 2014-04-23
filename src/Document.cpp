@@ -31,50 +31,78 @@ Document::Document(char *filename)
     sprintf(Filename, "%s", filename);
     ActivePage=1;
     ReadingMode=PAGE;
-    CurrentPage=NULL;
+    currentPage=NULL;
+    nextPage=NULL;
+    previousPage=NULL;
     ImgRender=NULL;
     FzCtx=NULL;
     FzDoc=NULL;
     PagePreview=true;
 
     //Init and open the pdf file
-    // Create a context to hold the exception stack and various caches.
-	FzCtx = fz_new_context(NULL, NULL, FZ_STORE_UNLIMITED);
-	// Open the PDF, XPS or CBZ document.
-	fz_try(FzCtx)
-	{
-	    FzDoc = fz_open_document(FzCtx, Filename);
-	}
-	fz_catch(FzCtx)
-	{
-	    FzDoc=NULL;
-	    NbPages = 0;
-	    return;
-	}
+    OpenPdf();
 
     // Retrieve the number of pages
 	NbPages = fz_count_pages(FzDoc);
 
-    //Close the doc and free the context
-	if(FzDoc)
-        fz_close_document(FzDoc);
-    if(FzCtx)
-        fz_free_context(FzCtx);
+    //Close the pdf, free the context..
+    ClosePdf();
 }
-
 
 //! Main destructor.
 //!Free the Pages objects created if some and release free the mudpf context
 //!and document if some still open.
 Document::~Document()
 {
-    if(CurrentPage)
-        delete CurrentPage;
+    if(currentPage)
+        delete currentPage;
+    if(nextPage)
+        delete nextPage;
+    if(previousPage)
+        delete previousPage;
+    /*if(FzDoc)
+        fz_close_document(FzDoc);
+    if(FzCtx)
+        fz_free_context(FzCtx);*/
+}
+
+
+
+//! Try to open the pdf file and create the FzCtx and FzDoc
+//! \return 0 if everything ok
+//! \return - if unable to open the file
+int Document::OpenPdf()
+{
+    // Create a context to hold the exception stack and various caches.
+    FzCtx = fz_new_context(NULL, NULL, FZ_STORE_UNLIMITED);
+    // Open the PDF, XPS or CBZ document.
+    fz_try(FzCtx)
+    {
+        FzDoc = fz_open_document(FzCtx, Filename);
+    }
+    fz_catch(FzCtx)
+    {
+        fz_free_context(FzCtx);
+        FzCtx=NULL;
+        FzDoc=NULL;
+        NbPages = 0;
+        return -1;
+    }
+
+    return 0;
+}
+
+//! Close the doc and free the context
+void Document::ClosePdf()
+{
+    //Close the doc and free the context
     if(FzDoc)
         fz_close_document(FzDoc);
     if(FzCtx)
         fz_free_context(FzCtx);
 }
+
+
 
 //! Load the page designated by the ActivePage variable.
 //!Basically call make a call to the LoadPage(int p) method with the ActivePage value
@@ -85,50 +113,103 @@ int Document::LoadPage()
     return LoadPage(ActivePage);
 }
 
-
 //! Load the page p.
 //!The method will first re-create a mupdf context and try to open the document. Then
 //!create a Page object with the given page number.
-//! \return 0 if the page is succesfully created.
-//! \return -1 if p is less than 1 (no Page has been created).
-//! \return -2 if p is greater than the number of pages of the document (no Page has been created).
-//! \return -3 if the document couldn't be opened (NbPages is then 0, no page has been created).
+//! \return 0 if the page is succesfully created
+//! \return -1 if p is less than 1 (no Page has been created)
+//! \return -2 if p is greater than the number of pages of the document (no Page has been created)
+//! \return -3 if the document couldn't be opened (NbPages is then 0, no page has been created)
 int Document::LoadPage(int p)
 {
     if(p>0 && p<=NbPages)
     {
-        // Create a context to hold the exception stack and various caches.
-        FzCtx = fz_new_context(NULL, NULL, FZ_STORE_UNLIMITED);
-        // Open the PDF, XPS or CBZ document.
-        fz_try(FzCtx)
+        //Open the pdf and create the context...
+        if(OpenPdf()<0)
         {
-            FzDoc = fz_open_document(FzCtx, Filename);
-        }
-        fz_catch(FzCtx)
-        {
-            fz_free_context(FzCtx);
-            FzCtx=NULL;
-            FzDoc=NULL;
-            NbPages = 0;
             return -3;
         }
-        //Change the current page
-        if(CurrentPage)
-            delete CurrentPage;
 
+        //Set the new active page number
         ActivePage=p;
-        CurrentPage=new Page(ActivePage, NbPages, ReadingMode, PagePreview, FzCtx, FzDoc);
-        ImgRender=CurrentPage->RenderCase();
 
-        //Close the doc and free the context
-        if(FzDoc)
-            fz_close_document(FzDoc);
-        if(FzCtx)
-            fz_free_context(FzCtx);
+        //If the page asked is already loaded as the NextPage
+        if(nextPage && ActivePage==nextPage->GetPageNb())
+        {
+            //If there is a Current page created
+            Page* tmp=NULL;
+            if(currentPage)
+                tmp=currentPage;
 
+            //If there is a next page already created
+            if(nextPage)
+                currentPage=nextPage; //Use it as the new current page
+            else
+                currentPage=new Page(ActivePage, NbPages, ReadingMode, PagePreview, FzCtx, FzDoc); // Otherwise create it
+
+            //Delete the old previous page if one
+            if(previousPage)
+                delete previousPage;
+            //Update the previous page: it's now the old current page...
+            previousPage=tmp;
+
+            //If the new current page is not ready to be displayed, just wait
+            while(!currentPage->IsLoaded())
+            {
+                Fl::wait(1);
+            }
+
+        }
+        else
+        {
+            //If the page asked is already loaded as the PreviousPage
+            if(previousPage && ActivePage==previousPage->GetPageNb())
+            {
+                //If there is a Current page created
+                Page* tmp=NULL;
+                if(currentPage)
+                    tmp=currentPage;
+
+                //If there is a previous page already created
+                if(previousPage)
+                    currentPage=previousPage; //Use it as the new current page
+                else
+                    currentPage=new Page(ActivePage, NbPages, ReadingMode, PagePreview, FzCtx, FzDoc); // Otherwise create it
+
+                //Delete the old next page if one
+                if(nextPage)
+                    delete nextPage;
+                //Update the next page: it's now the old current page...
+                nextPage=tmp;
+
+                //If the new current page is not ready to be displayed, just wait
+                while(!currentPage->IsLoaded())
+                {
+                    Fl::wait(1);
+                }
+
+            }
+            //If it's a completely new page
+            else
+            {
+                //Change the current page
+                if(currentPage)
+                    delete currentPage;
+
+                //Create the new page
+                currentPage=new Page(ActivePage, NbPages, ReadingMode, PagePreview, FzCtx, FzDoc);
+            }
+        }
+
+        //Anyway get the new rendering from the new current page
+        ImgRender=currentPage->RenderCase();
+
+        //Close the pdf, free the context..
+        ClosePdf();
 
         return 0;
     }
+
 
     if(p<1)
        return -1;
@@ -139,23 +220,82 @@ int Document::LoadPage(int p)
     return -4;
 }
 
-
-void Document::NextCase()
+//! Preload the surrounding pages (previous and next one if they exists).
+//!The method creates the previousPage and nextPage if it's needed: if they are not
+//!already created and if they exist in the pdf document. This method is intended to
+//!be called after the LoadPage one.
+void Document::PreloadPages()
 {
-    if(CurrentPage->NextCase()<0)
+    //Open the pdf and create the context...
+    if(OpenPdf()<0)
+    {
+        return;
+    }
+
+    //If next page is not already the one loaded (or there is currently no next page)
+    if( (!nextPage) || (nextPage && nextPage->GetPageNb()!=(ActivePage+1)) )
+    {
+        //and if this page exists in the pdf
+        if( (ActivePage+1)<=NbPages )
+        {
+            //Load the new next page
+            nextPage=new Page(ActivePage+1, NbPages, ReadingMode, PagePreview, FzCtx, FzDoc);
+        }
+        else
+        {
+            //otherwise the page doesn't exist
+            nextPage=NULL;
+        }
+    }
+
+    //If previous page is not already the one loaded (or there is currently no previous page)
+    if( (!previousPage) || (previousPage && previousPage->GetPageNb()!=(ActivePage-1)) )
+    {
+        //and if this page exists in the pdf
+        if( (ActivePage-1)>0 )
+        {
+            //Load the new previous page
+            previousPage=new Page(ActivePage-1, NbPages, ReadingMode, PagePreview, FzCtx, FzDoc);
+        }
+        else
+        {
+            //otherwise the page doesn't exist
+            previousPage=NULL;
+        }
+    }
+
+    //Close the pdf, free the context..
+    ClosePdf();
+}
+
+
+
+//! Go to the next case of the page, or to next page if no more case
+//! \return 0 if a next case exists
+//! \return -1 otherwise (a new page has been loaded)
+int Document::NextCase()
+{
+    if(currentPage->NextCase()<0)
     {
         NextPage();
         LoadPage();
+        return -1;
     }
+    return 0;
 }
 
-void Document::PreviousCase()
+//! Go to the previous case of the page, or to previous page if no more case
+//! \return 0 if a previous case exists
+//! \return -1 otherwise (a new page has been loaded)
+int Document::PreviousCase()
 {
-    if(CurrentPage->PreviousCase()<0)
+    if(currentPage->PreviousCase()<0)
     {
         PreviousPage();
         LoadPage();
+        return -1;
     }
+    return 0;
 }
 
 //! Increment the active page by one, if possible (in the range 0 NbPages)

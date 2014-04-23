@@ -39,7 +39,7 @@ class Preferences
         ~Preferences();
 
         int Load(const char prefFile[255]);
-        void Apply(Document *doc);
+        int Apply(Document *doc);
         void Save(Document *doc);
 
 

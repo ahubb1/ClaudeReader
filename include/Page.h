@@ -63,6 +63,7 @@ class Page
         int SetActiveCase(int val);
         READINGMODE GetReadingMode() {return ReadingMode;}
         void SetReadingMode(READINGMODE val) {ReadingMode=val;}
+        bool IsLoaded() {return Loaded;}
 
 
     protected:

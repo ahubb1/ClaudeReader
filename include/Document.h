@@ -41,23 +41,30 @@ class Document
         Document(char *filename);
         ~Document();
 
+        int OpenPdf();
+        void ClosePdf();
+
         int LoadPage();
         int LoadPage(int p);
-        void NextCase();
-        void PreviousCase();
+        void PreloadPages();
+
+        int NextCase();
+        int PreviousCase();
         int NextPage();
         int PreviousPage();
-        Mat *Render() {return ImgRender=CurrentPage->RenderCase();}
+
+        Mat *Render() {return ImgRender=currentPage->RenderCase();}
 
         char *GetFilename() {return Filename;}
-        void SetReadingMode(READINGMODE val) {ReadingMode=val; CurrentPage->SetReadingMode(ReadingMode);}
+        void SetReadingMode(READINGMODE val) {ReadingMode=val; currentPage->SetReadingMode(ReadingMode);}
+        //TODO UPDATE ALL PAGES: PREVIOUS AND NEXT
         READINGMODE GetReadingMode() {return ReadingMode;}
         int GetNumberOfPages() {return NbPages;}
         int GetCurrentPageNb() {return ActivePage;}
         void SetPagePreview(bool val) {PagePreview=val;}
         bool IsPagePreview() {return PagePreview;}
 
-        Page *CurrentPage;
+        Page *currentPage, *nextPage, *previousPage;
 
 
     private:

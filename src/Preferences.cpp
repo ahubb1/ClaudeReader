@@ -20,11 +20,13 @@
 //---------------------------------------------------------------------------
 #include "Preferences.h"
 
+//! Constructor (nothing).
 Preferences::Preferences()
 {
     NbRecentDocs=0;
 }
 
+//! Destructor (nothing).
 Preferences::~Preferences()
 {
     //dtor
@@ -79,21 +81,29 @@ int Preferences::Load(const char prefFilename[255])
 }
 
 //! Apply the loaded parameters to the document
-void Preferences::Apply(Document *doc)
+//! \return 1 if a page has been loaded
+//! \return 0 otherwise
+int Preferences::Apply(Document *doc)
 {
-    //The reading mode
-    doc->SetReadingMode(ReadingMode);
-
-    //The preview/not preview
-    doc->SetPagePreview(PagePreview);
+    int loaded=0;
 
     //Check if it was previously open
     if(strcmp(LastDoc, doc->GetFilename())==0)
     {
         //if yes, load the last page
         doc->LoadPage(LastDocPageNb);
+        //and preload
+        doc->PreloadPages();
+        loaded=1;
     }
 
+    //The reading mode
+    doc->SetReadingMode(ReadingMode);
+
+    //The preview/not preview
+    doc->SetPagePreview(PagePreview);
+
+    return loaded;
 }
 
 //! Save the current preferences to the preference file
