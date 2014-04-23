@@ -73,7 +73,7 @@ public:
   int w(){return _w;};
   int h(){return _h;};
 
-  Mat *image;
+  Mat *image, fimage;
   Fl_RGB_Image *FlImg;
 };
 

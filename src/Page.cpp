@@ -188,7 +188,7 @@ Page::Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, fz_conte
 
     //Free the pixmap
     fz_drop_pixmap(FzCtx, pix);
-    printf("-1- %d\n", clock()-begin_t);
+    printf("-1- %d %d\n", clock()-begin_t);
 
     //If we are not on special pages (first or last one)
     if(PageNb>1 && (NbPages-PageNb)>0)

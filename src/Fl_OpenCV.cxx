@@ -14,21 +14,7 @@ void Fl_OpenCV::draw(int xx, int yy, int ww, int hh)
     if(FlImg->w()<=0 || FlImg->h()<=0)
         return;
 
-    printf("%d %d %d %d %d %d %d\n", FlImg->w(), FlImg->h(), ww, hh, FlImg->d(), sizeof(*FlImg->data()), sizeof(uchar));
-    #ifndef WINDOWS
     FlImg->draw(xx, yy);
-    #endif
-    #ifdef WINDOWS
-    FlImg->draw(xx, yy, ww, hh);
-    /*fl_push_clip(xx, yy, ww, hh);
-    uchar *test=new uchar[FlImg->w()*FlImg->h()*FlImg->d()];
-    //fl_rectf(xx, yy, FlImg->w(), FlImg->h(), 255, 0, 0);
-    test=reinterpret_cast<uchar*>(const_cast<char**>(const_cast<char* const*>(FlImg->data())));
-
-    fl_draw_image((char*)test, xx, yy, FlImg->w(), FlImg->h(), FlImg->d(),  0);
-    fl_pop_clip();
-    delete test;*/
-    #endif
 }
 
 
@@ -76,7 +62,8 @@ void Fl_OpenCV::SetImage(Mat *nimage)
 
 
     //Prepare the image to draw
-    Mat fimage = cv::Mat::zeros(h(), w(), image->type()); //The final image (the image to draw) size is the widget size
+    fimage.release();
+    fimage = cv::Mat::zeros(h(), w(), image->type()); //The final image (the image to draw) size is the widget size
     cv::resize((*image), fimage(Rect((int)((w()-cvFloor(image->cols/scale))/2.), (int)((h()-cvFloor(image->rows/scale))/2.), cvFloor(image->cols/scale), cvFloor(image->rows/scale))), Size(cvFloor(image->cols/scale), cvFloor(image->rows/scale)), 0, 0, INTER_CUBIC);
 
 
