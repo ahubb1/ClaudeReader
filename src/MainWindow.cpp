@@ -235,7 +235,10 @@ void PreviousPage_cb(Fl_Widget* widget, void * param)
     //If still the same page asked, load it, otherwise do nothing
     if(p==mw->Doc->GetCurrentPageNb())
     {
-        mw->Doc->LoadPage();
+        if(mw->Doc->LoadPage()==-3)
+        {
+            fl_alert("Unable to access the document. Try to reopen it.");
+        }
         mw->Display->SetImage(mw->Doc->Render());
         StatusBarUpdate(mw);
     }
@@ -253,7 +256,10 @@ void NextPage_cb(Fl_Widget* widget, void * param)
     //If still the same page asked, load it, otherwise do nothing
     if(p==mw->Doc->GetCurrentPageNb())
     {
-        mw->Doc->LoadPage();
+        if(mw->Doc->LoadPage()==-3)
+        {
+            fl_alert("Unable to access the document. Try to reopen it.");
+        }
         mw->Display->SetImage(mw->Doc->Render());
         StatusBarUpdate(mw);
     }
@@ -588,7 +594,7 @@ void MainWindow::Init(char *filename)
         else
         {
             //Say it to the user
-            fl_alert("Wrong file format !");
+            fl_alert("Unable to open the document. Is it a valid pdf file ?");
 
             //Check if we have an active document
             if(!Doc)

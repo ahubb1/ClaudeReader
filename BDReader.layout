@@ -4,34 +4,34 @@
 	<File name="include/Document.h" open="1" top="0" tabpos="4">
 		<Cursor position="605" topLine="13" />
 	</File>
-	<File name="include/Fl_OpenCV.h" open="0" top="0" tabpos="7">
-		<Cursor position="1045" topLine="51" />
+	<File name="include/Fl_OpenCV.h" open="1" top="0" tabpos="7">
+		<Cursor position="1817" topLine="60" />
 	</File>
 	<File name="include/MainWindow.h" open="1" top="0" tabpos="2">
-		<Cursor position="418" topLine="11" />
+		<Cursor position="305" topLine="5" />
 	</File>
-	<File name="include/Page.h" open="1" top="0" tabpos="6">
+	<File name="include/Page.h" open="0" top="0" tabpos="6">
 		<Cursor position="33" topLine="12" />
 	</File>
-	<File name="include/Preferences.h" open="0" top="0" tabpos="8">
+	<File name="include/Preferences.h" open="0" top="0" tabpos="6">
 		<Cursor position="179" topLine="0" />
 	</File>
 	<File name="src/Document.cpp" open="1" top="0" tabpos="5">
-		<Cursor position="522" topLine="16" />
+		<Cursor position="1176" topLine="8" />
 	</File>
-	<File name="src/Fl_OpenCV.cxx" open="0" top="0" tabpos="8">
-		<Cursor position="631" topLine="35" />
+	<File name="src/Fl_OpenCV.cxx" open="1" top="0" tabpos="8">
+		<Cursor position="2386" topLine="57" />
 	</File>
-	<File name="src/MainWindow.cpp" open="1" top="0" tabpos="3">
-		<Cursor position="2326" topLine="83" />
+	<File name="src/MainWindow.cpp" open="1" top="1" tabpos="3">
+		<Cursor position="655" topLine="158" />
 	</File>
-	<File name="src/Page.cpp" open="1" top="1" tabpos="7">
-		<Cursor position="4755" topLine="141" />
+	<File name="src/Page.cpp" open="1" top="0" tabpos="6">
+		<Cursor position="5141" topLine="171" />
 	</File>
-	<File name="src/Preferences.cpp" open="0" top="0" tabpos="9">
-		<Cursor position="132" topLine="10" />
+	<File name="src/Preferences.cpp" open="0" top="0" tabpos="7">
+		<Cursor position="2425" topLine="22" />
 	</File>
 	<File name="src/main.cpp" open="1" top="0" tabpos="1">
-		<Cursor position="192" topLine="0" />
+		<Cursor position="297" topLine="5" />
 	</File>
 </CodeBlocks_layout_file>

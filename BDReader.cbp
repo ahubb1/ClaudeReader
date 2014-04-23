@@ -35,7 +35,12 @@
 				<Option use_console_runner="0" />
 				<Option projectLinkerOptionsRelation="1" />
 				<Option projectLibDirsRelation="1" />
+				<Compiler>
+					<Add option="-pg" />
+					<Add option="-g" />
+				</Compiler>
 				<Linker>
+					<Add option="-pg" />
 					<Add option="-static-libgcc" />
 					<Add library="libmupdf.a" />
 					<Add library="libmupdf-js-none.a" />
