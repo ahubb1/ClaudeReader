@@ -577,7 +577,8 @@ MainWindow::~MainWindow()
     delete Pref;
 }
 
-
+//! New document openning.
+//!Create and load the document and update the window and widgets accordingly.
 void MainWindow::Init(char *filename)
 {
     //If filename is correct
@@ -609,11 +610,6 @@ void MainWindow::Init(char *filename)
 
             //Apply the preferences to the document and the window widgets
             Pref->Load("preferences");
-            if(Pref->Apply(Doc)==0)
-            {
-                //If no page has been loaded through the preference, preload the surrounding pages (of the first one)
-                Doc->PreloadPages();
-            }
             UpdateWidgets((void*)this);
 
             //Get the image to draw
@@ -629,6 +625,10 @@ void MainWindow::Init(char *filename)
 
             //Activate menus
             ActivateMenus(this);
+
+            //Preload the surrounding pages
+            Fl::check();
+            Doc->PreloadPages();
         }
         //if the document couldn't be openned
         else

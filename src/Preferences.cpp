@@ -93,7 +93,7 @@ int Preferences::Apply(Document *doc)
         //if yes, load the last page
         doc->LoadPage(LastDocPageNb);
         //and preload
-        doc->PreloadPages();
+        //doc->PreloadPages();
         loaded=1;
     }
 
