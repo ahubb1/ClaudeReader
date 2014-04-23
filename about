@@ -3,7 +3,9 @@ BDReader
 A comics reader.
 
 
-  Vincent Crocher - 2014 (See License.txt)
+     Copyright (C) 2014  Vincent Crocher 
+                   (See License.txt)
+http://sourceforge.net/projects/bdreader/
               -------------------------------
 
 	FLTK: http://www.fltk.org

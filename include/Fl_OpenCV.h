@@ -7,6 +7,7 @@ http://derindelimavi.blogspot.com/
 Sent me any suggestion, modification or bugs. Don't hesitate to contact
 me for any question, I will be very grateful with your feedbacks.
 bluekid70@gmail.com
+Modified by Vincent Crocher - 2014
 */
 
 #ifndef Fl_OpenCV_H

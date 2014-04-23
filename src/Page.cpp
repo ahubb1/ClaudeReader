@@ -1,11 +1,35 @@
+//--------------------------------------------------------------------------
+//
+//    Copyright (C) 2014  Vincent Crocher
+//
+//	  This file is part of BDReader.
+//
+//    BDReader is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, either version 3 of the License, or
+//    (at your option) any later version.
+//
+//    BDReader is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with BDReader.  If not, see <http://www.gnu.org/licenses/>.
+//
+//---------------------------------------------------------------------------
 #include "Page.h"
+
+
 
 //------------------------------------Rectangles functions------------------------
 
-//Ordering function: smallest area
+//! Rectangles ordering function
+//! \return true if area of Rect A is smaller than area of Rect B, false otherwise (greater or equal)
 bool isSmaller (Rect A, Rect B) { return ((A.width*A.height)<(B.width*B.height)); }
 
-//Is A at least 20% in B ?
+//! Is A at least 20% in B ?
+//! \return true if Rect A has, at least, 20% of its surface in B
 bool isIn(Rect A, Rect B)
 {
     int IntersectL=0, IntersectR=0, IntersectT=0, IntersectB=0;
@@ -40,7 +64,8 @@ bool isIn(Rect A, Rect B)
     }
 }
 
-//Merge rectangle B in A
+//! Merge rectangle B in A.
+//!Redefine the position and size of A (x, y, width and height values) to have B included in it.
 void Merge(Rect *A, Rect B)
 {
     int x = min(A->x, B.x);
@@ -50,7 +75,8 @@ void Merge(Rect *A, Rect B)
     A->x=x;A->y=y;A->width=w;A->height=h;
 }
 
-//Min distance between corners of two rectangles
+//! Min distance between corners of two rectangles
+//! \return the minimum distance possible between two corners of A and B.
 int Distance(Rect A, Rect B)
 {
     //Define the four corners points of each rectangle
@@ -82,7 +108,9 @@ int Distance(Rect A, Rect B)
 }
 
 
-//Sort and merge
+//! Sort and merge a vector of Rect.
+//!Sort the Rect by area (see isSmaller()) and merge them (using Merge()) if they
+//!are overlapping (as defined by isIn()). The function is recursive.
 void SortAndMerge(vector<Rect> *CasesTmp, int counter)
 {
     //Remember the nb of time the function is called recursively

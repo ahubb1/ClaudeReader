@@ -1,5 +1,5 @@
-This project is under the terms of the GNU Library General Public 
-License (LGPL). See COPYING for the full license.
+This project is under the terms of the GNU General Public 
+License v3 (GPL v3). See COPYING for the full license disclaimer.
 
 This project is based, in part, on the following projects/libraries:
 
@@ -14,7 +14,7 @@ OpenCV (Open Source Computer Vision Library: http://opencv.org) is an open-sourc
 BSD-licensed library.
 
 3) MuPDF
-MuPDF is Copyright 2006-2013 Artifex Software, Inc.
+MuPDF is Copyright 2006-2013 Artifex Software, Inc. (http://www.mupdf.com/)
 
 This program is free software: you can redistribute it and/or modify it under
 the terms of the GNU Affero General Public License as published by the Free
@@ -32,4 +32,5 @@ For commercial licensing please contact sales@artifex.com.
 
 4) STLplus
 © 1999-2004 Southampton University, 2004 onwards Andy Rushton. All rights reserved.
-See STLplusLicense.html in Doc folder or http://stlplus.sourceforge.net/ for more information.
+See STLplusLicense.txt in Doc folder or visit http://stlplus.sourceforge.net/ for 
+more information.

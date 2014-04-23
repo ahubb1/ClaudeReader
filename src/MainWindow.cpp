@@ -1,3 +1,23 @@
+//--------------------------------------------------------------------------
+//
+//    Copyright (C) 2014  Vincent Crocher
+//
+//	  This file is part of BDReader.
+//
+//    BDReader is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, either version 3 of the License, or
+//    (at your option) any later version.
+//
+//    BDReader is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with BDReader.  If not, see <http://www.gnu.org/licenses/>.
+//
+//---------------------------------------------------------------------------
 #include "MainWindow.h"
 
 //To store the mouse wheel movements
@@ -144,7 +164,7 @@ void Fullscreen_cb(Fl_Widget* widget, void * param)
         mw->window->fullscreen();
         mw->window->resizable(NULL);
         Fl::wait(1);
-        //Hide the bars (but not really, just make them 0px width=> trick to keep the shortcuts and remember their size/position (only w() is forgot but it's the window one))
+        //Hide the bars (but not really, just make them 0px width=> trick to keep the shortcuts and remember their size/position (only w() is forgotten but it's the window one))
         mw->MenuBar->resize(mw->MenuBar->x(), mw->MenuBar->y(), 0, mw->MenuBar->h());
         mw->StatusBar->resize(mw->StatusBar->x(), mw->StatusBar->y(), 0, mw->StatusBar->h());
         //Adapt the display size
@@ -509,7 +529,6 @@ MainWindow::MainWindow()
 
          //TODO: Option background color (blanc ou noir)
          //TODO: Remember the page nb for each recent documents in preferences and the window size
-         //TODO: FUITE MEMOIRE
          //TODO: Meilleur gestion chgt des pages...
          //TODO: Gerer les bds en suites d'images (folders) (et cbr ?)
          //TODO: Version windows avec installateur

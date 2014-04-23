@@ -1,3 +1,23 @@
+//--------------------------------------------------------------------------
+//
+//    Copyright (C) 2014  Vincent Crocher
+//
+//	  This file is part of BDReader.
+//
+//    BDReader is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, either version 3 of the License, or
+//    (at your option) any later version.
+//
+//    BDReader is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with BDReader.  If not, see <http://www.gnu.org/licenses/>.
+//
+//---------------------------------------------------------------------------
 #include "Document.h"
 
 
@@ -59,7 +79,7 @@ Document::~Document()
 //! Load the page designated by the ActivePage variable.
 //!Basically call make a call to the LoadPage(int p) method with the ActivePage value
 //!in parameter.
-//! \return: the Loadpage(ActivePage) return value
+//! \return the Loadpage(ActivePage) return value
 int Document::LoadPage()
 {
     return LoadPage(ActivePage);
@@ -67,12 +87,12 @@ int Document::LoadPage()
 
 
 //! Load the page p.
-//!The method will first re-create a mupdf context and try to open the document.
-//!Then create a Page object with the given page number.
-//! \return: 0 if the page is succesfully created.
-//! \return: -1 if p is less than 1 (no Page has been created).
-//! \return: -2 if p is greater than the number of pages of the document (no Page has been created).
-//! \return: -3 if the document couldn't be opened (NbPages is then 0, no page has been created).
+//!The method will first re-create a mupdf context and try to open the document. Then
+//!create a Page object with the given page number.
+//! \return 0 if the page is succesfully created.
+//! \return -1 if p is less than 1 (no Page has been created).
+//! \return -2 if p is greater than the number of pages of the document (no Page has been created).
+//! \return -3 if the document couldn't be opened (NbPages is then 0, no page has been created).
 int Document::LoadPage(int p)
 {
     if(p>0 && p<=NbPages)
@@ -139,7 +159,9 @@ void Document::PreviousCase()
 }
 
 //! Increment the active page by one, if possible (in the range 0 NbPages)
-//! /return: The new active page, -1 if new page is negative, -2 if new page is superir to NbPages
+//! \return the new active page number
+//! \return -1 if new page is negative
+//! \return -2 if new page is greater than NbPages
 int Document::NextPage()
 {
     if((ActivePage+1)<1)
@@ -153,7 +175,9 @@ int Document::NextPage()
 }
 
 //! Decrement the active page by one, if possible (in the range 0 NbPages)
-//! /return: The new active page, -1 if new page is negative, -2 if new page is superir to NbPages
+//! \return the new active page number
+//! \return -1 if new page is negative
+//! \return -2 if new page is greater than NbPages
 int Document::PreviousPage()
 {
     if((ActivePage-1)<1)
