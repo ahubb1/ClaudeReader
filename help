@@ -1,10 +1,20 @@
-Shortcuts:
-	Ctrl-O: Open a pdf document
-	Ctrl-Q: Quit (preferences will be saved)
-	Ctrl-F: Fullscreen
-	Ctrl-P: Switch to Page mode (only the full pages are displayed)
-	Ctrl-C: Switch to Case mode (a preview of each page will be displayed, followed by each case of the comics)
-	Left: Go to previous case (to previous page in Page mode)
-	Right: Go to next case (to next page in Page mode)
-	Bottom: Go to previous page
-	Top: Go to next page
+Controls:
+	File:
+		Ctrl-O: Open a pdf document
+		Ctrl-Q: Quit (preferences will be saved)
+
+	Fullscreen:
+		Ctrl-F: Fullscreen
+
+	Reading mode:
+		p: Switch to Page mode (only the full pages are displayed)
+		s: Switch to Strip mode (display in strips mode, based on window/page width)
+		c: Switch to Case mode (display each case of the comics when possible)
+	
+	Navigation:
+		Left arrow: Go to previous case/previous strip (to previous page in Page mode)
+		Right arrow: Go to next case/next strip (to next page in Page mode)
+		Bottom arrow: Go to previous page
+		Top arrow: Go to next page
+		Mouse wheel up: Go to previous case/strip/page
+		Mouse wheel down: Go to next case/strip/page

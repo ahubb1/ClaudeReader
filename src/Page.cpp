@@ -180,8 +180,6 @@ Page::Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, fz_conte
     NbPages=nb_pages;
     FzCtx=ctx;
     FzDoc=doc;
-    begin_t=clock();
-    printf("%d - Created\n", PageNb);
 
 
     //Load it (numbering from 0, not 1)
@@ -227,7 +225,6 @@ Page::Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, fz_conte
     {
         ActiveCase=-1;
         Loaded=true;
-        printf("%d - Loaded\n", PageNb);
     }
 }
 
@@ -238,7 +235,6 @@ Page::~Page()
         Cases.clear();
     ImgRender.release();
     PageRenderCv.release();
-    printf("%d - Deleted\n", PageNb);
 }
 
 
@@ -509,7 +505,7 @@ Mat * Page::RenderCase()
         //ImgRender=PageRenderCv;
         ImgRender.release();
         PageRenderCv.copyTo(ImgRender);
-        /*pour debug
+        /*debug
         if(NbCases>0)
         {
             rectangle(ImgRender, Cases[ActiveCase], cvScalar(0, 0, 0), 6);

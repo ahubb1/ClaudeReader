@@ -418,7 +418,7 @@ void About_cb(Fl_Widget* widget, void * param)
     }
     else
     {
-        fl_message("BDReader\n A comics BDReader\n\n Vincent Crocher - 2014. (See License.txt).");
+        fl_message("BDReader\n A comics BDReader\n\n Vincent Crocher - 2014. (See License.txt).\n     ---http:\\\\bdreader.sourceforge.net---\n");
     }
 }
 

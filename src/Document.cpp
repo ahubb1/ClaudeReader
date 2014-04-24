@@ -60,10 +60,6 @@ Document::~Document()
         delete nextPage;
     if(previousPage)
         delete previousPage;
-    /*if(FzDoc)
-        fz_close_document(FzDoc);
-    if(FzCtx)
-        fz_free_context(FzCtx);*/
 }
 
 

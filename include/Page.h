@@ -68,7 +68,6 @@ class Page
 
     protected:
     private:
-        clock_t begin_t;    //TODO A ENLEVER
         vector<Rect> Cases;
         int NbCases;
         int PageNb;
