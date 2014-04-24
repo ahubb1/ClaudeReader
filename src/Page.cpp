@@ -396,6 +396,7 @@ void Page::DetectCases()
 
 
                     //Copy the cases from the tree to a list, in the right order (except the first one which is a fake case)
+                    Cases.clear();
                     for (ntree<Rect>::prefix_iterator i = ++CasesTree.prefix_begin(); i != CasesTree.prefix_end(); i++)
                     {
                         Cases.push_back(*i);
@@ -411,6 +412,7 @@ void Page::DetectCases()
             else
             {
                 //Creation of cases of 40% of the page which are sliding down=> arbitrary strips to allow a continuous lecture
+                Cases.clear();
                 for(int i=0; i<13; i++)
                 {
                     Cases.push_back(Rect(0, i*src.rows/20., src.cols, src.rows*.4-1));
@@ -425,6 +427,7 @@ void Page::DetectCases()
         else
         {
             //Creation of cases of 40% of the page which are sliding down=> arbitrary strips to allow a continuous lecture
+            Cases.clear();
             for(int i=0; i<13; i++)
             {
                 Cases.push_back(Rect(0, i*src.rows/20., src.cols, src.rows*.4-1));

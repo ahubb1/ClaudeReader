@@ -271,7 +271,7 @@ void Document::PreloadPages()
 //! \return -1 otherwise (a new page has been loaded)
 int Document::NextCase()
 {
-    if(currentPage->NextCase()<0)
+    if(currentPage->NextCase()<0 || ReadingMode==PAGE)
     {
         NextPage();
         LoadPage();
@@ -285,7 +285,7 @@ int Document::NextCase()
 //! \return -1 otherwise (a new page has been loaded)
 int Document::PreviousCase()
 {
-    if(currentPage->PreviousCase()<0)
+    if(currentPage->PreviousCase()<0 || ReadingMode==PAGE)
     {
         PreviousPage();
         LoadPage();
@@ -324,4 +324,35 @@ int Document::PreviousPage()
 
     ActivePage--;
     return ActivePage;
+}
+
+//! Change the Document reading mode and apply it to the linked Pages.
+//!In order to properly re-set the reading mode to each pages (current, previous and
+//!next), the DetectCases() is called for each of them.
+void Document::SetReadingMode(READINGMODE val)
+{
+    //Set the document reading mode
+    ReadingMode=val;
+
+    //Set it to each pages and call the DetectCases() since its behaviour depends on the reading mode
+    currentPage->SetReadingMode(ReadingMode);
+    currentPage->DetectCases();
+    if(previousPage)
+    {
+        previousPage->SetReadingMode(ReadingMode);
+        previousPage->DetectCases();
+    }
+    if(nextPage)
+    {
+        nextPage->SetReadingMode(ReadingMode);
+        nextPage->DetectCases();
+    }
+}
+
+//! Change the Document page preview mode
+void Document::SetPagePreview(bool val)
+{
+    //Set it to the document
+    PagePreview=val;
+    //will be applied to the next Pages loaded
 }

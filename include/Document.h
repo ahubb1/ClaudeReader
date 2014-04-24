@@ -56,12 +56,11 @@ class Document
         Mat *Render() {return ImgRender=currentPage->RenderCase();}
 
         char *GetFilename() {return Filename;}
-        void SetReadingMode(READINGMODE val) {ReadingMode=val; currentPage->SetReadingMode(ReadingMode);}
-        //TODO UPDATE ALL PAGES: PREVIOUS AND NEXT
+        void SetReadingMode(READINGMODE val);
         READINGMODE GetReadingMode() {return ReadingMode;}
         int GetNumberOfPages() {return NbPages;}
         int GetCurrentPageNb() {return ActivePage;}
-        void SetPagePreview(bool val) {PagePreview=val;}
+        void SetPagePreview(bool val);
         bool IsPagePreview() {return PagePreview;}
 
         Page *currentPage, *nextPage, *previousPage;

@@ -1,20 +1,23 @@
-Controls:
-	File:
-		Ctrl-O: Open a pdf document
-		Ctrl-Q: Quit (preferences will be saved)
+Controls/options:
+	*File:
+		-Ctrl-O: Open a pdf document
+		-Ctrl-Q: Quit (preferences will be saved)
 
-	Fullscreen:
-		Ctrl-F: Fullscreen
+	*Fullscreen:
+		Ctrl-F: Fullscreen mode on/off
 
-	Reading mode:
-		p: Switch to Page mode (only the full pages are displayed)
-		s: Switch to Strip mode (display in strips mode, based on window/page width)
-		c: Switch to Case mode (display each case of the comics when possible)
+	*Reading mode:
+		-p: Switch to Page mode: only the full pages are displayed
+		-s: Switch to Strip mode: display in strips mode, based on window/page width
+		-c: Switch to Panel (square) mode: display each panel of the comics individually when 
+possible
+		-Page preview: Display a preview of the full page when in Panel/Strip mode, allowing
+to preview the whole page before reading in details
 	
-	Navigation:
-		Left arrow: Go to previous case/previous strip (to previous page in Page mode)
-		Right arrow: Go to next case/next strip (to next page in Page mode)
-		Bottom arrow: Go to previous page
-		Top arrow: Go to next page
-		Mouse wheel up: Go to previous case/strip/page
-		Mouse wheel down: Go to next case/strip/page
+	*Navigation:
+		-Left arrow: Go to previous case/previous strip (to previous page in Page mode)
+		-Right arrow: Go to next case/next strip (to next page in Page mode)
+		-Bottom arrow: Go to previous page
+		-Top arrow: Go to next page
+		-Mouse wheel up: Go to previous case/strip/page
+		-Mouse wheel down: Go to next case/strip/page

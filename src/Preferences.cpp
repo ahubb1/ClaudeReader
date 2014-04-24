@@ -87,21 +87,19 @@ int Preferences::Apply(Document *doc)
 {
     int loaded=0;
 
-    //Check if it was previously open
-    if(strcmp(LastDoc, doc->GetFilename())==0)
-    {
-        //if yes, load the last page
-        doc->LoadPage(LastDocPageNb);
-        //and preload
-        //doc->PreloadPages();
-        loaded=1;
-    }
-
     //The reading mode
     doc->SetReadingMode(ReadingMode);
 
     //The preview/not preview
     doc->SetPagePreview(PagePreview);
+
+    //Check if it was previously open
+    if(strcmp(LastDoc, doc->GetFilename())==0)
+    {
+        //if yes, load the last page
+        doc->LoadPage(LastDocPageNb);
+        loaded=1;
+    }
 
     return loaded;
 }

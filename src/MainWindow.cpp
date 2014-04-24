@@ -35,7 +35,7 @@ void StatusBarUpdate(void * param)
       {
           if(mw->Doc->GetReadingMode()==CASE)
           {
-                sprintf(text, "Page %d/%d (Case %d/%d)", mw->Doc->GetCurrentPageNb(), mw->Doc->GetNumberOfPages(), mw->Doc->currentPage->GetActiveCase()+1, mw->Doc->currentPage->GetNbCases());
+                sprintf(text, "Page %d/%d (Panel %d/%d)", mw->Doc->GetCurrentPageNb(), mw->Doc->GetNumberOfPages(), mw->Doc->currentPage->GetActiveCase()+1, mw->Doc->currentPage->GetNbCases());
           }
           else
           {
@@ -82,14 +82,14 @@ void Timer_cb(void* param)
         //if positive, go to next case
         if(mouseWheel>0)
         {
-            Fl_Menu_Item* nextcb=(Fl_Menu_Item*)mw->MenuBar->find_item("&View/Next case");
+            Fl_Menu_Item* nextcb=(Fl_Menu_Item*)mw->MenuBar->find_item("&View/Next panel");
             if(nextcb && nextcb->active())
                 nextcb->do_callback((Fl_Widget*)mw->MenuBar);
         }
         //if negative, go to previous case
         else
         {
-            Fl_Menu_Item* previouscb=(Fl_Menu_Item*)mw->MenuBar->find_item("&View/Previous case");
+            Fl_Menu_Item* previouscb=(Fl_Menu_Item*)mw->MenuBar->find_item("&View/Previous panel");
             if(previouscb && previouscb->active())
                 previouscb->do_callback((Fl_Widget*)mw->MenuBar);
         }
@@ -339,8 +339,8 @@ void ActivateNavigationMenus(void *param, bool val)
         if(items[i].label()!=NULL &&
           (strcmp(items[i].label(), "Next page")==0 ||
            strcmp(items[i].label(), "Previous page")==0 ||
-           strcmp(items[i].label(), "Next case")==0 ||
-           strcmp(items[i].label(), "Previous case")==0)
+           strcmp(items[i].label(), "Next panel")==0 ||
+           strcmp(items[i].label(), "Previous panel")==0)
           )
         {
             //Then activate or deactivate it
@@ -437,7 +437,7 @@ void UpdateWidgets(void * param)
     }
     if(mw->Pref->GetReadingMode()==CASE)
     {
-        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Case mode"))->setonly();
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Panel mode"))->setonly();
     }
 
     //Preview page
@@ -507,14 +507,14 @@ MainWindow::MainWindow()
             { "&View",              0, 0, 0, FL_SUBMENU },
                 {"Fullscreen2", FL_Escape, (Fl_Callback *)Fullscreen_cb, this, FL_MENU_INVISIBLE | FL_MENU_INACTIVE},
                 {"Fullscreen", FL_COMMAND + 'f', (Fl_Callback *)Fullscreen_cb, this, FL_MENU_DIVIDER },
-                { "Page mode", 'p', (Fl_Callback *)PageMode_cb, this, FL_MENU_RADIO|FL_MENU_INACTIVE },
+                { "Panel mode", 'c', (Fl_Callback *)CaseMode_cb, this, FL_MENU_RADIO| FL_MENU_INACTIVE },
                 { "Strip mode", 's', (Fl_Callback *)StripMode_cb, this, FL_MENU_RADIO|FL_MENU_INACTIVE },
-                { "Case mode", 'c', (Fl_Callback *)CaseMode_cb, this, FL_MENU_RADIO|FL_MENU_DIVIDER | FL_MENU_INACTIVE },
+                { "Page mode", 'p', (Fl_Callback *)PageMode_cb, this, FL_MENU_RADIO|FL_MENU_DIVIDER |FL_MENU_INACTIVE },
                 { "Page preview", 0, (Fl_Callback *)PagePreview_cb, this, FL_MENU_TOGGLE|FL_MENU_DIVIDER | FL_MENU_INACTIVE },
+                { "Next panel", FL_Right, (Fl_Callback *)NextCase_cb, this, FL_MENU_INACTIVE },
+                { "Previous panel", FL_Left, (Fl_Callback *)PreviousCase_cb, this, FL_MENU_INACTIVE },
                 { "Next page", FL_Down, (Fl_Callback *)NextPage_cb, this, FL_MENU_INACTIVE },
                 { "Previous page", FL_Up, (Fl_Callback *)PreviousPage_cb, this, FL_MENU_INACTIVE },
-                { "Next case", FL_Right, (Fl_Callback *)NextCase_cb, this, FL_MENU_INACTIVE },
-                { "Previous case", FL_Left, (Fl_Callback *)PreviousCase_cb, this, FL_MENU_INACTIVE },
                 { 0 },
             { "&Help",              0, 0, 0, FL_SUBMENU },
                 { "Help", FL_COMMAND + 'h', (Fl_Callback *)Help_cb, this },
@@ -655,6 +655,7 @@ void MainWindow::Init(char *filename)
     }
 
     //Show the main window
+    UpdateWidgets((void*)this);
     Fl::visual(FL_RGB);
     window->show();
 }
