@@ -67,12 +67,6 @@ int Preferences::Load(const char prefFilename[255])
         }
         NbRecentDocs=i;
 
-        /*printf("%d %d %d %s %d %d\n", ReadingMode, BkgColor, PagePreview, LastDoc, LastDocPageNb, NbRecentDocs);
-        //The recent docs
-        for(int j=0; j<NbRecentDocs; j++)
-            printf("%d %s\n", j, RecentDocs[j]);
-        printf("\n");*/
-
         //Close the file
         fclose(prefFile);
     }

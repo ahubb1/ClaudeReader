@@ -38,14 +38,7 @@
 #include <FL/Fl_File_Chooser.H>
 #include <FL/Fl_Box.H>
 #include <FL/Fl_Help_Dialog.H>
-/*#include <FL/Fl_Pack.H>
-#include <FL/Fl_Hor_Value_Slider.H>
-#include <FL/Fl_Button.H>
-#include <FL/Fl_Input.H>
-#include <FL/Fl_Float_Input.H>
-#include <FL/Fl_Radio_Button.H>
-#include <FL/Fl_Group.H>
-#include <FL/fl_draw.H>*/
+
 
 #include "Fl_OpenCV.h"
 #include "Preferences.h"

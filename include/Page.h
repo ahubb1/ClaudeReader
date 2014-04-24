@@ -43,6 +43,7 @@ using namespace stlplus;
 
 enum READINGMODE { PAGE, STRIP, CASE };
 
+//! Class managing document pages: loading, rendering and case detection
 class Page
 {
     public:

@@ -34,7 +34,7 @@
 #include <Page.h>
 
 
-
+//! Class managing the openned pdf document and creating the different Page objects when needed
 class Document
 {
     public:
