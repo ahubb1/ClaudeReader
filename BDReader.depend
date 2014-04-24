@@ -1,22 +1,15 @@
 # depslib dependency file v1.0
-1398318954 source:/home/vincent/Perso/BDReader/BDReader/src/MainWindow.cpp
+1398338253 source:/home/vincent/Perso/BDReader/BDReader/src/MainWindow.cpp
 	"MainWindow.h"
 
-1398228515 /home/vincent/Perso/BDReader/BDReader/include/MainWindow.h
+1398337436 /home/vincent/Perso/BDReader/BDReader/include/MainWindow.h
 	<FL/Fl.H>
 	<FL/Fl_Window.H>
 	<FL/Fl_Menu_Bar.H>
 	<FL/fl_message.H>
-	<FL/Fl_File_Chooser.H>
+	<FL/Fl_Native_File_Chooser.H>
 	<FL/Fl_Box.H>
 	<FL/Fl_Help_Dialog.H>
-	<FL/Fl_Hor_Value_Slider.H>
-	<FL/Fl_Button.H>
-	<FL/Fl_Input.H>
-	<FL/Fl_Float_Input.H>
-	<FL/Fl_Radio_Button.H>
-	<FL/Fl_Group.H>
-	<FL/fl_draw.H>
 	"Fl_OpenCV.h"
 	"Preferences.h"
 	"Document.h"
@@ -40,7 +33,7 @@
 1398316867 source:/home/vincent/Perso/BDReader/BDReader/src/Document.cpp
 	"Document.h"
 
-1398315455 /home/vincent/Perso/BDReader/BDReader/include/Document.h
+1398319460 /home/vincent/Perso/BDReader/BDReader/include/Document.h
 	<Page.h>
 
 1397908225 /home/vincent/Perso/BDReader/BDReader/include/mupdf/fitz.h
@@ -331,7 +324,7 @@
 	"mupdf/fitz/device.h"
 	"mupdf/fitz/output.h"
 
-1398263675 /home/vincent/Perso/BDReader/BDReader/include/Page.h
+1398319367 /home/vincent/Perso/BDReader/BDReader/include/Page.h
 	<FL/Fl.H>
 	<mupdf/fitz.h>
 	<stlplus3/ntree.hpp>
@@ -376,10 +369,10 @@
 	<vector>
 	<algorithm>
 
-1398243609 /home/vincent/Perso/BDReader/BDReader/include/Preferences.h
+1398319401 /home/vincent/Perso/BDReader/BDReader/include/Preferences.h
 	"Document.h"
 
-1398316406 source:/home/vincent/Perso/BDReader/BDReader/src/Preferences.cpp
+1398319317 source:/home/vincent/Perso/BDReader/BDReader/src/Preferences.cpp
 	"Preferences.h"
 
 1397837284 /home/vincent/Perso/BDReader/BDReader/icon32.xbm

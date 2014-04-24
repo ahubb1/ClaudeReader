@@ -35,7 +35,7 @@
 #include <FL/Fl_Window.H>
 #include <FL/Fl_Menu_Bar.H>
 #include <FL/fl_message.H>
-#include <FL/Fl_File_Chooser.H>
+#include <FL/Fl_Native_File_Chooser.H>
 #include <FL/Fl_Box.H>
 #include <FL/Fl_Help_Dialog.H>
 

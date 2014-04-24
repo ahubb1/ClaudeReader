@@ -117,11 +117,16 @@ void Open_cb(Fl_Widget* widget, void * param)
     if(strcmp(((Fl_Menu_*)widget)->mvalue()->label(), "Open")==0)
     {
         //Window to define a directory and filename
-        sprintf(tmpFilename, fl_file_chooser("Open a pdf file","Pdf (*.pdf)", ".", 0));
-        //Check if filename not null or not a .tss file
-        if(tmpFilename[0]=='\0' || strstr (tmpFilename, ".pdf" )==NULL)
+        Fl_Native_File_Chooser chooser=Fl_Native_File_Chooser();
+        chooser.title("Open a pdf file");
+        chooser.filter("Pdf\t*.pdf");
+        int ret=chooser.show();
+        if(ret !=1 && ret!=-1)
         {
-            //fl_alert("Invalid filename !");
+            sprintf(tmpFilename, "%s", chooser.filename());
+        }
+        else
+        {
             return;
         }
     }
@@ -487,7 +492,7 @@ MainWindow::MainWindow()
 
     //Set an icon
     //Problem with windows compile (not declared): version prolem of fltk
-    #ifndef WINDOWS
+    #ifndef __WINDOWS__
         fl_open_display();
         Pixmap p = XCreateBitmapFromData(fl_display, DefaultRootWindow(fl_display), (char *)icon32_bits, icon32_width, icon32_height);
         window->icon((char *)p);

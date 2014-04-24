@@ -2,36 +2,36 @@
 <CodeBlocks_layout_file>
 	<ActiveTarget name="Win32" />
 	<File name="include/Document.h" open="1" top="0" tabpos="4">
-		<Cursor position="2054" topLine="40" />
+		<Cursor position="1230" topLine="21" />
 	</File>
 	<File name="include/Fl_OpenCV.h" open="0" top="0" tabpos="7">
 		<Cursor position="369" topLine="0" />
 	</File>
-	<File name="include/MainWindow.h" open="1" top="1" tabpos="2">
-		<Cursor position="4020" topLine="96" />
+	<File name="include/MainWindow.h" open="1" top="0" tabpos="2">
+		<Cursor position="3283" topLine="75" />
 	</File>
-	<File name="include/Page.h" open="0" top="0" tabpos="6">
-		<Cursor position="2057" topLine="55" />
+	<File name="include/Page.h" open="1" top="0" tabpos="5">
+		<Cursor position="1384" topLine="36" />
 	</File>
 	<File name="include/Preferences.h" open="0" top="0" tabpos="6">
-		<Cursor position="993" topLine="0" />
+		<Cursor position="1238" topLine="24" />
 	</File>
-	<File name="src/Document.cpp" open="1" top="0" tabpos="5">
-		<Cursor position="9191" topLine="0" />
+	<File name="src/Document.cpp" open="0" top="0" tabpos="5">
+		<Cursor position="9371" topLine="89" />
 	</File>
 	<File name="src/Fl_OpenCV.cxx" open="0" top="0" tabpos="8">
 		<Cursor position="67" topLine="0" />
 	</File>
-	<File name="src/MainWindow.cpp" open="1" top="0" tabpos="3">
-		<Cursor position="17091" topLine="467" />
+	<File name="src/MainWindow.cpp" open="1" top="1" tabpos="3">
+		<Cursor position="13795" topLine="454" />
 	</File>
-	<File name="src/Page.cpp" open="1" top="0" tabpos="6">
-		<Cursor position="2592" topLine="15" />
+	<File name="src/Page.cpp" open="0" top="0" tabpos="6">
+		<Cursor position="15741" topLine="77" />
 	</File>
 	<File name="src/Preferences.cpp" open="0" top="0" tabpos="8">
-		<Cursor position="2836" topLine="0" />
+		<Cursor position="2133" topLine="8" />
 	</File>
 	<File name="src/main.cpp" open="1" top="0" tabpos="1">
-		<Cursor position="124" topLine="0" />
+		<Cursor position="124" topLine="26" />
 	</File>
 </CodeBlocks_layout_file>
