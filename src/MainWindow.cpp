@@ -439,6 +439,10 @@ void UpdateWidgets(void * param)
     {
         ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Panel mode"))->setonly();
     }
+    if(mw->Pref->GetReadingMode()==STRIP)
+    {
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Strip mode"))->setonly();
+    }
 
     //Preview page
     if(mw->Pref->GetPagePreview())
@@ -482,7 +486,7 @@ MainWindow::MainWindow()
     window=new Fl_Double_Window(600, 600, "BDReader");
 
     //Set an icon
-    //Probleme with windows compile (not declared): version prolem of fltk
+    //Problem with windows compile (not declared): version prolem of fltk
     #ifndef WINDOWS
         fl_open_display();
         Pixmap p = XCreateBitmapFromData(fl_display, DefaultRootWindow(fl_display), (char *)icon32_bits, icon32_width, icon32_height);
@@ -610,6 +614,7 @@ void MainWindow::Init(char *filename)
 
             //Apply the preferences to the document and the window widgets
             Pref->Load("preferences");
+            Pref->Apply(Doc);
             UpdateWidgets((void*)this);
 
             //Get the image to draw
@@ -655,7 +660,6 @@ void MainWindow::Init(char *filename)
     }
 
     //Show the main window
-    UpdateWidgets((void*)this);
     Fl::visual(FL_RGB);
     window->show();
 }
