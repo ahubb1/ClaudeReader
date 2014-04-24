@@ -50,14 +50,15 @@
 					<Add library="libjbig2dec.a" />
 					<Add library="libfreetype.a" />
 					<Add library="libfonts.a" />
-					<Add library="z" />
-					<Add library="opencv_core247" />
-					<Add library="opencv_highgui247" />
-					<Add library="opencv_imgproc247" />
 					<Add library="fltk_gl" />
 					<Add library="fltk_jpeg" />
 					<Add library="fltk_images" />
 					<Add library="fltk" />
+					<Add library="z" />
+					<Add library="opencv_highgui247" />
+					<Add library="opencv_imgproc247" />
+					<Add library="opencv_core247" />
+					<Add library="zlib" />
 					<Add directory="lib/win32" />
 				</Linker>
 			</Target>
