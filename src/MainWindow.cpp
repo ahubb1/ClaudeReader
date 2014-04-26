@@ -385,10 +385,12 @@ void Help_cb(Fl_Widget* widget, void * param)
 
     //Load the text from the "help" file
     char HelpText[2048];
-   #ifdef __WINDOWS__
+    #ifdef __WINDOWS__
         FILE* helpfile=fopen("help", "r");
     #else
-        FILE* helpfile=fopen("%s/.bdreader/help", getenv("HOME"), "r");
+        char filename[1024];
+        sprintf(filename, "%s/.bdreader/help", getenv("HOME"));
+        FILE* helpfile=fopen(filename, "r");
     #endif
     //If success
     if(helpfile)
@@ -415,7 +417,9 @@ void About_cb(Fl_Widget* widget, void * param)
     #ifdef __WINDOWS__
         FILE* aboutfile=fopen("about", "r");
     #else
-        FILE* aboutfile=fopen("%s/.bdreader/about", getenv("HOME"), "r");
+        char filename[1024];
+        sprintf(filename, "%s/.bdreader/about", getenv("HOME"));
+        FILE* aboutfile=fopen(filename, "r");
     #endif
     //If success
     if(aboutfile)
