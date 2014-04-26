@@ -385,13 +385,12 @@ void Help_cb(Fl_Widget* widget, void * param)
 
     //Load the text from the "help" file
     char HelpText[2048];
-    FILE* helpfile=fopen("help", "r");
-    if(!helpfile)
-    {
-        //Try the other possibility (Linux install)
-        helpfile=fopen("../share/bdreader/help", "r");
-    }
-    //If one success
+   #ifdef __WINDOWS__
+        FILE* helpfile=fopen("help", "r");
+    #else
+        FILE* helpfile=fopen("%s/.bdreader/help", getenv("HOME"), "r");
+    #endif
+    //If success
     if(helpfile)
     {
         int i=0;
@@ -413,13 +412,12 @@ void About_cb(Fl_Widget* widget, void * param)
 
     //Load the text from the "about" file
     char AboutText[2048];
-    FILE* aboutfile=fopen("about", "r");
-    if(!aboutfile)
-    {
-        //Try the other possibility (Linux install)
-        aboutfile=fopen("../share/bdreader/about", "r");
-    }
-    //If one success
+    #ifdef __WINDOWS__
+        FILE* aboutfile=fopen("about", "r");
+    #else
+        FILE* aboutfile=fopen("%s/.bdreader/about", getenv("HOME"), "r");
+    #endif
+    //If success
     if(aboutfile)
     {
         int i=0;

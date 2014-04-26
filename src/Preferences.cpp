@@ -39,7 +39,7 @@ int Preferences::Load(const char prefFilename[255])
     #ifdef __WINDOWS__
         sprintf(Filename, "%s", prefFilename);
     #else
-        sprintf(Filename, "~/.bdreader/%s", prefFilename);
+        sprintf(Filename, "%s/.bdreader/%s", getenv("HOME"), prefFilename);
     #endif
 
     //Open the file
