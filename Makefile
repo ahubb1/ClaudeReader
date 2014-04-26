@@ -47,7 +47,7 @@ OBJ_RELEASE = $(OBJDIR_RELEASE)/src/Document.o $(OBJDIR_RELEASE)/src/Fl_OpenCV.o
 
 all: release
 
-clean: clean_debug clean_release
+clean: clean_debug clean_release clean_all
 
 before_debug: 
 	test -d bin/Debug || mkdir -p bin/Debug
@@ -117,6 +117,11 @@ clean_release:
 	rm -rf bin/Release
 	rm -rf $(OBJDIR_RELEASE)/src
 
+
+clean_all:
+	rm -rf bin
+	rm -rf obj
+
 install:
 	install -m 0755 $(OUT_RELEASE) $(PREFIX)/bin
 	mkdir ~/.bdreader
@@ -124,12 +129,13 @@ install:
 	install -m 0755 about ~/.bdreader
 	install -m 0755 help ~/.bdreader
 	touch ~/.bdreader/preferences
+	chmod 777 ~/.bdreader/preferences
 	#install -m 0644 *.png $(PREFIX)/share/our_program/icons
-	
+
 uninstall:
 	rm -f $(PREFIX)/bin/BDReader
 	rm -rf $(PREFIX)/share/bdreader
 	rm -rf ~/.bdreader
 
-.PHONY: before_debug after_debug clean_debug before_release after_release clean_release install uninstall
+.PHONY: before_debug after_debug clean_debug before_release after_release clean_release clean_all install uninstall
 
