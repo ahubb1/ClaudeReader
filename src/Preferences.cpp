@@ -36,7 +36,11 @@ Preferences::~Preferences()
 int Preferences::Load(const char prefFilename[255])
 {
     //First remember the preferences file filename
-    sprintf(Filename, "%s", prefFilename);
+    #ifdef __WINDOWS__
+        sprintf(Filename, "%s", prefFilename);
+    #else
+        sprintf(Filename, "~/.bdreader/%s", prefFilename);
+    #endif
 
     //Open the file
     FILE *prefFile=fopen(Filename, "r");

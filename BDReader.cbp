@@ -63,15 +63,15 @@
 			<Add directory="include" />
 		</Compiler>
 		<Linker>
-			<Add library="libmupdf.a" />
-			<Add library="libmupdf-js-none.a" />
-			<Add library="libjpeg.a" />
-			<Add library="libopenjpeg.a" />
-			<Add library="libjbig2dec.a" />
+			<Add library="mupdf" />
+			<Add library="mupdf-js-none" />
+			<Add library="jpeg" />
+			<Add library="openjpeg" />
+			<Add library="jbig2dec" />
 			<Add library="m" />
-			<Add library="libopencv_core" />
-			<Add library="libopencv_highgui" />
-			<Add library="libopencv_imgproc" />
+			<Add library="opencv_core" />
+			<Add library="opencv_highgui" />
+			<Add library="opencv_imgproc" />
 			<Add library="fltk" />
 			<Add library="Xft" />
 			<Add library="Xinerama" />

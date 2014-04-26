@@ -44,7 +44,7 @@ void StatusBarUpdate(void * param)
       }
       else
       {
-          sprintf(text, "\0");
+          sprintf(text, "%s", "\0");
       }
       mw->StatusBar->copy_label(text);
       mw->StatusBar->redraw();
@@ -386,6 +386,12 @@ void Help_cb(Fl_Widget* widget, void * param)
     //Load the text from the "help" file
     char HelpText[2048];
     FILE* helpfile=fopen("help", "r");
+    if(!helpfile)
+    {
+        //Try the other possibility (Linux install)
+        helpfile=fopen("../share/bdreader/help", "r");
+    }
+    //If one success
     if(helpfile)
     {
         int i=0;
@@ -408,6 +414,12 @@ void About_cb(Fl_Widget* widget, void * param)
     //Load the text from the "about" file
     char AboutText[2048];
     FILE* aboutfile=fopen("about", "r");
+    if(!aboutfile)
+    {
+        //Try the other possibility (Linux install)
+        aboutfile=fopen("../share/bdreader/about", "r");
+    }
+    //If one success
     if(aboutfile)
     {
         int i=0;

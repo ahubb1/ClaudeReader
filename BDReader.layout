@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
-	<ActiveTarget name="Win32" />
+	<ActiveTarget name="Release" />
 	<File name="include/Document.h" open="1" top="0" tabpos="4">
 		<Cursor position="1230" topLine="21" />
 	</File>
@@ -8,7 +8,7 @@
 		<Cursor position="369" topLine="0" />
 	</File>
 	<File name="include/MainWindow.h" open="1" top="0" tabpos="2">
-		<Cursor position="3283" topLine="75" />
+		<Cursor position="1214" topLine="0" />
 	</File>
 	<File name="include/Page.h" open="1" top="0" tabpos="5">
 		<Cursor position="1384" topLine="36" />
@@ -23,7 +23,7 @@
 		<Cursor position="67" topLine="0" />
 	</File>
 	<File name="src/MainWindow.cpp" open="1" top="1" tabpos="3">
-		<Cursor position="13795" topLine="454" />
+		<Cursor position="1707" topLine="24" />
 	</File>
 	<File name="src/Page.cpp" open="0" top="0" tabpos="6">
 		<Cursor position="15741" topLine="77" />
