@@ -130,7 +130,6 @@ install:
 	install -m 0755 help ~/.bdreader
 	touch ~/.bdreader/preferences
 	chmod 777 ~/.bdreader/preferences
-	#install -m 0644 *.png $(PREFIX)/share/our_program/icons
 
 uninstall:
 	rm -f $(PREFIX)/bin/BDReader
