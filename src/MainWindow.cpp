@@ -120,6 +120,30 @@ void Open_cb(Fl_Widget* widget, void * param)
         Fl_Native_File_Chooser chooser=Fl_Native_File_Chooser();
         chooser.title("Open a pdf file");
         chooser.filter("Pdf\t*.pdf");
+
+        //Select the working directory
+        char folder[1024];
+        //if a current doc is open
+        if(mw->Doc)
+        {
+            //use this directory
+            int last_separator=max((strrchr(mw->Doc->GetFilename(), '\/')-mw->Doc->GetFilename()), (strrchr(mw->Doc->GetFilename(), '\\')-mw->Doc->GetFilename()));
+            strncpy(folder, mw->Doc->GetFilename(), last_separator);
+            chooser.directory(folder);
+        }
+        else
+        {
+            //if lastdoc information is available
+            if(mw->Pref && mw->Pref->GetLastDoc()[0]!='\0')
+            {
+                //use the last doc directory
+                int last_separator=max((strrchr(mw->Pref->GetLastDoc(), '\/')-mw->Pref->GetLastDoc()), (strrchr(mw->Pref->GetLastDoc(), '\\')-mw->Pref->GetLastDoc()));
+                strncpy(folder, mw->Pref->GetLastDoc(), last_separator);
+                chooser.directory(folder);
+            }
+        }
+
+        //Show the chooser window
         int ret=chooser.show();
         if(ret !=1 && ret!=-1)
         {
@@ -603,12 +627,12 @@ MainWindow::MainWindow()
              PreviousButton->selection_color(fl_rgb_color(245,245,200));
              PreviousButton->callback(PreviousCase_cb, (void*)this);
              PreviousButton->hide();
-             NextPageButton = new Fl_Overlay_Arrow_Button(0, (int)(Display->y()+Display->h()-25), Display->w(), 25, "", -90, 0.15, 0.8, 2);
+             NextPageButton = new Fl_Overlay_Arrow_Button(0, (int)(Display->y()+Display->h()-35), Display->w(), 35, "", -90, 0.15, 0.8, 2);
              NextPageButton->color(fl_rgb_color(100, 100, 100));
              NextPageButton->selection_color(fl_rgb_color(245,245,200));
              NextPageButton->callback(NextPage_cb, (void*)this);
              NextPageButton->hide();
-             PreviousPageButton = new Fl_Overlay_Arrow_Button(0, (int)(Display->y()), Display->w(), 25, "", 90, 0.15, 0.8, 2);
+             PreviousPageButton = new Fl_Overlay_Arrow_Button(0, (int)(Display->y()), Display->w(), 35, "", 90, 0.15, 0.8, 2);
              PreviousPageButton->color(fl_rgb_color(100, 100, 100));
              PreviousPageButton->selection_color(fl_rgb_color(245,245,200));
              PreviousPageButton->callback(PreviousPage_cb, (void*)this);

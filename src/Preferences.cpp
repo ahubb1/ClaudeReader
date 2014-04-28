@@ -20,10 +20,13 @@
 //---------------------------------------------------------------------------
 #include "Preferences.h"
 
-//! Constructor (nothing).
+//! Constructor
 Preferences::Preferences()
 {
+    //Init to nothing
     NbRecentDocs=0;
+    LastDoc[0]='\0';
+    LastDocPageNb=0;
 }
 
 //! Destructor (nothing).
@@ -33,6 +36,9 @@ Preferences::~Preferences()
 }
 
 //! Load preferences from the given file
+//! \return 0 if the preferences file has been successfully loaded
+//! \return -1 if the preferences file was not found
+//! \return -2 if the preferences file had a wrong format
 int Preferences::Load(const char prefFilename[255])
 {
     //First remember the preferences file filename
@@ -48,7 +54,7 @@ int Preferences::Load(const char prefFilename[255])
     {
         //The reading mode, background color and preview page option
         if(fscanf(prefFile, "%d %d %d ", &ReadingMode, &BkgColor, &PagePreview)!=3)
-            return -1;
+            return -2;
 
         //The last document filename
         fgets(LastDoc, 1024, prefFile);
@@ -56,7 +62,7 @@ int Preferences::Load(const char prefFilename[255])
 
         //The last doc current page
         if(fscanf(prefFile, "%d ", &LastDocPageNb)!=1)
-            return -1;
+            return -2;
 
         //The recent docs
         int i=0;
@@ -73,9 +79,11 @@ int Preferences::Load(const char prefFilename[255])
 
         //Close the file
         fclose(prefFile);
+
+        return 0;
     }
 
-    return 0;
+    return -1;
 }
 
 //! Apply the loaded parameters to the document
