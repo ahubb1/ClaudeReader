@@ -32,6 +32,8 @@
 
 #include "Document.h"
 
+#define MAX_NB_RECENT 10
+
 //! Class managing the user preferences (saving in files, loading, applying to the current document)
 class Preferences
 {
@@ -54,6 +56,7 @@ class Preferences
         //void SetLastDoc[1024](char val) { LastDoc[1024] = val; }
         int GetLastDocPageNb() { return LastDocPageNb; }
         void SetLastDocPageNb(int val) { LastDocPageNb = val; }
+        int GetNbRecentDocs() { return NbRecentDocs; }
         char *GetRecentDocs(int i) { return RecentDocs[i]; }
         //void SetRecentDocs[5][1024](char val) { RecentDocs[5][1024] = val; }
     protected:
@@ -65,7 +68,7 @@ class Preferences
         char LastDoc[1024];
         int LastDocPageNb;
         int NbRecentDocs;
-        char RecentDocs[5][1024];
+        char RecentDocs[MAX_NB_RECENT][1024];
 };
 
 #endif // PREFERENCES_H

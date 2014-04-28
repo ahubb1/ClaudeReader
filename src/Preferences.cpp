@@ -60,7 +60,7 @@ int Preferences::Load(const char prefFilename[255])
 
         //The recent docs
         int i=0;
-        while(i<5 && !feof(prefFile))
+        while(i<MAX_NB_RECENT && !feof(prefFile))
         {
             fgets(RecentDocs[i], 1024, prefFile);
             //replace the last \n by a \0
@@ -105,7 +105,7 @@ int Preferences::Apply(Document *doc)
 //! Save the current preferences to the preference file
 void Preferences::Save(Document *doc)
 {
-    //If a doc exists
+    //If a doc exists (otherwise no new preferences are saved)
     if(doc)
     {
         //Open the preferences file

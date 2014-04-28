@@ -516,7 +516,8 @@ void Window_cb(Fl_Widget* widget, void * param)
 
 
 
-//! Constructor: create the widgets, build the window and call the Init() with NULL parameters (no document)
+//! Constructor
+//!Create the widgets, build the window and call the Init() with NULL parameters (no document).
 MainWindow::MainWindow()
 {
     //Load user preferences
@@ -534,90 +535,107 @@ MainWindow::MainWindow()
         window->icon((char *)p);
     #endif
 
+    //Widgets creation
     window->begin();
 
-        Fl_Menu_Item menuitems[] =
-        {
-            { "&File",              0, 0, 0, FL_SUBMENU },
-                { "Open", FL_COMMAND + 'o', (Fl_Callback *)Open_cb, this },
-                { "Recent files", 0, 0, 0, FL_SUBMENU },
-                    {Pref->GetRecentDocs(0), 0, (Fl_Callback *)Open_cb, this },
-                    {Pref->GetRecentDocs(1), 0, (Fl_Callback *)Open_cb, this },
-                    {Pref->GetRecentDocs(2), 0, (Fl_Callback *)Open_cb, this },
-                    {Pref->GetRecentDocs(3), 0, (Fl_Callback *)Open_cb, this },
-                    {Pref->GetRecentDocs(4), 0, (Fl_Callback *)Open_cb, this },
+        //Main menu
+            Fl_Menu_Item menuitems[] =
+            {
+                { "&File",              0, 0, 0, FL_SUBMENU },
+                    { "Open", FL_COMMAND + 'o', (Fl_Callback *)Open_cb, this },
+                    { "Recent files", 0, 0, 0, FL_SUBMENU },
+                        { 0 },
+                    { "Quit", FL_COMMAND + 'q', (Fl_Callback *)Quit_cb, this },
                     { 0 },
-                { "Quit", FL_COMMAND + 'q', (Fl_Callback *)Quit_cb, this },
-                { 0 },
-            { "&View",              0, 0, 0, FL_SUBMENU },
-                {"Fullscreen2", FL_Escape, (Fl_Callback *)Fullscreen_cb, this, FL_MENU_INVISIBLE | FL_MENU_INACTIVE},
-                {"Fullscreen", FL_COMMAND + 'f', (Fl_Callback *)Fullscreen_cb, this, FL_MENU_DIVIDER },
-                { "Panel mode", 'c', (Fl_Callback *)CaseMode_cb, this, FL_MENU_RADIO| FL_MENU_INACTIVE },
-                { "Strip mode", 's', (Fl_Callback *)StripMode_cb, this, FL_MENU_RADIO|FL_MENU_INACTIVE },
-                { "Page mode", 'p', (Fl_Callback *)PageMode_cb, this, FL_MENU_RADIO|FL_MENU_DIVIDER |FL_MENU_INACTIVE },
-                { "Page preview", 0, (Fl_Callback *)PagePreview_cb, this, FL_MENU_TOGGLE|FL_MENU_DIVIDER | FL_MENU_INACTIVE },
-                { "Next panel", FL_Right, (Fl_Callback *)NextCase_cb, this, FL_MENU_INACTIVE },
-                { "Previous panel", FL_Left, (Fl_Callback *)PreviousCase_cb, this, FL_MENU_INACTIVE },
-                { "Next page", FL_Down, (Fl_Callback *)NextPage_cb, this, FL_MENU_INACTIVE },
-                { "Previous page", FL_Up, (Fl_Callback *)PreviousPage_cb, this, FL_MENU_INACTIVE },
-                { 0 },
-            { "&Help",              0, 0, 0, FL_SUBMENU },
-                { "Help", FL_COMMAND + 'h', (Fl_Callback *)Help_cb, this },
-                { "About", 0, (Fl_Callback *)About_cb, this },
-                { 0 },
-            { 0 }
-         };
+                { "&View",              0, 0, 0, FL_SUBMENU },
+                    {"Fullscreen2", FL_Escape, (Fl_Callback *)Fullscreen_cb, this, FL_MENU_INVISIBLE | FL_MENU_INACTIVE},
+                    {"Fullscreen", FL_COMMAND + 'f', (Fl_Callback *)Fullscreen_cb, this, FL_MENU_DIVIDER },
+                    { "Panel mode", 'c', (Fl_Callback *)CaseMode_cb, this, FL_MENU_RADIO| FL_MENU_INACTIVE },
+                    { "Strip mode", 's', (Fl_Callback *)StripMode_cb, this, FL_MENU_RADIO|FL_MENU_INACTIVE },
+                    { "Page mode", 'p', (Fl_Callback *)PageMode_cb, this, FL_MENU_RADIO|FL_MENU_DIVIDER |FL_MENU_INACTIVE },
+                    { "Page preview", 0, (Fl_Callback *)PagePreview_cb, this, FL_MENU_TOGGLE|FL_MENU_DIVIDER | FL_MENU_INACTIVE },
+                    { "Next panel", FL_Right, (Fl_Callback *)NextCase_cb, this, FL_MENU_INACTIVE },
+                    { "Previous panel", FL_Left, (Fl_Callback *)PreviousCase_cb, this, FL_MENU_INACTIVE },
+                    { "Next page", FL_Down, (Fl_Callback *)NextPage_cb, this, FL_MENU_INACTIVE },
+                    { "Previous page", FL_Up, (Fl_Callback *)PreviousPage_cb, this, FL_MENU_INACTIVE },
+                    { 0 },
+                { "&Help",              0, 0, 0, FL_SUBMENU },
+                    { "Help", FL_COMMAND + 'h', (Fl_Callback *)Help_cb, this },
+                    { "About", 0, (Fl_Callback *)About_cb, this },
+                    { 0 },
+                { 0 }
+             };
 
-         MenuBar = new Fl_Menu_Bar(0, 0, window->w(), 25);
-         MenuBar->copy(menuitems);
+             MenuBar = new Fl_Menu_Bar(0, 0, window->w(), 25);
+             MenuBar->copy(menuitems);
+             //Add recent documents items according to Preferences
+             //WARNING: MenuItem is doing its own filtering to "delete" the potential doubles
+             if(Pref->GetNbRecentDocs()>0)
+             {
+                 for(int i=0; i<Pref->GetNbRecentDocs(); i++)
+                 {
+                     char tmp[1024];
+                     sprintf(tmp, "&File/Recent files/%s", Pref->GetRecentDocs(i));
+                     MenuBar->add(tmp, 0, (Fl_Callback *)Open_cb, this);
+                 }
+             }
+             //If no recent documents
+             else
+             {
+                //Deactivate the corresponding menu item
+                Fl_Menu_Item* recentitem=(Fl_Menu_Item*)MenuBar->find_item("&File/Recent files");
+                recentitem->deactivate();
+             }
+
 
          //Main display
-         Display = new Fl_OpenCV(0, 25, window->w(), window->h()-45);
+            Display = new Fl_OpenCV(0, 25, window->w(), window->h()-45);
 
-         //Buttons
-         NextButton = new Fl_Trans_Button(window->w()-25, (int)(Display->y()), 25, Display->h(), "", 0, 0.8, 0.15);
-         NextButton->color(fl_rgb_color(100, 100, 100));
-         NextButton->selection_color(fl_rgb_color(245,245,200));
-         NextButton->callback(NextCase_cb, (void*)this);
-         NextButton->hide();
-         PreviousButton = new Fl_Trans_Button(0, (int)(Display->y()), 25, Display->h(), "", 180, 0.8, 0.15);
-         PreviousButton->color(fl_rgb_color(100, 100, 100));
-         PreviousButton->selection_color(fl_rgb_color(245,245,200));
-         PreviousButton->callback(PreviousCase_cb, (void*)this);
-         PreviousButton->hide();
-         NextPageButton = new Fl_Trans_Button(0, (int)(Display->y()+Display->h()-25), Display->w(), 25, "", -90, 0.035, 4);
-         NextPageButton->color(fl_rgb_color(100, 100, 100));
-         NextPageButton->selection_color(fl_rgb_color(245,245,200));
-         NextPageButton->callback(NextPage_cb, (void*)this);
-         NextPageButton->hide();
-         PreviousPageButton = new Fl_Trans_Button(0, (int)(Display->y()), Display->w(), 25, "", 90, 0.8, 0.15);
-         PreviousPageButton->color(fl_rgb_color(100, 100, 100));
-         PreviousPageButton->selection_color(fl_rgb_color(245,245,200));
-         PreviousPageButton->callback(PreviousPage_cb, (void*)this);
-         PreviousPageButton->hide();
+
+         //Navigation buttons
+             NextButton = new Fl_Trans_Button(window->w()-25, (int)(Display->y()), 25, Display->h(), "", 0, 0.8, 0.15);
+             NextButton->color(fl_rgb_color(100, 100, 100));
+             NextButton->selection_color(fl_rgb_color(245,245,200));
+             NextButton->callback(NextCase_cb, (void*)this);
+             NextButton->hide();
+             PreviousButton = new Fl_Trans_Button(0, (int)(Display->y()), 25, Display->h(), "", 180, 0.8, 0.15);
+             PreviousButton->color(fl_rgb_color(100, 100, 100));
+             PreviousButton->selection_color(fl_rgb_color(245,245,200));
+             PreviousButton->callback(PreviousCase_cb, (void*)this);
+             PreviousButton->hide();
+             NextPageButton = new Fl_Trans_Button(0, (int)(Display->y()+Display->h()-25), Display->w(), 25, "", -90, 0.035, 4);
+             NextPageButton->color(fl_rgb_color(100, 100, 100));
+             NextPageButton->selection_color(fl_rgb_color(245,245,200));
+             NextPageButton->callback(NextPage_cb, (void*)this);
+             NextPageButton->hide();
+             PreviousPageButton = new Fl_Trans_Button(0, (int)(Display->y()), Display->w(), 25, "", 90, 0.8, 0.15);
+             PreviousPageButton->color(fl_rgb_color(100, 100, 100));
+             PreviousPageButton->selection_color(fl_rgb_color(245,245,200));
+             PreviousPageButton->callback(PreviousPage_cb, (void*)this);
+             PreviousPageButton->hide();
 
 
          //Status bar
-         StatusBar = new Fl_Box(0, window->h()-20,window->w(), 20);
-         //StatusBar->box(FL_FLAT_BOX);
-         StatusBar->align(FL_ALIGN_RIGHT|FL_ALIGN_INSIDE);
-
-         //Closing callback
-         window->callback(Window_cb, (void*)this);
+             StatusBar = new Fl_Box(0, window->h()-20,window->w(), 20);
+             //StatusBar->box(FL_FLAT_BOX);
+             StatusBar->align(FL_ALIGN_RIGHT|FL_ALIGN_INSIDE);
 
 
-         //Handle mouse wheel events (combine with the timer and a global variable mouseWheel...to be improved)
-         Fl::add_handler(MouseWheelEvents);
-         //Timer initializaton
-         Fl::add_timeout(0.1, Timer_cb, (void*)this);
+         //Events and callbacks
+             //Closing callback
+             window->callback(Window_cb, (void*)this);
 
+             //Handle mouse wheel events (combine with the timer and a global variable mouseWheel...to be improved)
+             Fl::add_handler(MouseWheelEvents);
+             //Timer initializaton
+             Fl::add_timeout(0.1, Timer_cb, (void*)this);
 
-         //Make the window resizable around the Display (and define minimum dimensions)
-         window->resizable(Display);
-         window->size_range(200, 200, 0, 0, 0, 0, 0);
+             //Make the window resizable around the Display (and define minimum dimensions)
+             window->resizable(Display);
+             window->size_range(200, 200, 0, 0, 0, 0, 0);
 
-         //Apply the platic theme/skin
-         Fl::scheme("plastic");
+             //Apply the platic theme/skin
+             Fl::scheme("plastic");
 
          //TODO: Option background color (blanc ou noir)
          //TODO: Remember the page nb for each recent documents in preferences and the window size
@@ -627,7 +645,8 @@ MainWindow::MainWindow()
          //TODO: Deb package (donc Makefile) pour Linux
     window->end();
 
-    //Init
+
+    //Initialize the window and Document
     UpdateWidgets(this);
     Doc=NULL;
     sprintf(Filename, "%s", "\0");
@@ -650,6 +669,7 @@ MainWindow::~MainWindow()
 
 //! New document openning.
 //!Create and load the document and update the window and widgets accordingly.
+//!\param filename: the full filename (path+name) of the document to open, can be "\0" if nothing
 void MainWindow::Init(char *filename)
 {
     //If filename is correct
