@@ -41,7 +41,7 @@
 
 
 #include "Fl_OpenCV.h"
-#include "Fl_Trans_Button.h"
+#include "Fl_Overlay_Arrow_Button.h"
 #include "Preferences.h"
 #include "Document.h"
 
@@ -100,7 +100,7 @@ class MainWindow
             Fl_Menu_Bar *MenuBar;
             Fl_Box *StatusBar;
             Fl_OpenCV *Display;
-            Fl_Trans_Button *NextButton, *PreviousButton, *NextPageButton, *PreviousPageButton;
+            Fl_Overlay_Arrow_Button *NextButton, *PreviousButton, *NextPageButton, *PreviousPageButton;
 
 
         //Other param
