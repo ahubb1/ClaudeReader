@@ -88,6 +88,7 @@ class MainWindow
         //Info/status/update
         friend void UpdateWidgets(void * param);
         friend void ActivateNavigationWidgets(void *param, bool val);
+        friend void AddRecentDocsItems(void *param);
 
         friend void StatusBarUpdate(void * param);
 

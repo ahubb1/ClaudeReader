@@ -401,6 +401,37 @@ void ActivateNavigationWidgets(void *param, bool val)
         mw->NextPageButton->hide();
     }*/
 }
+//! Add recent documents items according to Preferences
+void AddRecentDocsItems(void *param)
+{
+    MainWindow *mw=(MainWindow*)param;
+
+    //WARNING: MenuItem is doing its own filtering to "delete" the potential duplicates
+    if(mw->Pref->GetNbRecentDocs()>0)
+    {
+        //First remove the recent docs menu item (to delete the previous submenus)
+        int recent_item_index=mw->MenuBar->find_index("&File/Recent files");
+        if(recent_item_index!=-1)
+            mw->MenuBar->remove(recent_item_index);
+        //and re-create it (at its previous position)
+        mw->MenuBar->insert(recent_item_index, "Recent files", 0, 0, 0, FL_SUBMENU);
+
+        //Then re-create the recent docs items
+        for(int i=0; i<mw->Pref->GetNbRecentDocs(); i++)
+        {
+            char tmp[1024];
+            sprintf(tmp, "&File/Recent files/%s", mw->Pref->GetRecentDocs(i));
+            mw->MenuBar->add(tmp, 0, (Fl_Callback *)Open_cb, mw);
+        }
+    }
+    //If no recent documents
+    else
+    {
+        //Deactivate the corresponding menu item
+        Fl_Menu_Item* recentitem=(Fl_Menu_Item*)mw->MenuBar->find_item("&File/Recent files");
+        recentitem->deactivate();
+    }
+}
 //-----------------------------------------------------------------------------
 
 
@@ -501,8 +532,8 @@ void UpdateWidgets(void * param)
         ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Page preview"))->clear();
     }
 
-    //Recent docs
-    //TODO or not...current behaviour is ok
+    //Recent docs: will only add real new ones (no duplicates) if some
+    AddRecentDocsItems(mw);
 }
 
 
@@ -574,24 +605,9 @@ MainWindow::MainWindow()
 
              MenuBar = new Fl_Menu_Bar(0, 0, window->w(), 25);
              MenuBar->copy(menuitems);
-             //Add recent documents items according to Preferences
-             //WARNING: MenuItem is doing its own filtering to "delete" the potential duplicates
-             if(Pref->GetNbRecentDocs()>0)
-             {
-                 for(int i=0; i<Pref->GetNbRecentDocs(); i++)
-                 {
-                     char tmp[1024];
-                     sprintf(tmp, "&File/Recent files/%s", Pref->GetRecentDocs(i));
-                     MenuBar->add(tmp, 0, (Fl_Callback *)Open_cb, this);
-                 }
-             }
-             //If no recent documents
-             else
-             {
-                //Deactivate the corresponding menu item
-                Fl_Menu_Item* recentitem=(Fl_Menu_Item*)MenuBar->find_item("&File/Recent files");
-                recentitem->deactivate();
-             }
+
+             //Create the list of recent docs
+             AddRecentDocsItems(this);
 
 
          //Main display

@@ -32,7 +32,7 @@
 
 #include "Document.h"
 
-#define MAX_NB_RECENT 10
+#define MAX_NB_RECENT 9
 
 //! Class managing the user preferences (saving in files, loading, applying to the current document)
 class Preferences
