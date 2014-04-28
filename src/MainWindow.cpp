@@ -593,22 +593,22 @@ MainWindow::MainWindow()
 
 
          //Navigation buttons
-             NextButton = new Fl_Trans_Button(window->w()-25, (int)(Display->y()), 25, Display->h(), "", 0, 0.8, 0.15);
+             NextButton = new Fl_Trans_Button(window->w()-25, (int)(Display->y()), 25, Display->h(), "", 0, 0.8, 0.15, 2);
              NextButton->color(fl_rgb_color(100, 100, 100));
              NextButton->selection_color(fl_rgb_color(245,245,200));
              NextButton->callback(NextCase_cb, (void*)this);
              NextButton->hide();
-             PreviousButton = new Fl_Trans_Button(0, (int)(Display->y()), 25, Display->h(), "", 180, 0.8, 0.15);
+             PreviousButton = new Fl_Trans_Button(0, (int)(Display->y()), 25, Display->h(), "", 180, 0.8, 0.15, 2);
              PreviousButton->color(fl_rgb_color(100, 100, 100));
              PreviousButton->selection_color(fl_rgb_color(245,245,200));
              PreviousButton->callback(PreviousCase_cb, (void*)this);
              PreviousButton->hide();
-             NextPageButton = new Fl_Trans_Button(0, (int)(Display->y()+Display->h()-25), Display->w(), 25, "", -90, 0.035, 4);
+             NextPageButton = new Fl_Trans_Button(0, (int)(Display->y()+Display->h()-25), Display->w(), 25, "", -90, 0.035, 4, 2);
              NextPageButton->color(fl_rgb_color(100, 100, 100));
              NextPageButton->selection_color(fl_rgb_color(245,245,200));
              NextPageButton->callback(NextPage_cb, (void*)this);
              NextPageButton->hide();
-             PreviousPageButton = new Fl_Trans_Button(0, (int)(Display->y()), Display->w(), 25, "", 90, 0.8, 0.15);
+             PreviousPageButton = new Fl_Trans_Button(0, (int)(Display->y()), Display->w(), 25, "", 90, 0.8, 0.15, 2);
              PreviousPageButton->color(fl_rgb_color(100, 100, 100));
              PreviousPageButton->selection_color(fl_rgb_color(245,245,200));
              PreviousPageButton->callback(PreviousPage_cb, (void*)this);

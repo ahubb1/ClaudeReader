@@ -1,3 +1,23 @@
+//--------------------------------------------------------------------------
+//
+//    Copyright (C) 2014  Vincent Crocher
+//
+//	  This file is part of BDReader.
+//
+//    BDReader is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, either version 3 of the License, or
+//    (at your option) any later version.
+//
+//    BDReader is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with BDReader.  If not, see <http://www.gnu.org/licenses/>.
+//
+//---------------------------------------------------------------------------
 #include "Fl_Trans_Button.h"
 
 
@@ -77,24 +97,62 @@ void Fl_Trans_Button::draw()
             if(labelcolor()!=FL_TRANS)
             {
                 fl_color(labelcolor());
-                //fl_polygon(realxa, realya, realxa+realwa, realya+realha/2., realxa, realya+realha, realxa+realwa*0.5, realya+realha/2.);
-                fl_begin_complex_polygon();
-                    fl_curve(realxa, realya, 0.6*realxa+ 0.4*(realxa+realwa), 0.75*realya+0.25*(realya+realha/2.), 0.25*realxa+0.75*(realxa+realwa), 0.3*realya+0.7*(realya+realha/2.), realxa+realwa, realya+realha/2.);
-                    fl_curve(realxa+realwa, realya+realha/2., 0.25*realxa+0.75*(realxa+realwa), 0.3*(realya+realha)+0.7*(realya+realha/2.), 0.6*realxa+0.4*(realxa+realwa), 0.75*(realya+realha)+0.25*(realya+realha/2.), realxa, realya+realha);
-                    fl_curve(realxa, realya+realha, 0.6*realxa+ 0.4*(realxa+realwa), realya+0.5*realha, 0.6*realxa+ 0.4*(realxa+realwa), realya+0.5*realha, realxa, realya);
-                fl_end_complex_polygon();
+                fl_begin_polygon();
+                    //Draw the arrow according to the style choosen
+                    switch(style)
+                    {
+                        case 1:
+                            fl_vertex(realxa, realya);
+                            fl_vertex(realxa+realwa, realya+realha/2.);
+                            fl_vertex(realxa, realya+realha);
+                            fl_vertex(realxa+realwa*0.4, realya+realha/2.);
+                            break;
+
+                        case 2:
+                            fl_curve(realxa, realya, 0.6*realxa+ 0.4*(realxa+realwa), 0.75*realya+0.25*(realya+realha/2.), 0.25*realxa+0.75*(realxa+realwa), 0.3*realya+0.7*(realya+realha/2.), realxa+realwa, realya+realha/2.);
+                            fl_curve(realxa+realwa, realya+realha/2., 0.25*realxa+0.75*(realxa+realwa), 0.3*(realya+realha)+0.7*(realya+realha/2.), 0.6*realxa+0.4*(realxa+realwa), 0.75*(realya+realha)+0.25*(realya+realha/2.), realxa, realya+realha);
+                            fl_curve(realxa, realya+realha, 0.6*realxa+ 0.4*(realxa+realwa), realya+0.5*realha, 0.6*realxa+ 0.4*(realxa+realwa), realya+0.5*realha, realxa, realya);
+                            break;
+
+                        //O is the default one
+                        default:
+                            fl_vertex(realxa, realya);
+                            fl_vertex(realxa+realwa, realya+realha/2.);
+                            fl_vertex(realxa, realya+realha);
+                            break;
+                    }
+                fl_end_polygon();
             }
             //line
             if(selection_color()!=FL_TRANS)
             {
                 fl_color(selection_color());
                 fl_line_style(0, 2, 0);
-                //fl_loop(realxa, realya, realxa+realwa, realya+realha/2., realxa, realya+realha, realxa+realwa*0.5, realya+realha/2.);
-                fl_begin_line();
-                    fl_curve(realxa, realya, 0.6*realxa+ 0.4*(realxa+realwa), 0.75*realya+0.25*(realya+realha/2.), 0.25*realxa+0.75*(realxa+realwa), 0.3*realya+0.7*(realya+realha/2.), realxa+realwa, realya+realha/2.);
-                    fl_curve(realxa+realwa, realya+realha/2., 0.25*realxa+0.75*(realxa+realwa), 0.3*(realya+realha)+0.7*(realya+realha/2.), 0.6*realxa+0.4*(realxa+realwa), 0.75*(realya+realha)+0.25*(realya+realha/2.), realxa, realya+realha);
-                    fl_curve(realxa, realya+realha, 0.6*realxa+ 0.4*(realxa+realwa), realya+0.5*realha, 0.6*realxa+ 0.4*(realxa+realwa), realya+0.5*realha, realxa, realya);
-                fl_end_line();
+                fl_begin_loop();
+                    //Draw the arrow according to the style choosen
+                    switch(style)
+                    {
+                        case 1:
+                            fl_vertex(realxa, realya);
+                            fl_vertex(realxa+realwa, realya+realha/2.);
+                            fl_vertex(realxa, realya+realha);
+                            fl_vertex(realxa+realwa*0.4, realya+realha/2.);
+                            break;
+
+                        case 2:
+                            fl_curve(realxa, realya, 0.6*realxa+ 0.4*(realxa+realwa), 0.75*realya+0.25*(realya+realha/2.), 0.25*realxa+0.75*(realxa+realwa), 0.3*realya+0.7*(realya+realha/2.), realxa+realwa, realya+realha/2.);
+                            fl_curve(realxa+realwa, realya+realha/2., 0.25*realxa+0.75*(realxa+realwa), 0.3*(realya+realha)+0.7*(realya+realha/2.), 0.6*realxa+0.4*(realxa+realwa), 0.75*(realya+realha)+0.25*(realya+realha/2.), realxa, realya+realha);
+                            fl_curve(realxa, realya+realha, 0.6*realxa+ 0.4*(realxa+realwa), realya+0.5*realha, 0.6*realxa+ 0.4*(realxa+realwa), realya+0.5*realha, realxa, realya);
+                            break;
+
+                        //O is the default one
+                        default:
+                            fl_vertex(realxa, realya);
+                            fl_vertex(realxa+realwa, realya+realha/2.);
+                            fl_vertex(realxa, realya+realha);
+                            break;
+                    }
+                fl_end_loop();
                 fl_line_style(0);
             }
         fl_pop_matrix();
