@@ -385,7 +385,7 @@ void ActivateNavigationWidgets(void *param, bool val)
         }
     }
 
-    //The navigation buttons
+    /*The navigation buttons
     if(val)
     {
         mw->PreviousButton->show();
@@ -399,25 +399,7 @@ void ActivateNavigationWidgets(void *param, bool val)
         mw->NextButton->hide();
         mw->PreviousPageButton->hide();
         mw->NextPageButton->hide();
-    }
-
-}
-
-//! Activate all the menu items and buttons
-void ActivateWidgets(void * param)
-{
-      MainWindow *mw=(MainWindow*)param;
-
-      //Activate all the menu items
-      Fl_Menu_Item *items=(Fl_Menu_Item *)mw->MenuBar->menu();
-      for(int i=0; i<mw->MenuBar->size(); i++)
-            items[i].activate();
-
-      //The navigation buttons
-      mw->PreviousButton->show();
-      mw->NextButton->show();
-      mw->PreviousPageButton->show();
-      mw->NextPageButton->show();
+    }*/
 }
 //-----------------------------------------------------------------------------
 
@@ -593,7 +575,7 @@ MainWindow::MainWindow()
              MenuBar = new Fl_Menu_Bar(0, 0, window->w(), 25);
              MenuBar->copy(menuitems);
              //Add recent documents items according to Preferences
-             //WARNING: MenuItem is doing its own filtering to "delete" the potential doubles
+             //WARNING: MenuItem is doing its own filtering to "delete" the potential duplicates
              if(Pref->GetNbRecentDocs()>0)
              {
                  for(int i=0; i<Pref->GetNbRecentDocs(); i++)
@@ -616,7 +598,7 @@ MainWindow::MainWindow()
              Display = new Fl_OpenCV(0, 25, window->w(), window->h()-45);
 
 
-         //Navigation buttons
+         /*Navigation buttons
              NextButton = new Fl_Overlay_Arrow_Button(window->w()-25, (int)(Display->y()), 25, Display->h(), "", 0, 0.8, 0.15, 2);
              NextButton->color(fl_rgb_color(100, 100, 100));
              NextButton->selection_color(fl_rgb_color(245,245,200));
@@ -637,7 +619,7 @@ MainWindow::MainWindow()
              PreviousPageButton->selection_color(fl_rgb_color(245,245,200));
              PreviousPageButton->callback(PreviousPage_cb, (void*)this);
              PreviousPageButton->hide();
-
+*/
 
          //Status bar
              StatusBar = new Fl_Box(0, window->h()-20,window->w(), 20);
@@ -740,7 +722,7 @@ void MainWindow::Init(char *filename)
             StatusBarUpdate(this);
 
             //Activate menus
-            ActivateWidgets(this);
+            ActivateNavigationWidgets(this, true);
 
             //Preload the surrounding pages
             Fl::check();
