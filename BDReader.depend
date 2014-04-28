@@ -1,8 +1,8 @@
 # depslib dependency file v1.0
-1398489641 source:/home/vincent/Perso/BDReader/BDReader/src/MainWindow.cpp
+1398607303 source:/home/vincent/Perso/BDReader/BDReader/src/MainWindow.cpp
 	"MainWindow.h"
 
-1398338352 /home/vincent/Perso/BDReader/BDReader/include/MainWindow.h
+1398607034 /home/vincent/Perso/BDReader/BDReader/include/MainWindow.h
 	<FL/Fl.H>
 	<FL/Fl_Window.H>
 	<FL/Fl_Menu_Bar.H>
@@ -11,6 +11,7 @@
 	<FL/Fl_Box.H>
 	<FL/Fl_Help_Dialog.H>
 	"Fl_OpenCV.h"
+	"Fl_Trans_Button.h"
 	"Preferences.h"
 	"Document.h"
 	"icon32.xbm"
@@ -20,12 +21,12 @@
 	<stdlib.h>
 	"MainWindow.h"
 
-1398227716 /home/vincent/Perso/BDReader/BDReader/include/Fl_OpenCV.h
+1398650724 /home/vincent/Perso/BDReader/BDReader/include/Fl_OpenCV.h
 	<FL/Fl_Widget.H>
 	<FL/fl_ask.H>
 	<opencv2/opencv.hpp>
 
-1398221145 source:/home/vincent/Perso/BDReader/BDReader/src/Fl_OpenCV.cxx
+1398650360 source:/home/vincent/Perso/BDReader/BDReader/src/Fl_OpenCV.cxx
 	<FL/Fl.H>
 	<FL/fl_draw.H>
 	"Fl_OpenCV.h"
@@ -372,7 +373,7 @@
 1398319401 /home/vincent/Perso/BDReader/BDReader/include/Preferences.h
 	"Document.h"
 
-1398319317 source:/home/vincent/Perso/BDReader/BDReader/src/Preferences.cpp
+1398493204 source:/home/vincent/Perso/BDReader/BDReader/src/Preferences.cpp
 	"Preferences.h"
 
 1397837284 /home/vincent/Perso/BDReader/BDReader/icon32.xbm
@@ -381,4 +382,13 @@
 
 1397908262 /home/vincent/Perso/BDReader/BDReader/include/mupdf/img.h
 	"mupdf/fitz.h"
+
+1398606647 /home/vincent/Perso/BDReader/BDReader/include/Fl_Trans_Button.h
+	<FL/Fl.H>
+	<FL/fl_draw.H>
+	<FL/Fl_Button.H>
+	<stdio.h>
+
+1398608352 source:/home/vincent/Perso/BDReader/BDReader/src/Fl_Trans_Button.cpp
+	"Fl_Trans_Button.h"
 

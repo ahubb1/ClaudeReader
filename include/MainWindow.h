@@ -41,6 +41,7 @@
 
 
 #include "Fl_OpenCV.h"
+#include "Fl_Trans_Button.h"
 #include "Preferences.h"
 #include "Document.h"
 
@@ -86,8 +87,8 @@ class MainWindow
 
         //Info/status/update
         friend void UpdateWidgets(void * param);
-        friend void ActivateMenus(void * param);
-        friend void ActivateNavigationMenus(void *param, bool val);
+        friend void ActivateWidgets(void * param);
+        friend void ActivateNavigationWidgets(void *param, bool val);
 
         friend void StatusBarUpdate(void * param);
 
@@ -99,6 +100,7 @@ class MainWindow
             Fl_Menu_Bar *MenuBar;
             Fl_Box *StatusBar;
             Fl_OpenCV *Display;
+            Fl_Trans_Button *NextButton, *PreviousButton, *NextPageButton, *PreviousPageButton;
 
 
         //Other param

@@ -49,13 +49,14 @@ protected:
   CvMouseCallback mouse_cb;
   void *cb_param; //Vincent: a parameter for the callback function
   bool fit;
+  float maxzoom;
 
 public:
   //Assign a new image to draw (in Mat Opencv format)
   void SetImage(Mat *nimage);
   //void FitWindows();
-  Fl_OpenCV(int X, int Y);
-  Fl_OpenCV(int X,int Y,int W,int H);
+  Fl_OpenCV(int X, int Y, float mzoom=0.5);
+  Fl_OpenCV(int X,int Y,int W,int H, float mzoom=0.5);
   ~Fl_OpenCV();
 
   void SetMouseCallback(CvMouseCallback on_mouse, void * param=0);

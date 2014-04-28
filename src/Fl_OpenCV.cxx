@@ -18,23 +18,24 @@ void Fl_OpenCV::draw(int xx, int yy, int ww, int hh)
 }
 
 
-Fl_OpenCV::Fl_OpenCV(int X, int Y):Fl_Widget(X,Y,1,1,0)
+Fl_OpenCV::Fl_OpenCV(int X, int Y, float mzoom):Fl_Widget(X,Y,1,1,0)
 {
   image=NULL;
   FlImg=NULL;
   fit=true;
   mouse_cb=NULL;
   x(X);y(Y);
-
+  maxzoom=mzoom;
 }
 
-Fl_OpenCV::Fl_OpenCV(int X,int Y,int W,int H):Fl_Widget(X,Y,W,H,0)
+Fl_OpenCV::Fl_OpenCV(int X,int Y,int W,int H, float mzoom):Fl_Widget(X,Y,W,H,0)
 {
   x(X);y(Y);w(W);h(H);
   image=NULL;
   FlImg=NULL;
   fit=true;
   mouse_cb=NULL;
+  maxzoom=mzoom;
 }
 
 
@@ -57,8 +58,9 @@ void Fl_OpenCV::SetImage(Mat *nimage)
     float fx, fy, scale;
     fx=(float)image->cols/w();
     fy=(float)image->rows/h();
-
     scale=max(fx,fy);
+    //Impose a maximum zoom value (=>a minimum ratio value), defined by maxzoom
+    scale=max(scale, maxzoom);
 
 
     //Prepare the image to draw

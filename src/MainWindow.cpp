@@ -331,8 +331,8 @@ void NextCase_cb(Fl_Widget* widget, void * param)
 }
 
 
-//! Actvate or deactivate (depending on bool val), the navigation menu items (Next, Previous...)
-void ActivateNavigationMenus(void *param, bool val)
+//! Actvate or deactivate (depending on bool val), the navigation menu items (Next, Previous...) and buttons
+void ActivateNavigationWidgets(void *param, bool val)
 {
     MainWindow *mw=(MainWindow*)param;
 
@@ -360,10 +360,27 @@ void ActivateNavigationMenus(void *param, bool val)
 
         }
     }
+
+    //The navigation buttons
+    if(val)
+    {
+        mw->PreviousButton->show();
+        mw->NextButton->show();
+        mw->PreviousPageButton->show();
+        mw->NextPageButton->show();
+    }
+    else
+    {
+        mw->PreviousButton->hide();
+        mw->NextButton->hide();
+        mw->PreviousPageButton->hide();
+        mw->NextPageButton->hide();
+    }
+
 }
 
-//! Activate all the menu items
-void ActivateMenus(void * param)
+//! Activate all the menu items and buttons
+void ActivateWidgets(void * param)
 {
       MainWindow *mw=(MainWindow*)param;
 
@@ -372,6 +389,11 @@ void ActivateMenus(void * param)
       for(int i=0; i<mw->MenuBar->size(); i++)
             items[i].activate();
 
+      //The navigation buttons
+      mw->PreviousButton->show();
+      mw->NextButton->show();
+      mw->PreviousPageButton->show();
+      mw->NextPageButton->show();
 }
 //-----------------------------------------------------------------------------
 
@@ -550,7 +572,30 @@ MainWindow::MainWindow()
          MenuBar->copy(menuitems);
 
          //Main display
-         Display=new Fl_OpenCV(0, 25, window->w(), window->h()-45);
+         Display = new Fl_OpenCV(0, 25, window->w(), window->h()-45);
+
+         //Buttons
+         NextButton = new Fl_Trans_Button(window->w()-25, (int)(Display->y()), 25, Display->h(), "", 0, 0.8, 0.15);
+         NextButton->color(fl_rgb_color(100, 100, 100));
+         NextButton->selection_color(fl_rgb_color(245,245,200));
+         NextButton->callback(NextCase_cb, (void*)this);
+         NextButton->hide();
+         PreviousButton = new Fl_Trans_Button(0, (int)(Display->y()), 25, Display->h(), "", 180, 0.8, 0.15);
+         PreviousButton->color(fl_rgb_color(100, 100, 100));
+         PreviousButton->selection_color(fl_rgb_color(245,245,200));
+         PreviousButton->callback(PreviousCase_cb, (void*)this);
+         PreviousButton->hide();
+         NextPageButton = new Fl_Trans_Button(0, (int)(Display->y()+Display->h()-25), Display->w(), 25, "", -90, 0.035, 4);
+         NextPageButton->color(fl_rgb_color(100, 100, 100));
+         NextPageButton->selection_color(fl_rgb_color(245,245,200));
+         NextPageButton->callback(NextPage_cb, (void*)this);
+         NextPageButton->hide();
+         PreviousPageButton = new Fl_Trans_Button(0, (int)(Display->y()), Display->w(), 25, "", 90, 0.8, 0.15);
+         PreviousPageButton->color(fl_rgb_color(100, 100, 100));
+         PreviousPageButton->selection_color(fl_rgb_color(245,245,200));
+         PreviousPageButton->callback(PreviousPage_cb, (void*)this);
+         PreviousPageButton->hide();
+
 
          //Status bar
          StatusBar = new Fl_Box(0, window->h()-20,window->w(), 20);
@@ -567,8 +612,9 @@ MainWindow::MainWindow()
          Fl::add_timeout(0.1, Timer_cb, (void*)this);
 
 
-         //Make the window resizable around the Display
+         //Make the window resizable around the Display (and define minimum dimensions)
          window->resizable(Display);
+         window->size_range(200, 200, 0, 0, 0, 0, 0);
 
          //Apply the platic theme/skin
          Fl::scheme("plastic");
@@ -591,6 +637,8 @@ MainWindow::MainWindow()
 //! Destructor
 MainWindow::~MainWindow()
 {
+    //TODO delete the wigets
+
    if(Doc)
         delete Doc;
 
@@ -648,7 +696,7 @@ void MainWindow::Init(char *filename)
             StatusBarUpdate(this);
 
             //Activate menus
-            ActivateMenus(this);
+            ActivateWidgets(this);
 
             //Preload the surrounding pages
             Fl::check();
@@ -665,7 +713,7 @@ void MainWindow::Init(char *filename)
             {
                 //Update the window accordingly
                 //menus
-                ActivateNavigationMenus(this, false);
+                ActivateNavigationWidgets(this, false);
                 //display
                 Display->SetImage(NULL);
                 //window title
