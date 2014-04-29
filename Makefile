@@ -41,9 +41,9 @@ OBJDIR_RELEASE = obj/Release
 DEP_RELEASE = 
 OUT_RELEASE = bin/Release/BDReader
 
-OBJ_DEBUG = $(OBJDIR_DEBUG)/src/Document.o $(OBJDIR_DEBUG)/src/Fl_OpenCV.o $(OBJDIR_DEBUG)/src/MainWindow.o $(OBJDIR_DEBUG)/src/Page.o $(OBJDIR_DEBUG)/src/Preferences.o $(OBJDIR_DEBUG)/src/main.o
+OBJ_DEBUG = $(OBJDIR_DEBUG)/src/Document.o $(OBJDIR_DEBUG)/src/Fl_Overlay_Arrow_Button.o $(OBJDIR_DEBUG)/src/Fl_OpenCV.o $(OBJDIR_DEBUG)/src/MainWindow.o $(OBJDIR_DEBUG)/src/Page.o $(OBJDIR_DEBUG)/src/Preferences.o $(OBJDIR_DEBUG)/src/main.o
 
-OBJ_RELEASE = $(OBJDIR_RELEASE)/src/Document.o $(OBJDIR_RELEASE)/src/Fl_OpenCV.o $(OBJDIR_RELEASE)/src/MainWindow.o $(OBJDIR_RELEASE)/src/Page.o $(OBJDIR_RELEASE)/src/Preferences.o $(OBJDIR_RELEASE)/src/main.o
+OBJ_RELEASE = $(OBJDIR_RELEASE)/src/Document.o $(OBJDIR_RELEASE)/src/Fl_Overlay_Arrow_Button.o $(OBJDIR_RELEASE)/src/Fl_OpenCV.o $(OBJDIR_RELEASE)/src/MainWindow.o $(OBJDIR_RELEASE)/src/Page.o $(OBJDIR_RELEASE)/src/Preferences.o $(OBJDIR_RELEASE)/src/main.o
 
 all: release
 
@@ -60,8 +60,12 @@ debug: before_debug out_debug after_debug
 out_debug: before_debug $(OBJ_DEBUG) $(DEP_DEBUG)
 	$(LD) $(LIBDIR_DEBUG) -o $(OUT_DEBUG) $(OBJ_DEBUG)  $(LDFLAGS_DEBUG) $(LIB_DEBUG)
 
+
 $(OBJDIR_DEBUG)/src/Document.o: src/Document.cpp
 	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c src/Document.cpp -o $(OBJDIR_DEBUG)/src/Document.o
+
+$(OBJDIR_DEBUG)/src/Fl_Overlay_Arrow_Button.o: src/Fl_Overlay_Arrow_Button.cxx
+	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c src/Fl_Overlay_Arrow_Button.cxx -o $(OBJDIR_DEBUG)/src/Fl_Overlay_Arrow_Button.o
 
 $(OBJDIR_DEBUG)/src/Fl_OpenCV.o: src/Fl_OpenCV.cxx
 	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c src/Fl_OpenCV.cxx -o $(OBJDIR_DEBUG)/src/Fl_OpenCV.o
@@ -77,6 +81,7 @@ $(OBJDIR_DEBUG)/src/Preferences.o: src/Preferences.cpp
 
 $(OBJDIR_DEBUG)/src/main.o: src/main.cpp
 	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c src/main.cpp -o $(OBJDIR_DEBUG)/src/main.o
+
 
 clean_debug: 
 	rm -f $(OBJ_DEBUG) $(OUT_DEBUG)
@@ -96,6 +101,9 @@ out_release: before_release $(OBJ_RELEASE) $(DEP_RELEASE)
 
 $(OBJDIR_RELEASE)/src/Document.o: src/Document.cpp
 	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c src/Document.cpp -o $(OBJDIR_RELEASE)/src/Document.o
+
+$(OBJDIR_RELEASE)/src/Fl_Overlay_Arrow_Button.o: src/Fl_Overlay_Arrow_Button.cxx
+	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c src/Fl_Overlay_Arrow_Button.cxx -o $(OBJDIR_RELEASE)/src/Fl_Overlay_Arrow_Button.o
 
 $(OBJDIR_RELEASE)/src/Fl_OpenCV.o: src/Fl_OpenCV.cxx
 	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c src/Fl_OpenCV.cxx -o $(OBJDIR_RELEASE)/src/Fl_OpenCV.o
