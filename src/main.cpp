@@ -37,7 +37,6 @@
 
 int main()
 {
-    Fl::visual(FL_RGB);
     MainWindow *MW=new MainWindow();
     Fl::run();
 

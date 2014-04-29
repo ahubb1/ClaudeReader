@@ -385,7 +385,7 @@ void ActivateNavigationWidgets(void *param, bool val)
         }
     }
 
-    /*The navigation buttons
+    //The navigation buttons
     if(val)
     {
         mw->PreviousButton->show();
@@ -399,7 +399,7 @@ void ActivateNavigationWidgets(void *param, bool val)
         mw->NextButton->hide();
         mw->PreviousPageButton->hide();
         mw->NextPageButton->hide();
-    }*/
+    }
 }
 //! Add recent documents items according to Preferences
 void AddRecentDocsItems(void *param)
@@ -499,7 +499,6 @@ void About_cb(Fl_Widget* widget, void * param)
         fl_message("BDReader\n A comics BDReader\n\n Vincent Crocher - 2014. (See License.txt).\n     ---http:\\\\bdreader.sourceforge.net---\n");
     }
 }
-
 //-----------------------------------------------------------------------------
 
 
@@ -614,28 +613,39 @@ MainWindow::MainWindow()
              Display = new Fl_OpenCV(0, 25, window->w(), window->h()-45);
 
 
-         /*Navigation buttons
-             NextButton = new Fl_Overlay_Arrow_Button(window->w()-25, (int)(Display->y()), 25, Display->h(), "", 0, 0.8, 0.15, 2);
+         //Navigation buttons
+             NextButton = new Fl_Overlay_Arrow_Button(window->w()-25, (int)(Display->y()), 25, Display->h(), "", 0, 0.8, 0.15, 0);
              NextButton->color(fl_rgb_color(100, 100, 100));
              NextButton->selection_color(fl_rgb_color(245,245,200));
              NextButton->callback(NextCase_cb, (void*)this);
+             //Prevent the widget to get the focus and thus prevent to use the arrow keys to
+             //navigate through the widgets: keep the Arrows shortcut behavior (to menu_items)
+             //needed to apply to any other widget than the display (which can interecpt the arrow keys)
+             NextButton->clear_visible_focus();
              NextButton->hide();
-             PreviousButton = new Fl_Overlay_Arrow_Button(0, (int)(Display->y()), 25, Display->h(), "", 180, 0.8, 0.15, 2);
+             NextButton->tooltip("Next panel");
+             PreviousButton = new Fl_Overlay_Arrow_Button(0, (int)(Display->y()), 25, Display->h(), "", 180, 0.8, 0.15, 0);
              PreviousButton->color(fl_rgb_color(100, 100, 100));
              PreviousButton->selection_color(fl_rgb_color(245,245,200));
              PreviousButton->callback(PreviousCase_cb, (void*)this);
+             PreviousButton->clear_visible_focus();
              PreviousButton->hide();
-             NextPageButton = new Fl_Overlay_Arrow_Button(0, (int)(Display->y()+Display->h()-35), Display->w(), 35, "", -90, 0.15, 0.8, 2);
+             PreviousButton->tooltip("Previous panel");
+             NextPageButton = new Fl_Overlay_Arrow_Button(0, (int)(Display->y()+Display->h()-35), Display->w(), 35, "", -90, 0.10, 0.8, 0);
              NextPageButton->color(fl_rgb_color(100, 100, 100));
              NextPageButton->selection_color(fl_rgb_color(245,245,200));
              NextPageButton->callback(NextPage_cb, (void*)this);
+             NextPageButton->clear_visible_focus();
              NextPageButton->hide();
-             PreviousPageButton = new Fl_Overlay_Arrow_Button(0, (int)(Display->y()), Display->w(), 35, "", 90, 0.15, 0.8, 2);
+             NextPageButton->tooltip("Next page");
+             PreviousPageButton = new Fl_Overlay_Arrow_Button(0, (int)(Display->y()), Display->w(), 35, "", 90, 0.10, 0.8, 0);
              PreviousPageButton->color(fl_rgb_color(100, 100, 100));
              PreviousPageButton->selection_color(fl_rgb_color(245,245,200));
              PreviousPageButton->callback(PreviousPage_cb, (void*)this);
+             PreviousPageButton->clear_visible_focus();
              PreviousPageButton->hide();
-*/
+             PreviousPageButton->tooltip("Previous page");
+
 
          //Status bar
              StatusBar = new Fl_Box(0, window->h()-20,window->w(), 20);
@@ -659,11 +669,10 @@ MainWindow::MainWindow()
              //Apply the platic theme/skin
              Fl::scheme("plastic");
 
+
          //TODO: Option background color (blanc ou noir)
          //TODO: Remember the page nb for each recent documents in preferences and the window size
-         //TODO: Improve the change of view modes (to previous and next pages)
          //TODO: Gerer les bds en suites d'images (folders) (et cbr ?)
-         //TODO: Version windows avec installateur
          //TODO: Deb package (donc Makefile) pour Linux
     window->end();
 

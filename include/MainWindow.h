@@ -101,6 +101,7 @@ class MainWindow
             Fl_Box *StatusBar;
             Fl_OpenCV *Display;
             Fl_Overlay_Arrow_Button *NextButton, *PreviousButton, *NextPageButton, *PreviousPageButton;
+            //Fl_Button *NextButton, *PreviousButton, *NextPageButton, *PreviousPageButton;
 
 
         //Other param

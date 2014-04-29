@@ -79,11 +79,13 @@
 		</Linker>
 		<Unit filename="include/Document.h" />
 		<Unit filename="include/Fl_OpenCV.h" />
+		<Unit filename="include/Fl_Overlay_Arrow_Button.h" />
 		<Unit filename="include/MainWindow.h" />
 		<Unit filename="include/Page.h" />
 		<Unit filename="include/Preferences.h" />
 		<Unit filename="src/Document.cpp" />
 		<Unit filename="src/Fl_OpenCV.cxx" />
+		<Unit filename="src/Fl_Overlay_Arrow_Button.cxx" />
 		<Unit filename="src/MainWindow.cpp" />
 		<Unit filename="src/Page.cpp" />
 		<Unit filename="src/Preferences.cpp" />

@@ -24,13 +24,13 @@
 int Fl_Overlay_Arrow_Button::handle(int event)
 {
     int ret=0;
-    if(Fl::belowmouse()==this)
+    if((Fl::belowmouse()==this && event==FL_MOVE) || event==FL_ENTER)
     {
         //Make visible
         is_visible=true;
         //and redraw
         redraw();
-        //Pass the event to other widget if needed
+        //The event has been handled
         ret=1;
     }
     else
@@ -50,13 +50,14 @@ int Fl_Overlay_Arrow_Button::handle(int event)
         }
     }
 
-    //Call the classical button callback event handler (return non zero if the event have been handled)
+    //Call the classical button callback event handler (return non zero if the event has been handled)
     int ret2 = Fl_Button::handle(event);
     if(ret2!=0)
         return ret2;
 
     return ret;
 }
+
 
 void Fl_Overlay_Arrow_Button::draw()
 {
@@ -84,7 +85,8 @@ void Fl_Overlay_Arrow_Button::draw()
             fl_translate(x()+w()/2., y()+h()/2.);//go to the center
             fl_rotate(r);//rotate
             fl_translate(-x()-w()/2., -y()-h()/2.);//go back
-            //Draw
+
+            //Compute the arrow coordinates and dimensions
             int signha=1, signwa=1;
             //Apply an horizontal symetrie to the arrow (=>the arrow way)
             if( (r>90 && r<=180) || (r<=-90 && r>=-180) )
@@ -108,7 +110,7 @@ void Fl_Overlay_Arrow_Button::draw()
                             fl_vertex(realxa, realya);
                             fl_vertex(realxa+realwa, realya+realha/2.);
                             fl_vertex(realxa, realya+realha);
-                            fl_vertex(realxa+realwa*0.4, realya+realha/2.);
+                            fl_vertex(realxa+realwa*0.3, realya+realha/2.);
                             break;
 
                         case 2:
@@ -139,7 +141,7 @@ void Fl_Overlay_Arrow_Button::draw()
                             fl_vertex(realxa, realya);
                             fl_vertex(realxa+realwa, realya+realha/2.);
                             fl_vertex(realxa, realya+realha);
-                            fl_vertex(realxa+realwa*0.4, realya+realha/2.);
+                            fl_vertex(realxa+realwa*0.3, realya+realha/2.);
                             break;
 
                         case 2:
