@@ -671,6 +671,7 @@ MainWindow::MainWindow()
              //Timer initializaton
              Fl::add_timeout(0.1, Timer_cb, (void*)this);
 
+        //Graphics
              //Make the window resizable around the Display (and define minimum dimensions)
              window->resizable(Display);
              window->size_range(200, 200, 0, 0, 0, 0, 0);

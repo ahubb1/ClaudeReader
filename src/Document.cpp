@@ -154,7 +154,6 @@ int Document::LoadPage(int p)
             {
                 Fl::wait(1);
             }
-
         }
         else
         {
