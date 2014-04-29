@@ -20,7 +20,7 @@
 //---------------------------------------------------------------------------
 #include "Preferences.h"
 
-//! Constructor
+//! Constructor.
 Preferences::Preferences()
 {
     //Init to nothing

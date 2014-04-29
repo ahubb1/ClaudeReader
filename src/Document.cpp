@@ -66,7 +66,7 @@ Document::~Document()
 
 //! Try to open the pdf file and create the FzCtx and FzDoc
 //! \return 0 if everything ok
-//! \return - if unable to open the file
+//! \return -1 if unable to open the file
 int Document::OpenPdf()
 {
     // Create a context to hold the exception stack and various caches.

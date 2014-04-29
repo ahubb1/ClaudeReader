@@ -24,7 +24,7 @@
 
 //------------------------------------Rectangles functions------------------------
 
-//! Rectangles ordering function
+//! Rectangles ordering function.
 //! \return true if area of Rect A is smaller than area of Rect B, false otherwise (greater or equal)
 bool isSmaller (Rect A, Rect B) { return ((A.width*A.height)<(B.width*B.height)); }
 
@@ -75,7 +75,7 @@ void Merge(Rect *A, Rect B)
     A->x=x;A->y=y;A->width=w;A->height=h;
 }
 
-//! Min distance between corners of two rectangles
+//! Min distance between corners of two rectangles.
 //! \return the minimum distance possible between two corners of A and B.
 int Distance(Rect A, Rect B)
 {
@@ -218,7 +218,7 @@ Page::Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, fz_conte
     DetectCases();
 }
 
-//! Destructor
+//! Destructor.
 Page::~Page()
 {
     if(Cases.size()>0)
@@ -464,7 +464,7 @@ int Page::PreviousCase()
 
 
 //! Set a case as active and render it
-//! \param val: the case number (-1 for the whole page)
+//! \param val the case number (-1 for the whole page)
 //! \return 0 if the page is loaded and the case is valid (the case has been rendered)
 //! \return -1 if val if less than -1
 //! \return -2 if val if greater than the number of cases (int NbCases)

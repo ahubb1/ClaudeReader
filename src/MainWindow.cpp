@@ -187,7 +187,7 @@ void Fullscreen_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
 
-    if( mw->window->fullscreen_active() == 0)
+    if( mw->window->fullscreen_active() == 0 )
     {
         //Go in fullscreen mode
         mw->window->fullscreen();
@@ -199,6 +199,11 @@ void Fullscreen_cb(Fl_Widget* widget, void * param)
         //Adapt the display size
         mw->Display->resize(0, 0, mw->window->w(), mw->window->h());
         Fl::wait(1);
+        //Adapt the buttons
+        mw->NextButton->resize(mw->window->w()-25, 0, 25, mw->window->h());
+        mw->PreviousButton->resize(0, 0, 25, mw->window->h());
+        mw->NextPageButton->resize(0, mw->window->h()-35, mw->window->w(), 35);
+        mw->PreviousPageButton->resize(0, 0, mw->window->w(), 35);
 
         //Add the ESC control as a fullscreen shortcut
         ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Fullscreen2"))->activate();
@@ -212,6 +217,11 @@ void Fullscreen_cb(Fl_Widget* widget, void * param)
         //Show the bars again: redefine their width equal to the window one
         mw->MenuBar->resize(mw->MenuBar->x(), mw->MenuBar->y(), mw->window->w(), 25);
         mw->StatusBar->resize(mw->StatusBar->x(), mw->window->h()-20, mw->window->w(), 20);
+        //Re-adapt the buttons
+        mw->NextButton->resize(mw->window->w()-25, 25, 25, mw->window->h()-(25+20));
+        mw->PreviousButton->resize(0, 25, 25, mw->window->h()-(25+20));
+        mw->NextPageButton->resize(0, mw->window->h()-35-20, mw->window->w(), 35);
+        mw->PreviousPageButton->resize(0, 25, mw->window->w(), 35);
         //Re-adapt the display size
         mw->Display->resize(0, 25, mw->window->w(), mw->window->h()-45);
         mw->window->resizable(mw->Display);
@@ -552,7 +562,7 @@ void Window_cb(Fl_Widget* widget, void * param)
 
 
 
-//! Constructor
+//! Constructor.
 //!Create the widgets, build the window and call the Init() with NULL parameters (no document).
 MainWindow::MainWindow()
 {
@@ -649,7 +659,6 @@ MainWindow::MainWindow()
 
          //Status bar
              StatusBar = new Fl_Box(0, window->h()-20,window->w(), 20);
-             //StatusBar->box(FL_FLAT_BOX);
              StatusBar->align(FL_ALIGN_RIGHT|FL_ALIGN_INSIDE);
 
 
@@ -684,7 +693,7 @@ MainWindow::MainWindow()
     Init(Filename);
 }
 
-//! Destructor
+//! Destructor.
 MainWindow::~MainWindow()
 {
     //TODO delete the wigets
@@ -700,7 +709,7 @@ MainWindow::~MainWindow()
 
 //! New document openning.
 //!Create and load the document and update the window and widgets accordingly.
-//!\param filename: the full filename (path+name) of the document to open, can be "\0" if nothing
+//!\param filename the full filename (path+name) of the document to open, can be "\0" if nothing
 void MainWindow::Init(char *filename)
 {
     //If filename is correct

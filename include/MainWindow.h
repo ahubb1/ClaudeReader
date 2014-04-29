@@ -54,8 +54,8 @@
 class MainWindow
 {
     public:
-        MainWindow();                                                                   //!< Constructor
-        ~MainWindow();                                                                  //!< Destructor
+        MainWindow();
+        ~MainWindow();
 
         void Init(char *filename);
 
@@ -96,13 +96,10 @@ class MainWindow
     private:
         //FLTK param
             Fl_Double_Window *window;
-
             Fl_Menu_Bar *MenuBar;
             Fl_Box *StatusBar;
             Fl_OpenCV *Display;
             Fl_Overlay_Arrow_Button *NextButton, *PreviousButton, *NextPageButton, *PreviousPageButton;
-            //Fl_Button *NextButton, *PreviousButton, *NextPageButton, *PreviousPageButton;
-
 
         //Other param
             char Filename[1024];   //!< Local copy of the filename of the currently open pdf

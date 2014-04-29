@@ -34,8 +34,6 @@
 #include <FL/fl_draw.H>
 #include <FL/Fl_Button.H>
 
-#include <stdio.h> //TODO: to remove
-
 const Fl_Color FL_TRANS = 0xffffffff;
 
 //! Fl_Overlay_Arrow_Button is a Fl_Button drawing a "stylistic" arrow and behave such that it only appears when overlayed by the mouse cursor
@@ -47,14 +45,14 @@ class Fl_Overlay_Arrow_Button : public Fl_Button
 {
     public:
         //! Constructor.
-        //!\param X, Y, W, H, L: see Fl_Button
-        //!\param R: the rotation angle defining the arrow direction (0: to the left, 180: to the right, 90: up...)
-        //!\param Wa: the proportion of the arrow width regarding the widget width (default is 1: the arrow has the widget width)
-        //!\param Ha: the proportion of the arrow height regarding the widget height (default is 1: the arrow has the widget height)
-        //!\param S: the arrow style. Three styles are provided: 0(default): classic straight arrow, 1: sharp more complex shape, 2: a rounded arrow
-        //! Note: color(Fl_Color) sets the widget background color, labelcolor(Fl_Color) sets the inside arrow color and selection_color(Fl_Color) sets
+        //!\param X, Y, W, H, L see Fl_Button
+        //!\param R the rotation angle defining the arrow direction (0: to the left, 180: to the right, 90: up...)
+        //!\param Wa the proportion of the arrow width regarding the widget width (default is 1: the arrow has the widget width)
+        //!\param Ha the proportion of the arrow height regarding the widget height (default is 1: the arrow has the widget height)
+        //!\param S the arrow style. Three styles are provided: 0(default): classic straight arrow, 1: sharp more complex shape, 2: a rounded arrow
+        //!\note: color(Fl_Color) sets the widget background color, labelcolor(Fl_Color) sets the inside arrow color and selection_color(Fl_Color) sets
         //!the arrow contour color (line color).
-        //! Note: the arrow is drawn centered on the widget.
+        //!\note: the arrow is drawn centered on the widget.
         Fl_Overlay_Arrow_Button(int X, int Y, int W, int H, const char *L=0, float R=.0, float Wa=1., float Ha=1., int S=0):Fl_Button(X, Y, W, H, L){r=R;w_a=Wa;h_a=Ha;style=S;is_visible=false;};
     protected:
         int handle(int E);

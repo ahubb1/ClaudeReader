@@ -74,7 +74,7 @@ void Fl_OpenCV::SetImage(Mat *nimage)
     {
         //1 channel (GREY):
         case 1:
-            cvtColor(fimage, fimage, CV_GREY2RGB);
+            cvtColor(fimage, fimage, CV_GRAY2RGB);
         break;
 
         //3 channels (BGR):
