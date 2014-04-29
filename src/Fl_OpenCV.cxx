@@ -70,18 +70,20 @@ void Fl_OpenCV::SetImage(Mat *nimage)
 
 
     //Check the image type for: converting from Opencv BGR (or BGRA if 4 channels) to RGB AND to make sure the image is encoded in unsigned chars
-    //TODO: manage binary and gray images
-    switch(image->type())
+    switch(image->channels())
     {
+        //1 channel (GREY):
+        case 1:
+            cvtColor(fimage, fimage, CV_GREY2RGB);
+        break;
+
         //3 channels (BGR):
-        case 16:
-        case 17:
+        case 3:
             cvtColor(fimage, fimage, CV_BGR2RGB);
         break;
 
         //4 channels (BGRA):
-        case 24:
-        case 25:
+        case 4:
             cvtColor(fimage, fimage, CV_BGRA2RGB);
         break;
 
