@@ -379,7 +379,11 @@ void ActivateNavigationWidgets(void *param, bool val)
           (strcmp(items[i].label(), "Next page")==0 ||
            strcmp(items[i].label(), "Previous page")==0 ||
            strcmp(items[i].label(), "Next panel")==0 ||
-           strcmp(items[i].label(), "Previous panel")==0)
+           strcmp(items[i].label(), "Previous panel")==0 ||
+           strcmp(items[i].label(), "Panel mode")==0 ||
+           strcmp(items[i].label(), "Strip mode")==0 ||
+           strcmp(items[i].label(), "Page mode")==0 ||
+           strcmp(items[i].label(), "Page preview")==0)
           )
         {
             //Then activate or deactivate it
