@@ -35,11 +35,19 @@
 #include "MainWindow.h"
 
 
-int main()
+int main(int argc, char **argv)
 {
-    MainWindow *MW=new MainWindow();
+    MainWindow *MW;
+    //If a parameter is passed, use the first one as a potential filename to open
+    if(argc>1)
+        MW=new MainWindow(argv[1]);
+    else
+        MW=new MainWindow();
+
+    //Run the Fltk main loop
     Fl::run();
 
+    //Delete the MainWindow objetc when Fltk loops return (on closing)
     delete MW;
 
     return 0;

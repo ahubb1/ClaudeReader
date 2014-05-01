@@ -19,7 +19,7 @@
 	<File name="include/Preferences.h" open="0" top="0" tabpos="6">
 		<Cursor position="1161" topLine="20" />
 	</File>
-	<File name="src/Document.cpp" open="1" top="1" tabpos="4">
+	<File name="src/Document.cpp" open="1" top="0" tabpos="4">
 		<Cursor position="4693" topLine="108" />
 	</File>
 	<File name="src/Fl_OpenCV.cxx" open="0" top="0" tabpos="8">
@@ -28,8 +28,8 @@
 	<File name="src/Fl_Overlay_Arrow_Button.cxx" open="0" top="0" tabpos="4">
 		<Cursor position="2704" topLine="6" />
 	</File>
-	<File name="src/MainWindow.cpp" open="1" top="0" tabpos="3">
-		<Cursor position="23154" topLine="225" />
+	<File name="src/MainWindow.cpp" open="1" top="1" tabpos="3">
+		<Cursor position="12265" topLine="371" />
 	</File>
 	<File name="src/Page.cpp" open="0" top="0" tabpos="6">
 		<Cursor position="16587" topLine="27" />

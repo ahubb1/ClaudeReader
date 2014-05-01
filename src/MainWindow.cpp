@@ -22,6 +22,8 @@
 
 //To store the mouse wheel movements
 int mouseWheel=0;
+//To store DND state
+bool isDNDavailable=false;
 
 
 //! Update the status bar text according to current state (document current page...)
@@ -51,6 +53,70 @@ void StatusBarUpdate(void * param)
       Fl::wait(100);
 }
 
+//! Catch the Drag N Drop events (if the user drops a file on the window)
+//!This function only raise a flag that will be catched later on by the TimerDND_cb() function.
+int DragNDrop(int e)
+{
+     //Select the DND related events
+     switch(e)
+     {
+         case FL_DND_DRAG:
+         case FL_DND_ENTER:
+            //Tell the system we are interested by DND events
+            return 1;
+            break;
+
+         case FL_DND_RELEASE:
+         case FL_PASTE:
+            //Once something has been "received" through dnd, raise a flag
+            isDNDavailable=true;
+            return 1;
+            break;
+
+         default:
+            return 0;
+     }
+ }
+//! The timer callback function used to check the DND events
+//!If a DragNdrop event has been detected this function proceeds
+//!the text associated to it and call the MainWindow::Init method
+//!to open the dropped file (if it is a file). Note that if several
+//!objects are dropped together, only the first one will be open.
+void TimerDND_cb(void* param)
+{
+    MainWindow *mw=(MainWindow*)param;
+
+    //If something has been received
+    if(isDNDavailable)
+    {
+        //wait for the event_text to be available
+        Fl::wait(50);
+        //Decode the filename
+        char tmpfilename[1024];
+        fl_decode_uri(tmpfilename);
+        //Replace the \n by a \0 (by the way, select only the first file if several are dropped at the same time)
+        char *c = strchr(tmpfilename,'\n');
+        if(c)
+            *c='\0';
+        //Check if it's a locale file
+        if(strncmp(tmpfilename, "file://", 7) != 0)
+        {
+            fl_alert("Invalid filename!");
+        }
+        else
+        {
+            char filename[1024];
+            //Remove the "file://"
+            strcpy(filename, (tmpfilename+7));
+            //Try to open it
+            mw->Init(filename);
+        }
+        //No more DND available
+        isDNDavailable=false;
+    }
+    //Repeat...
+    Fl::repeat_timeout(0.1, TimerDND_cb, (void*)mw);
+}
 
 //! Catch the mouse wheel events
 int MouseWheelEvents(int p)
@@ -68,11 +134,9 @@ int MouseWheelEvents(int p)
         //say fltk that the event has not been managed
         return 0;
     }
-
 }
-
 //! The timer callback function used to check the mouse wheel movements
-void Timer_cb(void* param)
+void TimerMouseWheel_cb(void* param)
 {
     MainWindow *mw=(MainWindow*)param;
 
@@ -99,7 +163,7 @@ void Timer_cb(void* param)
 
     Fl::wait(50);
     //Repeat...
-    Fl::repeat_timeout(0.1, Timer_cb, (void*)mw);
+    Fl::repeat_timeout(0.1, TimerMouseWheel_cb, (void*)mw);
 }
 
 
@@ -568,7 +632,8 @@ void Window_cb(Fl_Widget* widget, void * param)
 
 //! Constructor.
 //!Create the widgets, build the window and call the Init() with NULL parameters (no document).
-MainWindow::MainWindow()
+//!\param f the filename aof a file top open on startup, can be '\0' if nothing
+MainWindow::MainWindow(const char *f)
 {
     //Load user preferences
     Pref = new Preferences();
@@ -673,7 +738,12 @@ MainWindow::MainWindow()
              //Handle mouse wheel events (combine with the timer and a global variable mouseWheel...to be improved)
              Fl::add_handler(MouseWheelEvents);
              //Timer initializaton
-             Fl::add_timeout(0.1, Timer_cb, (void*)this);
+             Fl::add_timeout(0.1, TimerMouseWheel_cb, (void*)this);
+             //Handle drag'n'drop event (actually only dropping of a file on the window)
+             Fl::add_handler(DragNDrop);
+             //Timer initializaton
+             Fl::add_timeout(0.1, TimerDND_cb, (void*)this);
+
 
         //Graphics
              //Make the window resizable around the Display (and define minimum dimensions)
@@ -694,7 +764,15 @@ MainWindow::MainWindow()
     //Initialize the window and Document
     UpdateWidgets(this);
     Doc=NULL;
-    sprintf(Filename, "%s", "\0");
+    if(f)
+    {
+        //Convert the filename from relative to absolute path
+        fl_filename_absolute(Filename, 1024, f);
+    }
+    else
+    {
+        sprintf(Filename, "%s", "\0");
+    }
     Init(Filename);
 }
 
@@ -717,6 +795,10 @@ MainWindow::~MainWindow()
 //!\param filename the full filename (path+name) of the document to open, can be "\0" if nothing
 void MainWindow::Init(char *filename)
 {
+    //Show the main window
+    Fl::visual(FL_RGB);
+    window->show();
+
     //If filename is correct
     if(filename[0]!='\0')
     {
@@ -790,8 +872,4 @@ void MainWindow::Init(char *filename)
             }
         }
     }
-
-    //Show the main window
-    Fl::visual(FL_RGB);
-    window->show();
 }

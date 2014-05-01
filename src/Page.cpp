@@ -346,7 +346,7 @@ void Page::DetectCases()
             //Check if we have more than one case
             if(CasesTmp.size()>1)
             {
-                //Reorder it in a BD style (TopLeft to Bottom Right)
+                //Reorder them in a comics style (TopLeft to Bottom Right)
                 //Create a cases tree to reprensent the page organization
                 ntree<Rect> CasesTree;
 
@@ -411,7 +411,7 @@ void Page::DetectCases()
             //If less than 2 cases (or the detection has failed)
             else
             {
-                //Creation of cases of 40% of the page which are sliding down=> arbitrary strips to allow a continuous lecture
+                //Creation of cases of strips of 40% of the page height which are sliding down=> arbitrary strips to allow a continuous lecture
                 Cases.clear();
                 for(int i=0; i<13; i++)
                 {
@@ -505,7 +505,6 @@ Mat * Page::RenderCase()
     //Render the whole page
     if(ActiveCase==-1 || ReadingMode==PAGE)
     {
-        //ImgRender=PageRenderCv;
         ImgRender.release();
         PageRenderCv.copyTo(ImgRender);
         /*debug
@@ -517,7 +516,6 @@ Mat * Page::RenderCase()
     //or the active case
     else
     {
-        //ImgRender=PageRenderCv(Cases[ActiveCase]);
         ImgRender.release();
         (PageRenderCv(Cases[ActiveCase])).copyTo(ImgRender);
     }

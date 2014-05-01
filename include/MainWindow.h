@@ -54,7 +54,7 @@
 class MainWindow
 {
     public:
-        MainWindow();
+        MainWindow(const char *f=NULL);
         ~MainWindow();
 
         void Init(char *filename);
@@ -62,8 +62,10 @@ class MainWindow
 
         friend void Window_cb(Fl_Widget* widget, void * param);                       //!< Window callback function (when closing)
 
-        friend int MouseWheelEvents(int p);                                           //!< Handler of the mouse wheel events
-        friend void Timer_cb(void*);                                                  //!< The timer callback function used to check the mouse wheel movements
+        friend int DragNDrop(int e);                                                  //!< Handler of drag n drop events (when user dropped a file)
+        friend void TimerDND_cb(void*);                                               //!< The timer callback function used to check the DND events
+        friend int MouseWheelEvents(int e);                                           //!< Handler of the mouse wheel events
+        friend void TimerMouseWheel_cb(void*);                                        //!< The timer callback function used to check the mouse wheel movements
 
         //File menu
         friend void Open_cb(Fl_Widget* widget, void * param);
@@ -89,7 +91,6 @@ class MainWindow
         friend void UpdateWidgets(void * param);
         friend void ActivateNavigationWidgets(void *param, bool val);
         friend void AddRecentDocsItems(void *param);
-
         friend void StatusBarUpdate(void * param);
 
 
