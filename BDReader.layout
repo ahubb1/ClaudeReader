@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
 	<ActiveTarget name="Win32" />
-	<File name="include/Document.h" open="0" top="0" tabpos="4">
-		<Cursor position="1230" topLine="32" />
+	<File name="include/Document.h" open="1" top="0" tabpos="5">
+		<Cursor position="2034" topLine="58" />
 	</File>
 	<File name="include/Fl_OpenCV.h" open="0" top="0" tabpos="7">
 		<Cursor position="1396" topLine="45" />
@@ -10,14 +10,14 @@
 	<File name="include/Fl_Overlay_Arrow_Button.h" open="0" top="0" tabpos="5">
 		<Cursor position="2137" topLine="9" />
 	</File>
-	<File name="include/MainWindow.h" open="1" top="1" tabpos="2">
-		<Cursor position="1679" topLine="51" />
+	<File name="include/MainWindow.h" open="1" top="0" tabpos="2">
+		<Cursor position="4114" topLine="89" />
 	</File>
 	<File name="include/Page.h" open="0" top="0" tabpos="5">
 		<Cursor position="1751" topLine="0" />
 	</File>
-	<File name="include/Preferences.h" open="0" top="0" tabpos="6">
-		<Cursor position="1161" topLine="20" />
+	<File name="include/Preferences.h" open="1" top="0" tabpos="6">
+		<Cursor position="1816" topLine="43" />
 	</File>
 	<File name="src/Document.cpp" open="1" top="0" tabpos="4">
 		<Cursor position="7949" topLine="0" />
@@ -28,16 +28,16 @@
 	<File name="src/Fl_Overlay_Arrow_Button.cxx" open="0" top="0" tabpos="4">
 		<Cursor position="2704" topLine="6" />
 	</File>
-	<File name="src/MainWindow.cpp" open="1" top="0" tabpos="3">
-		<Cursor position="3332" topLine="121" />
+	<File name="src/MainWindow.cpp" open="1" top="1" tabpos="3">
+		<Cursor position="1099" topLine="126" />
 	</File>
 	<File name="src/Page.cpp" open="0" top="0" tabpos="6">
 		<Cursor position="6898" topLine="54" />
 	</File>
-	<File name="src/Preferences.cpp" open="0" top="0" tabpos="6">
-		<Cursor position="680" topLine="23" />
+	<File name="src/Preferences.cpp" open="1" top="0" tabpos="7">
+		<Cursor position="1421" topLine="0" />
 	</File>
 	<File name="src/main.cpp" open="1" top="0" tabpos="1">
-		<Cursor position="1523" topLine="0" />
+		<Cursor position="1344" topLine="23" />
 	</File>
 </CodeBlocks_layout_file>

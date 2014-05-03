@@ -519,7 +519,21 @@ void AddRecentDocsItems(void *param)
         for(int i=0; i<mw->Pref->GetNbRecentDocs(); i++)
         {
             char tmp[FL_PATH_MAX];
-            sprintf(tmp, "&File/Recent files/%s", mw->Pref->GetRecentDocs(i));
+            //init the menu item
+            sprintf(tmp, "&File/Recent files/");
+            //Copy the string and replace '\' by '\\' for windows style files paths
+            int n_d=strlen(tmp);
+            for(int n_s=0; n_s<strlen(mw->Pref->GetRecentDocs(i)); n_s++)
+            {
+                if(mw->Pref->GetRecentDocs(i)[n_s]=='\\')
+                {
+                    tmp[n_d++]='\\';
+                }
+                tmp[n_d++]=mw->Pref->GetRecentDocs(i)[n_s];
+            }
+            //Terminating char
+            tmp[n_d++]='\0';
+            //Add it to the menu
             mw->MenuBar->add(tmp, 0, (Fl_Callback *)Open_cb, mw);
         }
     }
