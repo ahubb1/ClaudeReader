@@ -28,9 +28,7 @@
  *
  */
 
-
 #include <stdio.h>
-#include <stdlib.h>
 
 #include "MainWindow.h"
 
@@ -47,7 +45,7 @@ int main(int argc, char **argv)
     //Run the Fltk main loop
     Fl::run();
 
-    //Delete the MainWindow objetc when Fltk loops return (on closing)
+    //Delete the MainWindow object when Fltk loops return (on closing)
     delete MW;
 
     return 0;

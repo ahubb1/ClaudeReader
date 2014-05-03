@@ -103,9 +103,9 @@ class MainWindow
             Fl_Overlay_Arrow_Button *NextButton, *PreviousButton, *NextPageButton, *PreviousPageButton;
 
         //Other param
-            char Filename[1024];   //!< Local copy of the filename of the currently open pdf
-            Preferences *Pref;      //!< User preferences
-            Document *Doc;          //!< Pdf document
+            char Filename[FL_PATH_MAX];    //!< Local copy of the filename of the currently open pdf
+            Preferences *Pref;              //!< User preferences
+            Document *Doc;                  //!< Pdf document
 };
 
 

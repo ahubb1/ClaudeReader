@@ -57,7 +57,7 @@ int Preferences::Load(const char prefFilename[255])
             return -2;
 
         //The last document filename
-        fgets(LastDoc, 1024, prefFile);
+        fgets(LastDoc, 2048, prefFile);
         (*strchr(LastDoc,'\n'))='\0'; //replace the last \n by a \0
 
         //The last doc current page
@@ -68,7 +68,7 @@ int Preferences::Load(const char prefFilename[255])
         int i=0;
         while(i<MAX_NB_RECENT && !feof(prefFile))
         {
-            fgets(RecentDocs[i], 1024, prefFile);
+            fgets(RecentDocs[i], 2048, prefFile);
             //replace the last \n by a \0
             char *c = strchr(RecentDocs[i],'\n');
             if(c)

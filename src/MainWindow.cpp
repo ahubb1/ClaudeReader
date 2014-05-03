@@ -20,10 +20,14 @@
 //---------------------------------------------------------------------------
 #include "MainWindow.h"
 
+#include <FL/names.h>
+
 //To store the mouse wheel movements
 int mouseWheel=0;
-//To store DND state
+//To store the DragNDrop state
+bool isDNDavailableTmp=false;
 bool isDNDavailable=false;
+char DNDFilename[FL_PATH_MAX];
 
 
 //! Update the status bar text according to current state (document current page...)
@@ -60,8 +64,8 @@ int DragNDrop(int e)
      //Select the DND related events
      switch(e)
      {
-         case FL_DND_DRAG:
          case FL_DND_ENTER:
+         case FL_DND_DRAG:
             //Tell the system we are interested by DND events
             return 1;
             break;
@@ -69,18 +73,29 @@ int DragNDrop(int e)
          case FL_DND_RELEASE:
          case FL_PASTE:
             //Once something has been "received" through dnd, raise a flag
-            isDNDavailable=true;
+            isDNDavailableTmp=true;
             return 1;
             break;
 
+         //After a DND_RELEASE occured, we need to catch any event untill the event_text() is updated
          default:
+            if(isDNDavailableTmp && strlen(Fl::event_text())==Fl::event_length())
+            {
+                //Get the content of the dropped object (=>the filename)
+                strncpy(DNDFilename, Fl::event_text(), Fl::event_length());
+                //Add a terminating character (needed on Windows)
+                DNDFilename[Fl::event_length()]='\0';
+                //Reset the tmp flag
+                isDNDavailableTmp=false;
+                //Raise the final flag (i.e. txt is arrived)
+                isDNDavailable=true;
+            }
             return 0;
      }
  }
-//! The timer callback function used to check the DND events
-//!If a DragNdrop event has been detected this function proceeds
-//!the text associated to it and call the MainWindow::Init method
-//!to open the dropped file (if it is a file). Note that if several
+//! The timer callback function used to check the DND events.
+//!If a DragNdrop event has been detected this function proceeds the text associated to it and call
+//!the MainWindow::Init() method to open the dropped file (if it is a file). Note that if several
 //!objects are dropped together, only the first one will be open.
 void TimerDND_cb(void* param)
 {
@@ -89,33 +104,39 @@ void TimerDND_cb(void* param)
     //If something has been received
     if(isDNDavailable)
     {
-        //wait for the event_text to be available
-        Fl::wait(50);
+        //No more DND available
+        isDNDavailable=false;
         //Decode the filename
-        char tmpfilename[1024];
-        fl_decode_uri(tmpfilename);
-        //Replace the \n by a \0 (by the way, select only the first file if several are dropped at the same time)
-        char *c = strchr(tmpfilename,'\n');
+        fl_decode_uri(DNDFilename);
+        //Replace the \n by a \0 (by the way, select only the first file (corresponding to the first line) if several are dropped at the same time)
+        char *c = strchr(DNDFilename,'\n');
         if(c)
             *c='\0';
         //Check if it's a locale file
-        if(strncmp(tmpfilename, "file://", 7) != 0)
-        {
-            fl_alert("Invalid filename!");
-        }
-        else
-        {
-            char filename[1024];
-            //Remove the "file://"
-            strcpy(filename, (tmpfilename+7));
-            //Try to open it
-            mw->Init(filename);
-        }
-        //No more DND available
-        isDNDavailable=false;
+        #ifndef __WINDOWS__ //On linux a locale file uri begin with "file://"
+            if(strncmp(DNDFilename, "file://", 7) != 0)
+            {
+                fl_alert("Invalid filename !");
+            }
+            else
+            {
+                //Try to open it (without the 7 first characters: "file://")
+                mw->Init(DNDFilename+7);
+            }
+        #else   //On Windows, check if it's begin with a disk letter (A->Z, other ones (AA...) are not managed)
+            if( (DNDFilename[0]>=65 && DNDFilename[0]<=90) &&  DNDFilename[1]==':' )
+            {
+                //Try to open it
+                mw->Init(DNDFilename);
+            }
+            else
+            {
+                fl_alert("Invalid filename !");
+            }
+        #endif
     }
     //Repeat...
-    Fl::repeat_timeout(0.1, TimerDND_cb, (void*)mw);
+    Fl::repeat_timeout(0.01, TimerDND_cb, (void*)mw);
 }
 
 //! Catch the mouse wheel events
@@ -174,7 +195,7 @@ void Open_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
 
-    char tmpFilename[1024];
+    char tmpFilename[FL_PATH_MAX];
 
     //Retrieve the menu item value to know if it's an open or a recent document item
     //if it's an open, do the stuff
@@ -186,7 +207,7 @@ void Open_cb(Fl_Widget* widget, void * param)
         chooser.filter("Pdf\t*.pdf");
 
         //Select the working directory
-        char folder[1024];
+        char folder[FL_PATH_MAX];
         //if a current doc is open
         if(mw->Doc)
         {
@@ -497,7 +518,7 @@ void AddRecentDocsItems(void *param)
         //Then re-create the recent docs items
         for(int i=0; i<mw->Pref->GetNbRecentDocs(); i++)
         {
-            char tmp[1024];
+            char tmp[FL_PATH_MAX];
             sprintf(tmp, "&File/Recent files/%s", mw->Pref->GetRecentDocs(i));
             mw->MenuBar->add(tmp, 0, (Fl_Callback *)Open_cb, mw);
         }
@@ -525,7 +546,7 @@ void Help_cb(Fl_Widget* widget, void * param)
     #ifdef __WINDOWS__
         FILE* helpfile=fopen("help", "r");
     #else
-        char filename[1024];
+        char filename[FL_PATH_MAX];
         sprintf(filename, "%s/.bdreader/help", getenv("HOME"));
         FILE* helpfile=fopen(filename, "r");
     #endif
@@ -554,7 +575,7 @@ void About_cb(Fl_Widget* widget, void * param)
     #ifdef __WINDOWS__
         FILE* aboutfile=fopen("about", "r");
     #else
-        char filename[1024];
+        char filename[FL_PATH_MAX];
         sprintf(filename, "%s/.bdreader/about", getenv("HOME"));
         FILE* aboutfile=fopen(filename, "r");
     #endif
@@ -613,7 +634,6 @@ void UpdateWidgets(void * param)
     AddRecentDocsItems(mw);
 }
 
-
 //! On closing the window (and thus exiting the program), save the parameters in preferences file and close everything (delete is called in main())
 void Window_cb(Fl_Widget* widget, void * param)
 {
@@ -632,7 +652,7 @@ void Window_cb(Fl_Widget* widget, void * param)
 
 //! Constructor.
 //!Create the widgets, build the window and call the Init() with NULL parameters (no document).
-//!\param f the filename aof a file top open on startup, can be '\0' if nothing
+//!\param f the filename of a file top open on startup, can be '\0' if nothing
 MainWindow::MainWindow(const char *f)
 {
     //Load user preferences
@@ -767,7 +787,7 @@ MainWindow::MainWindow(const char *f)
     if(f)
     {
         //Convert the filename from relative to absolute path
-        fl_filename_absolute(Filename, 1024, f);
+        fl_filename_absolute(Filename, FL_PATH_MAX, f);
     }
     else
     {

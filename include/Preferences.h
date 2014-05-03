@@ -53,22 +53,21 @@ class Preferences
         int GetBkgColor() { return BkgColor; }
         void SetBkgColor(int val) { BkgColor = val; }
         char *GetLastDoc() { return LastDoc; }
-        //void SetLastDoc[1024](char val) { LastDoc[1024] = val; }
         int GetLastDocPageNb() { return LastDocPageNb; }
         void SetLastDocPageNb(int val) { LastDocPageNb = val; }
         int GetNbRecentDocs() { return NbRecentDocs; }
         char *GetRecentDocs(int i) { return RecentDocs[i]; }
-        //void SetRecentDocs[5][1024](char val) { RecentDocs[5][1024] = val; }
+
     protected:
     private:
         char Filename[255];
         READINGMODE ReadingMode;
         bool PagePreview;
         int BkgColor;
-        char LastDoc[1024];
+        char LastDoc[2048];
         int LastDocPageNb;
         int NbRecentDocs;
-        char RecentDocs[MAX_NB_RECENT][1024];
+        char RecentDocs[MAX_NB_RECENT][2048];
 };
 
 #endif // PREFERENCES_H

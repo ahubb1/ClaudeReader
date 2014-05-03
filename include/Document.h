@@ -67,7 +67,7 @@ class Document
 
 
     private:
-        char Filename[1024];
+        char Filename[2048];
         fz_context *FzCtx;
         fz_document *FzDoc;
         Mat *ImgRender;

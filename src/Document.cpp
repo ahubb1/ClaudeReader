@@ -64,7 +64,7 @@ Document::~Document()
 
 
 
-//! Try to open the pdf file and create the FzCtx and FzDoc
+//! Try to open the pdf file and create the FzCtx and FzDoc.
 //! \return 0 if everything ok
 //! \return -1 if unable to open the file
 int Document::OpenPdf()
@@ -88,7 +88,7 @@ int Document::OpenPdf()
     return 0;
 }
 
-//! Close the doc and free the context
+//! Close the doc and free the context.
 void Document::ClosePdf()
 {
     //Close the doc and free the context
@@ -265,7 +265,7 @@ void Document::PreloadPages()
 
 
 
-//! Go to the next case of the page, or to next page if no more case
+//! Go to the next case of the page, or to next page if no more case.
 //! \return 0 if a next case exists
 //! \return -1 otherwise (a new page has been loaded)
 int Document::NextCase()
@@ -279,7 +279,7 @@ int Document::NextCase()
     return 0;
 }
 
-//! Go to the previous case of the page, or to previous page if no more case
+//! Go to the previous case of the page, or to previous page if no more case.
 //! \return 0 if a previous case exists
 //! \return -1 otherwise (a new page has been loaded)
 int Document::PreviousCase()
@@ -293,7 +293,7 @@ int Document::PreviousCase()
     return 0;
 }
 
-//! Increment the active page by one, if possible (in the range 0 NbPages)
+//! Increment the active page by one, if possible (in the range 0 NbPages).
 //! \return the new active page number
 //! \return -1 if new page is negative
 //! \return -2 if new page is greater than NbPages
@@ -309,7 +309,7 @@ int Document::NextPage()
     return ActivePage;
 }
 
-//! Decrement the active page by one, if possible (in the range 0 NbPages)
+//! Decrement the active page by one, if possible (in the range 0 NbPages).
 //! \return the new active page number
 //! \return -1 if new page is negative
 //! \return -2 if new page is greater than NbPages
@@ -327,7 +327,7 @@ int Document::PreviousPage()
 
 //! Change the Document reading mode and apply it to the linked Pages.
 //!In order to properly re-set the reading mode to each pages (current, previous and
-//!next), the DetectCases() is called for each of them.
+//! next), the DetectCases() is called for each of them.
 void Document::SetReadingMode(READINGMODE val)
 {
     //Set the document reading mode
@@ -348,7 +348,7 @@ void Document::SetReadingMode(READINGMODE val)
     }
 }
 
-//! Change the Document page preview mode
+//! Change the Document page preview mode.
 void Document::SetPagePreview(bool val)
 {
     //Set it to the document
