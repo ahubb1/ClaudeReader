@@ -71,7 +71,7 @@ int DragNDrop(int e)
             break;
 
          case FL_DND_RELEASE:
-         case FL_PASTE:
+         case FL_PASTE: //FL_PASTE never occurs since DND events cannot be used in widgets derived from Fl_Group or Fl_Window=> so need a trick
             //Once something has been "received" through dnd, raise a flag
             isDNDavailableTmp=true;
             return 1;
@@ -275,20 +275,15 @@ void Fullscreen_cb(Fl_Widget* widget, void * param)
     if( mw->window->fullscreen_active() == 0 )
     {
         //Go in fullscreen mode
-        mw->window->fullscreen();
         mw->window->resizable(NULL);
-        Fl::wait(1);
+        mw->window->fullscreen();
+        Fl::wait(100);
         //Hide the bars (but not really, just make them 0px width=> trick to keep the shortcuts and remember their size/position (only w() is forgotten but it's the window one))
         mw->MenuBar->resize(mw->MenuBar->x(), mw->MenuBar->y(), 0, mw->MenuBar->h());
         mw->StatusBar->resize(mw->StatusBar->x(), mw->StatusBar->y(), 0, mw->StatusBar->h());
-        //Adapt the display size
-        mw->Display->resize(0, 0, mw->window->w(), mw->window->h());
-        Fl::wait(1);
-        //Adapt the buttons
-        mw->NextButton->resize(mw->window->w()-25, 0, 25, mw->window->h());
-        mw->PreviousButton->resize(0, 0, 25, mw->window->h());
-        mw->NextPageButton->resize(0, mw->window->h()-35, mw->window->w(), 35);
-        mw->PreviousPageButton->resize(0, 0, mw->window->w(), 35);
+        Fl::wait(100);
+        //Adapt the displayGrp size (no more menu and status bar shown=>screen size)
+        mw->DisplayGrp->resize(0, 0, Fl::w(), Fl::h());
 
         //Add the ESC control as a fullscreen shortcut
         ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Fullscreen2"))->activate();
@@ -298,21 +293,18 @@ void Fullscreen_cb(Fl_Widget* widget, void * param)
         //Go back from fullscreen
         mw->window->fullscreen_off();
         mw->window->resizable(NULL);
-        Fl::wait(1);
+        Fl::wait(100);
         //Show the bars again: redefine their width equal to the window one
         mw->MenuBar->resize(mw->MenuBar->x(), mw->MenuBar->y(), mw->window->w(), 25);
         mw->StatusBar->resize(mw->StatusBar->x(), mw->window->h()-20, mw->window->w(), 20);
-        //Re-adapt the buttons
-        mw->NextButton->resize(mw->window->w()-25, 25, 25, mw->window->h()-(25+20));
-        mw->PreviousButton->resize(0, 25, 25, mw->window->h()-(25+20));
-        mw->NextPageButton->resize(0, mw->window->h()-35-20, mw->window->w(), 35);
-        mw->PreviousPageButton->resize(0, 25, mw->window->w(), 35);
-        //Re-adapt the display size
-        mw->Display->resize(0, 25, mw->window->w(), mw->window->h()-45);
-        mw->window->resizable(mw->Display);
+        Fl::wait(100);
+        //Resize the display group
+        mw->DisplayGrp->resize(0, 25, mw->window->w(), mw->window->h()-45);
+        mw->window->resizable(mw->DisplayGrp);
+
         //and let some time to update that
         mw->window->redraw();
-        Fl::wait(1);
+        Fl::wait(100);
 
         //Remove the ESC control as a fullscreen shortcut
         ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Fullscreen2"))->deactivate();
@@ -366,6 +358,34 @@ void PagePreview_cb(Fl_Widget* widget, void * param)
     StatusBarUpdate(mw);
 }
 
+//! Hide or show the thumbnails pages preview
+void Thumbnails_cb(Fl_Widget* widget, void * param)
+{
+    MainWindow *mw=(MainWindow*)param;
+
+    //Show or hide according to the current state
+    if(mw->PrevDisplayGrp->visible())
+    {
+        //hide it
+        mw->PrevDisplayGrp->hide();
+        mw->DisplayGrp->remove(mw->PrevDisplayGrp);
+        //and resize the main display to take the full space
+        mw->MainDisplayGrp->resize(mw->DisplayGrp->x(), mw->DisplayGrp->y(), mw->DisplayGrp->w(), mw->DisplayGrp->h());
+        Fl::wait(10);
+    }
+    else
+    {
+        //show it (resize before: window size can have changed)
+        mw->PrevDisplayGrp->resize(mw->DisplayGrp->x(), mw->DisplayGrp->y(), mw->DisplayGrp->w()/5., mw->DisplayGrp->h());
+        mw->PrevDisplayGrp->show();
+        mw->DisplayGrp->add(mw->PrevDisplayGrp);
+        //and reduce the size of the main display
+        mw->MainDisplayGrp->resize(mw->DisplayGrp->x()+mw->PrevDisplayGrp->w(), mw->DisplayGrp->y(), mw->DisplayGrp->w()*4/5., mw->DisplayGrp->h());
+        mw->PrevDisplayGrp->redraw();
+        Fl::wait(100);
+    }
+}
+
 //! Go to next page (through Doc)
 void PreviousPage_cb(Fl_Widget* widget, void * param)
 {
@@ -389,6 +409,12 @@ void PreviousPage_cb(Fl_Widget* widget, void * param)
         Fl::check();
         //and then preload the surrounding pages
         mw->Doc->PreloadPages();
+
+        //Update the thumbnails (if needed)
+        if(mw->PrevDisplay->visible())
+        {
+            mw->PrevDisplay->SetImage(mw->Doc->ThumbnailsRender());
+        }
     }
 }
 //! Go to previous page (through Doc)
@@ -414,6 +440,12 @@ void NextPage_cb(Fl_Widget* widget, void * param)
         Fl::check();
         //and then preload the surrounding pages
         mw->Doc->PreloadPages();
+
+        //Update the thumbnails (if needed)
+        if(mw->PrevDisplay->visible())
+        {
+            mw->PrevDisplay->SetImage(mw->Doc->ThumbnailsRender());
+        }
     }
 }
 //! Go to next case (through Doc)
@@ -430,6 +462,11 @@ void PreviousCase_cb(Fl_Widget* widget, void * param)
     {
         Fl::check();
         mw->Doc->PreloadPages();
+        //Update the thumbnails (if needed)
+        if(mw->PrevDisplay->visible())
+        {
+            mw->PrevDisplay->SetImage(mw->Doc->ThumbnailsRender());
+        }
     }
 }
 //! Go to previous case (through Doc)
@@ -446,6 +483,11 @@ void NextCase_cb(Fl_Widget* widget, void * param)
     {
         Fl::check();
         mw->Doc->PreloadPages();
+        //Update the thumbnails (if needed)
+        if(mw->PrevDisplay->visible())
+        {
+            mw->PrevDisplay->SetImage(mw->Doc->ThumbnailsRender());
+        }
     }
 }
 
@@ -468,8 +510,9 @@ void ActivateNavigationWidgets(void *param, bool val)
            strcmp(items[i].label(), "Panel mode")==0 ||
            strcmp(items[i].label(), "Strip mode")==0 ||
            strcmp(items[i].label(), "Page mode")==0 ||
-           strcmp(items[i].label(), "Page preview")==0)
-          )
+           strcmp(items[i].label(), "Page preview")==0 ||
+           strcmp(items[i].label(), "Thumnails view")==0
+          ))
         {
             //Then activate or deactivate it
             if(val)
@@ -644,6 +687,16 @@ void UpdateWidgets(void * param)
         ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Page preview"))->clear();
     }
 
+    //Thumnails view
+    if(mw->Pref->GetThumbnails())
+    {
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Thumnails view"))->set();
+    }
+    else
+    {
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Thumnails view"))->clear();
+    }
+
     //Recent docs: will only add real new ones (no duplicates) if some
     AddRecentDocsItems(mw);
 }
@@ -654,6 +707,7 @@ void Window_cb(Fl_Widget* widget, void * param)
      MainWindow *mw=(MainWindow*)param;
 
      //Save the preferences in file
+     mw->Pref->SetThumbnails(mw->PrevDisplayGrp->visible());
      mw->Pref->Save(mw->Doc);
 
      //Close the window
@@ -703,6 +757,7 @@ MainWindow::MainWindow(const char *f)
                     { "Strip mode", 's', (Fl_Callback *)StripMode_cb, this, FL_MENU_RADIO|FL_MENU_INACTIVE },
                     { "Page mode", 'p', (Fl_Callback *)PageMode_cb, this, FL_MENU_RADIO|FL_MENU_DIVIDER |FL_MENU_INACTIVE },
                     { "Page preview", 0, (Fl_Callback *)PagePreview_cb, this, FL_MENU_TOGGLE|FL_MENU_DIVIDER | FL_MENU_INACTIVE },
+                    { "Thumnails view", FL_COMMAND + 't', (Fl_Callback *)Thumbnails_cb, this, FL_MENU_TOGGLE|FL_MENU_DIVIDER | FL_MENU_INACTIVE },
                     { "Next panel", FL_Right, (Fl_Callback *)NextCase_cb, this, FL_MENU_INACTIVE },
                     { "Previous panel", FL_Left, (Fl_Callback *)PreviousCase_cb, this, FL_MENU_INACTIVE },
                     { "Next page", FL_Down, (Fl_Callback *)NextPage_cb, this, FL_MENU_INACTIVE },
@@ -722,50 +777,75 @@ MainWindow::MainWindow(const char *f)
              AddRecentDocsItems(this);
 
 
-         //Main display
-             Display = new Fl_OpenCV(0, 25, window->w(), window->h()-45);
+         //Main group containing the main display, navigation buttons and page preview display
+            DisplayGrp = new Fl_Group(0, 25, window->w(), window->h()-45);
+            DisplayGrp->begin();
 
+                //Sub group containing the preview thumbnails and the separator
+                PrevDisplayGrp = new Fl_Group(DisplayGrp->x(), DisplayGrp->y(), DisplayGrp->w()/5., DisplayGrp->h());
+                PrevDisplayGrp->begin();
+                 //Thumbnails display
+                     PrevDisplay = new Fl_OpenCV(PrevDisplayGrp->x(), PrevDisplayGrp->y(), PrevDisplayGrp->w()-5, PrevDisplayGrp->h());
+                 //Separator
+                     Fl_Box *separator = new Fl_Box(FL_PLASTIC_UP_BOX, PrevDisplay->x()+PrevDisplay->w(), PrevDisplay->y(), 5, PrevDisplay->h(), "");
+                 PrevDisplayGrp->end();
 
-         //Navigation buttons
-             NextButton = new Fl_Overlay_Arrow_Button(window->w()-25, (int)(Display->y()), 25, Display->h(), "", 0, 0.8, 0.15, 0);
-             NextButton->color(fl_rgb_color(100, 100, 100));
-             NextButton->selection_color(fl_rgb_color(245,245,200));
-             NextButton->callback(NextCase_cb, (void*)this);
-             //Prevent the widget to get the focus and thus prevent to use the arrow keys to
-             //navigate through the widgets: keep the Arrows shortcut behavior (to menu_items)
-             //needed to apply to any other widget than the display (which can interecpt the arrow keys)
-             NextButton->clear_visible_focus();
-             NextButton->hide();
-             NextButton->tooltip("Next panel");
-             PreviousButton = new Fl_Overlay_Arrow_Button(0, (int)(Display->y()), 25, Display->h(), "", 180, 0.8, 0.15, 0);
-             PreviousButton->color(fl_rgb_color(100, 100, 100));
-             PreviousButton->selection_color(fl_rgb_color(245,245,200));
-             PreviousButton->callback(PreviousCase_cb, (void*)this);
-             PreviousButton->clear_visible_focus();
-             PreviousButton->hide();
-             PreviousButton->tooltip("Previous panel");
-             NextPageButton = new Fl_Overlay_Arrow_Button(0, (int)(Display->y()+Display->h()-35), Display->w(), 35, "", -90, 0.10, 0.8, 0);
-             NextPageButton->color(fl_rgb_color(100, 100, 100));
-             NextPageButton->selection_color(fl_rgb_color(245,245,200));
-             NextPageButton->callback(NextPage_cb, (void*)this);
-             NextPageButton->clear_visible_focus();
-             NextPageButton->hide();
-             NextPageButton->tooltip("Next page");
-             PreviousPageButton = new Fl_Overlay_Arrow_Button(0, (int)(Display->y()), Display->w(), 35, "", 90, 0.10, 0.8, 0);
-             PreviousPageButton->color(fl_rgb_color(100, 100, 100));
-             PreviousPageButton->selection_color(fl_rgb_color(245,245,200));
-             PreviousPageButton->callback(PreviousPage_cb, (void*)this);
-             PreviousPageButton->clear_visible_focus();
-             PreviousPageButton->hide();
-             PreviousPageButton->tooltip("Previous page");
+                 //Sub group containing the main display and the navigation buttons
+                 MainDisplayGrp = new Fl_Group(DisplayGrp->x()+PrevDisplayGrp->w(), DisplayGrp->y(), DisplayGrp->w()*4/5., DisplayGrp->h());
+                 MainDisplayGrp->begin();
+                 //Main display
+                     //Display = new Fl_OpenCV(0, 25, window->w(), window->h()-45);
+                     Display = new Fl_OpenCV(MainDisplayGrp->x(), MainDisplayGrp->y(), MainDisplayGrp->w(), MainDisplayGrp->h());
+
+                 //Navigation buttons
+                     NextButton = new Fl_Overlay_Arrow_Button(Display->x()+Display->w()-25, (int)(Display->y()), 25, Display->h(), "", 0, 0.8, 0.15, 0);
+                     NextButton->color(fl_rgb_color(100, 100, 100));
+                     NextButton->selection_color(fl_rgb_color(245,245,200));
+                     NextButton->callback(NextCase_cb, (void*)this);
+                     //Prevent the widget to get the focus and thus prevent to use the arrow keys to
+                     //navigate through the widgets: keep the Arrows shortcut behavior (to menu_items)
+                     //needed to apply to any other widget than the display (which can interecpt the arrow keys)
+                     NextButton->clear_visible_focus();
+                     NextButton->hide();
+                     NextButton->tooltip("Next panel");
+                     PreviousButton = new Fl_Overlay_Arrow_Button(Display->x(), (int)(Display->y()), 25, Display->h(), "", 180, 0.8, 0.15, 0);
+                     PreviousButton->color(fl_rgb_color(100, 100, 100));
+                     PreviousButton->selection_color(fl_rgb_color(245,245,200));
+                     PreviousButton->callback(PreviousCase_cb, (void*)this);
+                     PreviousButton->clear_visible_focus();
+                     PreviousButton->hide();
+                     PreviousButton->tooltip("Previous panel");
+                     NextPageButton = new Fl_Overlay_Arrow_Button(Display->x(), (int)(Display->y()+Display->h()-35), Display->w(), 35, "", -90, 0.10, 0.8, 0);
+                     NextPageButton->color(fl_rgb_color(100, 100, 100));
+                     NextPageButton->selection_color(fl_rgb_color(245,245,200));
+                     NextPageButton->callback(NextPage_cb, (void*)this);
+                     NextPageButton->clear_visible_focus();
+                     NextPageButton->hide();
+                     NextPageButton->tooltip("Next page");
+                     PreviousPageButton = new Fl_Overlay_Arrow_Button(Display->x(), (int)(Display->y()), Display->w(), 35, "", 90, 0.10, 0.8, 0);
+                     PreviousPageButton->color(fl_rgb_color(100, 100, 100));
+                     PreviousPageButton->selection_color(fl_rgb_color(245,245,200));
+                     PreviousPageButton->callback(PreviousPage_cb, (void*)this);
+                     PreviousPageButton->clear_visible_focus();
+                     PreviousPageButton->hide();
+                     PreviousPageButton->tooltip("Previous page");
+                MainDisplayGrp->end();
+
+            DisplayGrp->end();
+            //Hide the thumbnails if preferences say so (visible by default when created)
+            if(!Pref->GetThumbnails())
+            {
+                Thumbnails_cb(DisplayGrp, this);
+            }
 
 
          //Status bar
              StatusBar = new Fl_Box(0, window->h()-20,window->w(), 20);
              StatusBar->align(FL_ALIGN_RIGHT|FL_ALIGN_INSIDE);
+             StatusBar->box(FL_PLASTIC_UP_BOX);
 
 
-         //Events and callbacks
+         //Events callbacks
              //Closing callback
              window->callback(Window_cb, (void*)this);
 
@@ -781,10 +861,10 @@ MainWindow::MainWindow(const char *f)
 
         //Graphics
              //Make the window resizable around the Display (and define minimum dimensions)
-             window->resizable(Display);
+             window->resizable(DisplayGrp);
              window->size_range(200, 200, 0, 0, 0, 0, 0);
 
-             //Apply the platic theme/skin
+             //Apply the plastic theme/skin
              Fl::scheme("plastic");
 
 
@@ -843,6 +923,7 @@ void MainWindow::Init(char *filename)
         if(Doc)
         {
             //Save preferences (especially add the doc to the recent docs)
+            Pref->SetThumbnails(PrevDisplayGrp->visible());
             Pref->Save(Doc);
         }
 
@@ -863,10 +944,18 @@ void MainWindow::Init(char *filename)
             //Apply the preferences to the document and the window widgets
             Pref->Load("preferences");
             Pref->Apply(Doc);
+            //Hide the thumbnails if preferences say so (visible by default when created)
+            if(Pref->GetThumbnails()!=PrevDisplayGrp->visible())
+            {
+                Thumbnails_cb(DisplayGrp, this);
+            }
             UpdateWidgets((void*)this);
 
             //Get the image to draw
             Display->SetImage(Doc->Render());
+
+            //Set the thumbnails (if needed)
+            PrevDisplay->SetImage(Doc->ThumbnailsRender());
 
             //Change the window title
             char title[1060];

@@ -1,9 +1,9 @@
 # depslib dependency file v1.0
-1399090829 source:/home/vincent/Perso/BDReader/BDReader/src/MainWindow.cpp
+1399774958 source:/home/vincent/Perso/BDReader/BDReader/src/MainWindow.cpp
 	"MainWindow.h"
 	<FL/names.h>
 
-1399085782 /home/vincent/Perso/BDReader/BDReader/include/MainWindow.h
+1399728031 /home/vincent/Perso/BDReader/BDReader/include/MainWindow.h
 	<FL/Fl.H>
 	<FL/Fl_Window.H>
 	<FL/Fl_Menu_Bar.H>
@@ -21,7 +21,7 @@
 	<stdio.h>
 	"MainWindow.h"
 
-1398650724 /home/vincent/Perso/BDReader/BDReader/include/Fl_OpenCV.h
+1399775411 /home/vincent/Perso/BDReader/BDReader/include/Fl_OpenCV.h
 	<FL/Fl_Widget.H>
 	<FL/fl_ask.H>
 	<opencv2/opencv.hpp>
@@ -31,10 +31,10 @@
 	<FL/fl_draw.H>
 	"Fl_OpenCV.h"
 
-1398946129 source:/home/vincent/Perso/BDReader/BDReader/src/Document.cpp
+1399614382 source:/home/vincent/Perso/BDReader/BDReader/src/Document.cpp
 	"Document.h"
 
-1399085964 /home/vincent/Perso/BDReader/BDReader/include/Document.h
+1399614367 /home/vincent/Perso/BDReader/BDReader/include/Document.h
 	<Page.h>
 
 1397908225 /home/vincent/Perso/BDReader/BDReader/include/mupdf/fitz.h
@@ -325,13 +325,13 @@
 	"mupdf/fitz/device.h"
 	"mupdf/fitz/output.h"
 
-1398319367 /home/vincent/Perso/BDReader/BDReader/include/Page.h
+1399614332 /home/vincent/Perso/BDReader/BDReader/include/Page.h
 	<FL/Fl.H>
 	<mupdf/fitz.h>
 	<stlplus3/ntree.hpp>
 	<opencv2/opencv.hpp>
 
-1398912009 source:/home/vincent/Perso/BDReader/BDReader/src/Page.cpp
+1399632353 source:/home/vincent/Perso/BDReader/BDReader/src/Page.cpp
 	"Page.h"
 
 1389021098 /home/vincent/Perso/BDReader/BDReader/include/ntree.tpp
@@ -370,10 +370,10 @@
 	<vector>
 	<algorithm>
 
-1399085978 /home/vincent/Perso/BDReader/BDReader/include/Preferences.h
+1399727871 /home/vincent/Perso/BDReader/BDReader/include/Preferences.h
 	"Document.h"
 
-1399089613 source:/home/vincent/Perso/BDReader/BDReader/src/Preferences.cpp
+1399774279 source:/home/vincent/Perso/BDReader/BDReader/src/Preferences.cpp
 	"Preferences.h"
 
 1397837284 /home/vincent/Perso/BDReader/BDReader/icon32.xbm

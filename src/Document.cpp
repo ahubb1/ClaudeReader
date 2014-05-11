@@ -264,6 +264,11 @@ void Document::PreloadPages()
 }
 
 
+Mat *Document::ThumbnailsRender()
+{
+    return ThumbnailsImgRender=currentPage->RenderPage();
+}
+
 
 //! Go to the next case of the page, or to next page if no more case.
 //! \return 0 if a next case exists

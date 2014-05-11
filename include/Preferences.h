@@ -50,6 +50,8 @@ class Preferences
         void SetReadingMode(READINGMODE val) { ReadingMode = val; }
         bool GetPagePreview() { return PagePreview; }
         void SetPagePreview(bool val) { PagePreview = val; }
+        bool GetThumbnails() { return Thumbnails; }
+        void SetThumbnails(bool val) { Thumbnails = val; }
         int GetBkgColor() { return BkgColor; }
         void SetBkgColor(int val) { BkgColor = val; }
         char *GetLastDoc() { return LastDoc; }
@@ -63,6 +65,7 @@ class Preferences
         char Filename[255];
         READINGMODE ReadingMode;
         bool PagePreview;
+        bool Thumbnails;
         int BkgColor;
         char LastDoc[2048];
         int LastDocPageNb;

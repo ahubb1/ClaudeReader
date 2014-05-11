@@ -52,6 +52,7 @@ class Page
 
         void DetectCases();
         Mat * RenderCase();
+        Mat * RenderPage();
 
         int NextCase();
         int PreviousCase();

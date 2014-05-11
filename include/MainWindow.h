@@ -77,6 +77,7 @@ class MainWindow
         friend void StripMode_cb(Fl_Widget* widget, void * param);
         friend void CaseMode_cb(Fl_Widget* widget, void * param);
         friend void PagePreview_cb(Fl_Widget* widget, void * param);
+        friend void Thumbnails_cb(Fl_Widget* widget, void * param);
         friend void PreviousPage_cb(Fl_Widget* widget, void * param);
         friend void NextPage_cb(Fl_Widget* widget, void * param);
         friend void PreviousCase_cb(Fl_Widget* widget, void * param);
@@ -99,7 +100,8 @@ class MainWindow
             Fl_Double_Window *window;
             Fl_Menu_Bar *MenuBar;
             Fl_Box *StatusBar;
-            Fl_OpenCV *Display;
+            Fl_Group *DisplayGrp, *MainDisplayGrp, *PrevDisplayGrp;
+            Fl_OpenCV *Display, *PrevDisplay;
             Fl_Overlay_Arrow_Button *NextButton, *PreviousButton, *NextPageButton, *PreviousPageButton;
 
         //Other param

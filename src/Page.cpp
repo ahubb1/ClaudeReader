@@ -108,8 +108,8 @@ int Distance(Rect A, Rect B)
 }
 
 
-//! Sort and merge a vector of Rect.
-//!Sort the Rect by area (see isSmaller()) and merge them (using Merge()) if they
+//! Sort and merge a vector of Rects.
+//!Sort the Rects by area (see isSmaller()) and merge them (using Merge()) if they
 //!are overlapping (as defined by isIn()). The function is recursive.
 void SortAndMerge(vector<Rect> *CasesTmp, int counter)
 {
@@ -246,12 +246,19 @@ void Page::DetectCases()
         if(ReadingMode==CASE || ReadingMode==PAGE)
         {
             //To binary
-            inRange(src, 20, 240, src);
-            //Canny(src, src, 100, 200); //Keep it ?
+            inRange(src, 0, 240, src);
+
+            /*Test contour detection....
+            Canny(src, src, 220, 220); //Keep it ?
+            Mat src_hl, src_vl;
+            Sobel( src, src_hl, CV_8U, 0, 1, 5, 1, 0, BORDER_DEFAULT );//Emphasize horizontal lines
+            Sobel( src, src_vl, CV_8U, 1, 0, 5, 1, 0, BORDER_DEFAULT );//Emphasize vertical lines
+            src=src_hl^src_vl;
+
             //Enlarge the contours
-            Mat conv=Mat::ones(5,5,CV_8UC1);
+            Mat conv=Mat::ones(5,5 ,CV_8UC1);
             dilate(src, src, conv);
-            conv.release();
+            conv.release();*/
 
 
             /*Test strip
@@ -277,15 +284,51 @@ void Page::DetectCases()
             vector<Vec4i> hierarchy;
             findContours( src, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE );
 
-            //Remove according to ratio perimeter/area (keep only rectangles) ???
-
             //Rectangle bounding box for each contour found
             vector<Rect> CasesTmp;
+            vector<Point> approx;
             for( int i = contours.size()-1; i >-1; i-- )
             {
                CasesTmp.push_back(boundingRect( contours[i] ));
-               //rectangle(PageRenderCv, CasesTmp[i], cvScalar(0, 255, 0), 8);
             }
+
+            //Remove according to ratio perimeter/area (keep only rectangles) ???
+            /*approxPolyDP(Mat(contours[i]), approx, arcLength(Mat(contours[i]), true)*0.02, true);
+               printf("%f\n", matchShapes( approx, contours[i], CV_CONTOURS_MATCH_I1, .0));*/
+
+            /*Verifier si certaines cases sont remplies de + petites, si oui, virer la grande
+            INUTILE ???????????????????????????????????
+            //Les ranger par taille
+            //Order them by area (smallest to largest)
+            sort(CasesTmp.begin(), CasesTmp.end(), isSmaller);
+
+            //PROBLEME SI PLEINS DE PETITES IMBRIQUEES=> le faire dans sort and merge ???
+            for(unsigned int i = 0; i < CasesTmp.size(); i++ )
+            {
+                //pour chaque case qui fait + d'1/4 de la page
+                if((CasesTmp[i].width*CasesTmp[i].height)>(0.25*src.rows*src.cols))
+                {
+                    printf("%d %d>0.25*%d ", i, (CasesTmp[i].width*CasesTmp[i].height), src.rows*src.cols);
+                    int internalArea=0;
+                    //parcourir les autres
+                    for(unsigned int k = i+1; k < CasesTmp.size(); k++ )
+                    {
+                        //sommer la surface de celles qui sont dedans (avec isIn => 20% ?)
+                        if(isIn(CasesTmp[k], CasesTmp[i]))
+                        {
+                            internalArea+=CasesTmp[k].width*CasesTmp[k].height;
+                        }
+                    }
+                    //si cette somme fait plus de 90%, retirer la grande
+                    if(internalArea>0.9*CasesTmp[i].width*CasesTmp[i].height)
+                    {
+                        CasesTmp.erase(CasesTmp.begin()+i);
+                        printf("->Yes");
+                        i--;
+                    }
+                    printf("\n");
+                }
+            }*/
 
             //Sort the cases by size and merge them if overlaping
             SortAndMerge(&CasesTmp, 0);
@@ -352,7 +395,7 @@ void Page::DetectCases()
 
                 //Create (and fill) the tree
                     //First the root node: a band on the left of the page
-                    CasesTree.insert(Rect(0, 0, src.cols*.1, src.rows));
+                    CasesTree.insert(Rect(0, 0, src.cols*.01, src.rows));
                     ntree<Rect>::prefix_iterator currentParentPre=CasesTree.prefix_begin();
 
                     while (CasesTmp.size()>0)
@@ -507,11 +550,6 @@ Mat * Page::RenderCase()
     {
         ImgRender.release();
         PageRenderCv.copyTo(ImgRender);
-        /*debug
-        if(NbCases>0)
-        {
-            rectangle(ImgRender, Cases[ActiveCase], cvScalar(0, 0, 0), 6);
-        }*/
     }
     //or the active case
     else
@@ -520,4 +558,19 @@ Mat * Page::RenderCase()
         (PageRenderCv(Cases[ActiveCase])).copyTo(ImgRender);
     }
     return &ImgRender;
+}
+
+//! Update the page rendering (whole page).
+//!The ImgRender cv::Mat is filled with the page image.
+//! \return A pointer on the valid PageRenderCv cv::Mat
+Mat * Page::RenderPage()
+{
+    if(Loaded)
+    {
+        return &PageRenderCv;
+    }
+    else
+    {
+        return NULL;
+    }
 }

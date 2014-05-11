@@ -54,6 +54,7 @@ class Document
         int PreviousPage();
 
         Mat *Render() {return ImgRender=currentPage->RenderCase();}
+        Mat *ThumbnailsRender();
 
         char *GetFilename() {return Filename;}
         void SetReadingMode(READINGMODE val);
@@ -71,6 +72,7 @@ class Document
         fz_context *FzCtx;
         fz_document *FzDoc;
         Mat *ImgRender;
+        Mat *ThumbnailsImgRender;
         int NbPages;
         int ActivePage;
         bool PagePreview;

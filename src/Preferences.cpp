@@ -27,6 +27,8 @@ Preferences::Preferences()
     NbRecentDocs=0;
     LastDoc[0]='\0';
     LastDocPageNb=0;
+    PagePreview=true;
+    Thumbnails=true;
 }
 
 //! Destructor (nothing).
@@ -52,9 +54,13 @@ int Preferences::Load(const char prefFilename[255])
     FILE *prefFile=fopen(Filename, "r");
     if(prefFile)
     {
-        //The reading mode, background color and preview page option
-        if(fscanf(prefFile, "%d %d %d ", &ReadingMode, &BkgColor, &PagePreview)!=3)
+        //The reading mode, thumbnails option and preview page option
+        int thumb_int, preview_int;
+        if(fscanf(prefFile, "%d %d %d ", &ReadingMode, &thumb_int, &preview_int)!=3)
             return -2;
+
+        Thumbnails=thumb_int;
+        PagePreview=preview_int;
 
         //The last document filename
         fgets(LastDoc, 2048, prefFile);
@@ -121,7 +127,7 @@ void Preferences::Save(Document *doc)
         if(prefFile)
         {
             //The reading mode, background color and preview page option
-            fprintf(prefFile, "%d\n%d\n%d\n", doc->GetReadingMode(), BkgColor, doc->IsPagePreview());
+            fprintf(prefFile, "%d\n%d\n%d\n", doc->GetReadingMode(), Thumbnails, doc->IsPagePreview());
 
             //The last document filename
             fprintf(prefFile, "%s\n", doc->GetFilename());
