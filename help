@@ -13,6 +13,7 @@ Controls/options:
 possible
 		-Page preview: Display a preview of the full page when in Panel/Strip mode, allowing
 to preview the whole page before reading in details
+		-Ctrl-P: Show/hide the page thumbnails view (full page view on the side)
 	
 	*Navigation:
 		-Left arrow: Go to previous case/previous strip (to previous page in Page mode)
