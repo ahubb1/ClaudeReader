@@ -395,7 +395,7 @@ void Page::DetectCases()
 
                 //Create (and fill) the tree
                     //First the root node: a band on the left of the page
-                    CasesTree.insert(Rect(0, 0, src.cols*.01, src.rows));
+                    CasesTree.insert(Rect(0, 0, src.cols*.1, src.rows));
                     ntree<Rect>::prefix_iterator currentParentPre=CasesTree.prefix_begin();
 
                     while (CasesTmp.size()>0)

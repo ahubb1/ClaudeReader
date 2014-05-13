@@ -28,11 +28,11 @@
 	<File name="src/Fl_Overlay_Arrow_Button.cxx" open="0" top="0" tabpos="4">
 		<Cursor position="2704" topLine="6" />
 	</File>
-	<File name="src/MainWindow.cpp" open="1" top="0" tabpos="3">
-		<Cursor position="28158" topLine="333" />
+	<File name="src/MainWindow.cpp" open="1" top="1" tabpos="3">
+		<Cursor position="27681" topLine="441" />
 	</File>
-	<File name="src/Page.cpp" open="1" top="1" tabpos="7">
-		<Cursor position="13715" topLine="386" />
+	<File name="src/Page.cpp" open="1" top="0" tabpos="7">
+		<Cursor position="9339" topLine="428" />
 	</File>
 	<File name="src/Preferences.cpp" open="0" top="0" tabpos="4">
 		<Cursor position="2450" topLine="57" />

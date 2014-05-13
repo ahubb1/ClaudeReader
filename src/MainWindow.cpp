@@ -372,6 +372,8 @@ void Thumbnails_cb(Fl_Widget* widget, void * param)
         //and resize the main display to take the full space
         mw->MainDisplayGrp->resize(mw->DisplayGrp->x(), mw->DisplayGrp->y(), mw->DisplayGrp->w(), mw->DisplayGrp->h());
         Fl::wait(10);
+        //Update the menu item state if needed
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Thumnails view"))->clear();
     }
     else
     {
@@ -382,6 +384,8 @@ void Thumbnails_cb(Fl_Widget* widget, void * param)
         //and reduce the size of the main display
         mw->MainDisplayGrp->resize(mw->DisplayGrp->x()+mw->PrevDisplayGrp->w(), mw->DisplayGrp->y(), mw->DisplayGrp->w()*4/5., mw->DisplayGrp->h());
         mw->PrevDisplayGrp->redraw();
+        //Update the menu item state if needed
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Thumnails view"))->set();
         Fl::wait(100);
     }
 }
@@ -523,7 +527,6 @@ void ActivateNavigationWidgets(void *param, bool val)
             {
                 items[i].deactivate();
             }
-
         }
     }
 
@@ -786,12 +789,17 @@ MainWindow::MainWindow(const char *f)
                 PrevDisplayGrp->begin();
                  //Thumbnails display
                      PrevDisplay = new Fl_OpenCV(PrevDisplayGrp->x(), PrevDisplayGrp->y(), PrevDisplayGrp->w()-5, PrevDisplayGrp->h());
+                 //Close button
+                     PrevCloseButton = new Fl_Button(PrevDisplay->x()+PrevDisplay->w()-20, PrevDisplay->y(), 20, 20, "X");
+                     PrevCloseButton->clear_visible_focus();
+                     PrevCloseButton->color(FL_BLACK);PrevCloseButton->labelcolor(FL_WHITE);PrevCloseButton->selection_color(FL_WHITE);PrevCloseButton->box(FL_FLAT_BOX);
+                     PrevCloseButton->callback(Thumbnails_cb, (void*)this);
                  //Separator
                      Fl_Box *separator = new Fl_Box(FL_PLASTIC_UP_BOX, PrevDisplay->x()+PrevDisplay->w(), PrevDisplay->y(), 5, PrevDisplay->h(), "");
                  PrevDisplayGrp->end();
 
                  //Sub group containing the main display and the navigation buttons
-                 MainDisplayGrp = new Fl_Group(DisplayGrp->x()+PrevDisplayGrp->w(), DisplayGrp->y(), DisplayGrp->w()*4/5., DisplayGrp->h());
+                 MainDisplayGrp = new Fl_Group(DisplayGrp->x(), DisplayGrp->y(), DisplayGrp->w(), DisplayGrp->h());
                  MainDisplayGrp->begin();
                  //Main display
                      //Display = new Fl_OpenCV(0, 25, window->w(), window->h()-45);
@@ -799,8 +807,7 @@ MainWindow::MainWindow(const char *f)
 
                  //Navigation buttons
                      NextButton = new Fl_Overlay_Arrow_Button(Display->x()+Display->w()-25, (int)(Display->y()), 25, Display->h(), "", 0, 0.8, 0.15, 0);
-                     NextButton->color(fl_rgb_color(100, 100, 100));
-                     NextButton->selection_color(fl_rgb_color(245,245,200));
+                     NextButton->color(fl_rgb_color(100, 100, 100));NextButton->selection_color(fl_rgb_color(245,245,200));
                      NextButton->callback(NextCase_cb, (void*)this);
                      //Prevent the widget to get the focus and thus prevent to use the arrow keys to
                      //navigate through the widgets: keep the Arrows shortcut behavior (to menu_items)
@@ -809,22 +816,19 @@ MainWindow::MainWindow(const char *f)
                      NextButton->hide();
                      NextButton->tooltip("Next panel");
                      PreviousButton = new Fl_Overlay_Arrow_Button(Display->x(), (int)(Display->y()), 25, Display->h(), "", 180, 0.8, 0.15, 0);
-                     PreviousButton->color(fl_rgb_color(100, 100, 100));
-                     PreviousButton->selection_color(fl_rgb_color(245,245,200));
+                     PreviousButton->color(fl_rgb_color(100, 100, 100));PreviousButton->selection_color(fl_rgb_color(245,245,200));
                      PreviousButton->callback(PreviousCase_cb, (void*)this);
                      PreviousButton->clear_visible_focus();
                      PreviousButton->hide();
                      PreviousButton->tooltip("Previous panel");
                      NextPageButton = new Fl_Overlay_Arrow_Button(Display->x(), (int)(Display->y()+Display->h()-35), Display->w(), 35, "", -90, 0.10, 0.8, 0);
-                     NextPageButton->color(fl_rgb_color(100, 100, 100));
-                     NextPageButton->selection_color(fl_rgb_color(245,245,200));
+                     NextPageButton->color(fl_rgb_color(100, 100, 100));NextPageButton->selection_color(fl_rgb_color(245,245,200));
                      NextPageButton->callback(NextPage_cb, (void*)this);
                      NextPageButton->clear_visible_focus();
                      NextPageButton->hide();
                      NextPageButton->tooltip("Next page");
                      PreviousPageButton = new Fl_Overlay_Arrow_Button(Display->x(), (int)(Display->y()), Display->w(), 35, "", 90, 0.10, 0.8, 0);
-                     PreviousPageButton->color(fl_rgb_color(100, 100, 100));
-                     PreviousPageButton->selection_color(fl_rgb_color(245,245,200));
+                     PreviousPageButton->color(fl_rgb_color(100, 100, 100));PreviousPageButton->selection_color(fl_rgb_color(245,245,200));
                      PreviousPageButton->callback(PreviousPage_cb, (void*)this);
                      PreviousPageButton->clear_visible_focus();
                      PreviousPageButton->hide();
@@ -832,11 +836,9 @@ MainWindow::MainWindow(const char *f)
                 MainDisplayGrp->end();
 
             DisplayGrp->end();
-            //Hide the thumbnails if preferences say so (visible by default when created)
-            if(!Pref->GetThumbnails())
-            {
-                Thumbnails_cb(DisplayGrp, this);
-            }
+            //Hide the thumbnails (will be displayed at document opening if preferences say so)
+            PrevDisplayGrp->hide();
+            DisplayGrp->remove(PrevDisplayGrp);
 
 
          //Status bar
@@ -862,7 +864,7 @@ MainWindow::MainWindow(const char *f)
         //Graphics
              //Make the window resizable around the Display (and define minimum dimensions)
              window->resizable(DisplayGrp);
-             window->size_range(200, 200, 0, 0, 0, 0, 0);
+             window->size_range(400, 400, 0, 0, 0, 0, 0);
 
              //Apply the plastic theme/skin
              Fl::scheme("plastic");

@@ -102,6 +102,7 @@ class MainWindow
             Fl_Box *StatusBar;
             Fl_Group *DisplayGrp, *MainDisplayGrp, *PrevDisplayGrp;
             Fl_OpenCV *Display, *PrevDisplay;
+            Fl_Button *PrevCloseButton;
             Fl_Overlay_Arrow_Button *NextButton, *PreviousButton, *NextPageButton, *PreviousPageButton;
 
         //Other param
