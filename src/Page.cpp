@@ -239,152 +239,155 @@ void Page::DetectCases()
     if(PageNb>1 && (NbPages-PageNb)>0)
     {
         Mat src;
-
         cvtColor(PageRenderCv, src, CV_BGR2GRAY);
 
         //Only if we are in case or page mode
         if(ReadingMode==CASE || ReadingMode==PAGE)
         {
-            //To binary
-            inRange(src, 0, 240, src);
-
-            /*Test contour detection....
-            Canny(src, src, 220, 220); //Keep it ?
-            Mat src_hl, src_vl;
-            Sobel( src, src_hl, CV_8U, 0, 1, 5, 1, 0, BORDER_DEFAULT );//Emphasize horizontal lines
-            Sobel( src, src_vl, CV_8U, 1, 0, 5, 1, 0, BORDER_DEFAULT );//Emphasize vertical lines
-            src=src_hl^src_vl;
-
-            //Enlarge the contours
-            Mat conv=Mat::ones(5,5 ,CV_8UC1);
-            dilate(src, src, conv);
-            conv.release();*/
-
-
-            /*Test strip
-            Sobel( src, src, CV_8U, 0, 2, 3, 1, 0, BORDER_DEFAULT );//Emphasize horizontal lines
-            Mat convH=Mat::zeros(11, 11, CV_8UC1);
-            convH.col(5)=Mat::ones(11,1,CV_8UC1);
-            dilate(src, src, convH);
-            dilate(src, src, convH);
-            Mat conv=Mat::ones(13,13,CV_8UC1);
-            erode(src, src, conv);
-
-            vector<Vec4i> lines;
-            HoughLinesP(src, lines, 25, CV_PI/180*10, 80, 0.8*PageRenderCv.cols, PageRenderCv.cols/10 );
-            for( size_t i = 0; i < lines.size(); i++ )
-            {
-                Vec4i l = lines[i];
-                line( PageRenderCv, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0,0,255), 3, CV_AA);
-            }*/
-
-
-            //Contours detection
-            vector<vector <Point> > contours;
-            vector<Vec4i> hierarchy;
-            findContours( src, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE );
-
-            //Rectangle bounding box for each contour found
+            //List of Case
             vector<Rect> CasesTmp;
-            vector<Point> approx;
-            for( int i = contours.size()-1; i >-1; i-- )
+            //Try the detection several times (if it's failed) with a different range of "white" detection
+            bool detectionFailed=true;
+            int nbdetections=0;
+            while(detectionFailed && nbdetections<5)
             {
-               CasesTmp.push_back(boundingRect( contours[i] ));
-            }
+                detectionFailed=false;
 
-            //Remove according to ratio perimeter/area (keep only rectangles) ???
-            /*approxPolyDP(Mat(contours[i]), approx, arcLength(Mat(contours[i]), true)*0.02, true);
-               printf("%f\n", matchShapes( approx, contours[i], CV_CONTOURS_MATCH_I1, .0));*/
+                //To binary
+                cvtColor(PageRenderCv, src, CV_BGR2GRAY);
+                inRange(src, 0, 240+nbdetections, src);
 
-            /*Verifier si certaines cases sont remplies de + petites, si oui, virer la grande
-            INUTILE ???????????????????????????????????
-            //Les ranger par taille
-            //Order them by area (smallest to largest)
-            sort(CasesTmp.begin(), CasesTmp.end(), isSmaller);
+                /*Test contour detection....
+                Canny(src, src, 220, 220); //Keep it ?
+                Mat src_hl, src_vl;
+                Sobel( src, src_hl, CV_8U, 0, 1, 5, 1, 0, BORDER_DEFAULT );//Emphasize horizontal lines
+                Sobel( src, src_vl, CV_8U, 1, 0, 5, 1, 0, BORDER_DEFAULT );//Emphasize vertical lines
+                src=src_hl^src_vl;
 
-            //PROBLEME SI PLEINS DE PETITES IMBRIQUEES=> le faire dans sort and merge ???
-            for(unsigned int i = 0; i < CasesTmp.size(); i++ )
-            {
-                //pour chaque case qui fait + d'1/4 de la page
-                if((CasesTmp[i].width*CasesTmp[i].height)>(0.25*src.rows*src.cols))
+                //Enlarge the contours
+                Mat conv=Mat::ones(5,5 ,CV_8UC1);
+                dilate(src, src, conv);
+                conv.release();*/
+
+
+                /*Test strip
+                Sobel( src, src, CV_8U, 0, 2, 3, 1, 0, BORDER_DEFAULT );//Emphasize horizontal lines
+                Mat convH=Mat::zeros(11, 11, CV_8UC1);
+                convH.col(5)=Mat::ones(11,1,CV_8UC1);
+                dilate(src, src, convH);
+                dilate(src, src, convH);
+                Mat conv=Mat::ones(13,13,CV_8UC1);
+                erode(src, src, conv);
+
+                vector<Vec4i> lines;
+                HoughLinesP(src, lines, 25, CV_PI/180*10, 80, 0.8*PageRenderCv.cols, PageRenderCv.cols/10 );
+                for( size_t i = 0; i < lines.size(); i++ )
                 {
-                    printf("%d %d>0.25*%d ", i, (CasesTmp[i].width*CasesTmp[i].height), src.rows*src.cols);
-                    int internalArea=0;
-                    //parcourir les autres
-                    for(unsigned int k = i+1; k < CasesTmp.size(); k++ )
-                    {
-                        //sommer la surface de celles qui sont dedans (avec isIn => 20% ?)
-                        if(isIn(CasesTmp[k], CasesTmp[i]))
-                        {
-                            internalArea+=CasesTmp[k].width*CasesTmp[k].height;
-                        }
-                    }
-                    //si cette somme fait plus de 90%, retirer la grande
-                    if(internalArea>0.9*CasesTmp[i].width*CasesTmp[i].height)
+                    Vec4i l = lines[i];
+                    line( PageRenderCv, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0,0,255), 3, CV_AA);
+                }*/
+
+                //Contours detection
+                vector<vector <Point> > contours;
+                vector<Vec4i> hierarchy;
+                findContours( src, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE );
+
+                //Rectangle bounding box for each contour found
+                for( int i = contours.size()-1; i >-1; i-- )
+                {
+                   CasesTmp.push_back(boundingRect( contours[i] ));
+                }
+
+                //Remove according to ratio perimeter/area (keep only rectangles) ???
+                /*approxPolyDP(Mat(contours[i]), approx, arcLength(Mat(contours[i]), true)*0.02, true);
+                   printf("%f\n", matchShapes( approx, contours[i], CV_CONTOURS_MATCH_I1, .0));*/
+
+                //Sort the cases by size and merge them if overlaping
+                SortAndMerge(&CasesTmp, 0);
+
+
+                //Remove the too small ones (noise)
+                for(unsigned int i = 0; i < CasesTmp.size(); i++ )
+                {
+                    if((CasesTmp[i].width*CasesTmp[i].height)<(0.01*src.rows*src.cols))
                     {
                         CasesTmp.erase(CasesTmp.begin()+i);
-                        printf("->Yes");
                         i--;
                     }
-                    printf("\n");
                 }
-            }*/
 
-            //Sort the cases by size and merge them if overlaping
-            SortAndMerge(&CasesTmp, 0);
-
-
-            //Remove the too small ones (noise)
-            for(unsigned int i = 0; i < CasesTmp.size(); i++ )
-            {
-                if((CasesTmp[i].width*CasesTmp[i].height)<(0.01*src.rows*src.cols))
+                //Merge cases between 0.01 and 0.04 to their closest one
+                for(unsigned int i = 0; i < CasesTmp.size(); i++ )
                 {
-                    CasesTmp.erase(CasesTmp.begin()+i);
-                    i--;
-                }
-            }
-
-            //Merge cases between 0.01 and 0.04 to their closest one
-            for(unsigned int i = 0; i < CasesTmp.size(); i++ )
-            {
-                if((CasesTmp[i].width*CasesTmp[i].height)<(0.04*src.rows*src.cols))
-                {
-                    //Find the closest one
-                    int mind=src.rows*src.cols; //init to some huge number
-                    int closest=-1;
-                    for(unsigned int k = 0; k < CasesTmp.size(); k++ )
+                    if((CasesTmp[i].width*CasesTmp[i].height)<(0.04*src.rows*src.cols))
                     {
-                        if(i!=k)
+                        //Find the closest one
+                        int mind=src.rows*src.cols; //init to some huge number
+                        int closest=-1;
+                        for(unsigned int k = 0; k < CasesTmp.size(); k++ )
                         {
-                            int d=Distance(CasesTmp[i], CasesTmp[k]);
-                            if(d<mind)
+                            if(i!=k)
                             {
-                                mind=d;
-                                closest=k;
+                                int d=Distance(CasesTmp[i], CasesTmp[k]);
+                                if(d<mind)
+                                {
+                                    mind=d;
+                                    closest=k;
+                                }
                             }
                         }
-                    }
-                    //Merge
-                    if(closest!=-1)
-                    {
-                        Merge(&CasesTmp[closest], CasesTmp[i]);
-                        CasesTmp.erase(CasesTmp.begin()+i);
-                        i--;
+                        //Merge
+                        if(closest!=-1)
+                        {
+                            Merge(&CasesTmp[closest], CasesTmp[i]);
+                            CasesTmp.erase(CasesTmp.begin()+i);
+                            i--;
+                        }
                     }
                 }
+
+                //Sort the cases by size and merge them if overlaping: done again because sizes and overlapping could have changed
+                SortAndMerge(&CasesTmp, 0);
+
+
+                //Check if parts of the page not covered
+                if(CasesTmp.size()>0)
+                {
+                    //Compute the "within area": the extreme total area covered by the detected cases and sum the actual cases areas
+                    Mat testCoveredArea; //Image representing the covered area in white
+                    cvtColor(PageRenderCv, testCoveredArea, CV_BGR2GRAY);
+                    rectangle(testCoveredArea, CasesTmp[0], cvScalar(255), -1);
+                    Rect withinRect(CasesTmp[0]); //Initilaize as the first case
+                    int coveredArea=CasesTmp[0].width*CasesTmp[0].height;
+                    for(int i = 1; i < CasesTmp.size(); i++ )
+                    {
+                        //do it by merging all the rectangles
+                        Merge(&withinRect, CasesTmp[i]);
+                        //sum the cases area
+                        coveredArea+=CasesTmp[i].width*CasesTmp[i].height;
+                        //paint each case space in white (255)
+                        rectangle(testCoveredArea, CasesTmp[i], cvScalar(255), -1);
+                    }
+                    //paint the page "contour" (area outside the withinRect) in white (0)
+                    rectangle(testCoveredArea, Rect(0, 0, withinRect.x, src.rows), cvScalar(255), -1);//left band
+                    rectangle(testCoveredArea, Rect(withinRect.x+withinRect.width, 0, src.cols-(withinRect.x+withinRect.width), src.rows), cvScalar(255), -1);//right band
+                    rectangle(testCoveredArea, Rect(0, 0, src.cols, withinRect.y), cvScalar(255), -1);//top band
+                    rectangle(testCoveredArea, Rect(0, withinRect.y+withinRect.height, src.cols, src.rows-(withinRect.y+withinRect.height)), cvScalar(255), -1);//bottom band
+
+                    //compare the two values: if two large difference, it means that there are some internal part not covered by a case
+                    if(coveredArea<0.95*withinRect.width*withinRect.height)
+                    {
+                        //Inspect the not covered area: if not 255 means that not fully blank
+                        if(mean(testCoveredArea).val[0]<250)
+                        {
+                            //Detection failed
+                            detectionFailed=true;
+                            CasesTmp.clear();
+                        }
+                    }
+                }
+                nbdetections++;
             }
-
-            //Sort the cases by size and merge them if overlaping: done again because sizes and overlapping could have changed
-            SortAndMerge(&CasesTmp, 0);
-
-
-            //Check if parts of the page not covered !!!!!!!!!!!!!!!
-                //compute the "within area": the extreme total area covered by the detected cases
-
-                //sum the cases areas
-
-                //compare the two values: if two large difference, it means that there are some internal part not covered by a case
-            //et dans ce cas eraser le CasesTmp et donc faire un decoupage en strip
 
             //Check if we have more than one case
             if(CasesTmp.size()>1)
@@ -437,7 +440,6 @@ void Page::DetectCases()
                         }
                     }
 
-
                     //Copy the cases from the tree to a list, in the right order (except the first one which is a fake case)
                     Cases.clear();
                     for (ntree<Rect>::prefix_iterator i = ++CasesTree.prefix_begin(); i != CasesTree.prefix_end(); i++)
@@ -480,6 +482,7 @@ void Page::DetectCases()
 
         //Release some memory
         src.release();
+
     }//if not special pages
     else
     {
