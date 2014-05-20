@@ -249,7 +249,7 @@ void Page::DetectCases()
             //Try the detection several times (if it's failed) with a different range of "white" detection
             bool detectionFailed=true;
             int nbdetections=0;
-            while(detectionFailed && nbdetections<5)
+            while(detectionFailed && nbdetections<10)
             {
                 detectionFailed=false;
 

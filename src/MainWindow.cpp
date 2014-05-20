@@ -280,6 +280,7 @@ void Fullscreen_cb(Fl_Widget* widget, void * param)
     {
         //Go in fullscreen mode
         mw->window->resizable(NULL);
+        Fl::wait(100);
         mw->window->fullscreen();
         Fl::wait(100);
         //Hide the bars (but not really, just make them 0px width=> trick to keep the shortcuts and remember their size/position (only w() is forgotten but it's the window one))
@@ -287,6 +288,8 @@ void Fullscreen_cb(Fl_Widget* widget, void * param)
         mw->StatusBar->resize(mw->StatusBar->x(), mw->StatusBar->y(), 0, mw->StatusBar->h());
         //Adapt the displayGrp size (no more menu and status bar shown=>screen size)
         mw->DisplayGrp->resize(0, 0, Fl::w(), Fl::h());
+        Fl::wait(100);
+        mw->DisplayGrp->redraw();
         Fl::wait(100);
 
         //Add the ESC control as a fullscreen shortcut
@@ -296,6 +299,7 @@ void Fullscreen_cb(Fl_Widget* widget, void * param)
     {
         //Go back from fullscreen
         mw->window->fullscreen_off();
+        Fl::wait(100);
         mw->window->resizable(NULL);
         Fl::wait(100);
         //Show the bars again: redefine their width equal to the window one
@@ -304,7 +308,9 @@ void Fullscreen_cb(Fl_Widget* widget, void * param)
         Fl::wait(100);
         //Resize the display group
         mw->DisplayGrp->resize(0, 25, mw->window->w(), mw->window->h()-45);
+        Fl::wait(100);
         mw->window->resizable(mw->DisplayGrp);
+        Fl::wait(100);
 
         //and let some time to update that
         mw->window->redraw();
