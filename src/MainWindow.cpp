@@ -30,33 +30,7 @@ bool isDNDavailable=false;
 char DNDFilename[FL_PATH_MAX];
 
 
-//! Update the status bar text according to current state (document current page...)
-void StatusBarUpdate(void * param)
-{
-      MainWindow *mw=(MainWindow*)param;
-
-      //Get number of pages... blabla
-      char text[1024];
-      if(mw->Doc)
-      {
-          if(mw->Doc->GetReadingMode()==CASE)
-          {
-                sprintf(text, "Page %d/%d (Panel %d/%d)", mw->Doc->GetCurrentPageNb(), mw->Doc->GetNumberOfPages(), mw->Doc->currentPage->GetActiveCase()+1, mw->Doc->currentPage->GetNbCases());
-          }
-          else
-          {
-                sprintf(text, "Page %d/%d", mw->Doc->GetCurrentPageNb(), mw->Doc->GetNumberOfPages());
-          }
-      }
-      else
-      {
-          sprintf(text, "%s", "\0");
-      }
-      mw->StatusBar->copy_label(text);
-      mw->StatusBar->redraw();
-      Fl::wait(100);
-}
-
+//-------------------------------- Events ---------------------------------
 //! Catch the Drag N Drop events (if the user drops a file on the window)
 //!This function only raise a flag that will be catched later on by the TimerDND_cb() function.
 int DragNDrop(int e)
@@ -186,7 +160,37 @@ void TimerMouseWheel_cb(void* param)
     //Repeat...
     Fl::repeat_timeout(0.1, TimerMouseWheel_cb, (void*)mw);
 }
+//-----------------------------------------------------------------------------
 
+
+//--------------------------------- Status ----------------------------------
+//! Update the status bar text according to current state (document current page...)
+void StatusBarUpdate(void * param)
+{
+      MainWindow *mw=(MainWindow*)param;
+
+      //Get number of pages... blabla
+      char text[1024];
+      if(mw->Doc)
+      {
+          if(mw->Doc->GetReadingMode()==CASE)
+          {
+                sprintf(text, "Page %d/%d (Panel %d/%d)", mw->Doc->GetCurrentPageNb(), mw->Doc->GetNumberOfPages(), mw->Doc->currentPage->GetActiveCase()+1, mw->Doc->currentPage->GetNbCases());
+          }
+          else
+          {
+                sprintf(text, "Page %d/%d", mw->Doc->GetCurrentPageNb(), mw->Doc->GetNumberOfPages());
+          }
+      }
+      else
+      {
+          sprintf(text, "%s", "\0");
+      }
+      mw->StatusBar->copy_label(text);
+      mw->StatusBar->redraw();
+      Fl::wait(100);
+}
+//-----------------------------------------------------------------------------
 
 
 //---------------------------------File menu----------------------------------
@@ -281,9 +285,9 @@ void Fullscreen_cb(Fl_Widget* widget, void * param)
         //Hide the bars (but not really, just make them 0px width=> trick to keep the shortcuts and remember their size/position (only w() is forgotten but it's the window one))
         mw->MenuBar->resize(mw->MenuBar->x(), mw->MenuBar->y(), 0, mw->MenuBar->h());
         mw->StatusBar->resize(mw->StatusBar->x(), mw->StatusBar->y(), 0, mw->StatusBar->h());
-        Fl::wait(100);
         //Adapt the displayGrp size (no more menu and status bar shown=>screen size)
         mw->DisplayGrp->resize(0, 0, Fl::w(), Fl::h());
+        Fl::wait(100);
 
         //Add the ESC control as a fullscreen shortcut
         ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Fullscreen2"))->activate();
@@ -309,7 +313,6 @@ void Fullscreen_cb(Fl_Widget* widget, void * param)
         //Remove the ESC control as a fullscreen shortcut
         ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Fullscreen2"))->deactivate();
     }
-
 }
 
 //! Switch to page reading mode
@@ -802,7 +805,6 @@ MainWindow::MainWindow(const char *f)
                  MainDisplayGrp = new Fl_Group(DisplayGrp->x(), DisplayGrp->y(), DisplayGrp->w(), DisplayGrp->h());
                  MainDisplayGrp->begin();
                  //Main display
-                     //Display = new Fl_OpenCV(0, 25, window->w(), window->h()-45);
                      Display = new Fl_OpenCV(MainDisplayGrp->x(), MainDisplayGrp->y(), MainDisplayGrp->w(), MainDisplayGrp->h());
 
                  //Navigation buttons

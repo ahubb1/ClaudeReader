@@ -122,9 +122,7 @@ int Document::LoadPage(int p)
     {
         //Open the pdf and create the context...
         if(OpenPdf()<0)
-        {
             return -3;
-        }
 
         //Set the new active page number
         ActivePage=p;
@@ -223,9 +221,7 @@ void Document::PreloadPages()
 {
     //Open the pdf and create the context...
     if(OpenPdf()<0)
-    {
         return;
-    }
 
     //If next page is not already the one loaded (or there is currently no next page)
     if( (!nextPage) || (nextPage && nextPage->GetPageNb()!=(ActivePage+1)) )
