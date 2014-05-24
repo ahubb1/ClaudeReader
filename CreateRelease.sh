@@ -3,7 +3,7 @@
 
 base_dir=../Releases/Unix/
 base_file=bdreader
-base_name=$base_dir-$base_file
+base_name=$base_dir$base_file-
 echo -------------------------
 echo BDReader release creation
 echo -------------------------
@@ -96,16 +96,21 @@ fi
 
 #Deb package preparation
 echo -e '\t\t' ----Deb package preparation----
-cd ..
-echo -e Prepare a deb package ? (y/n)
+echo -e Prepare a deb package ? '('y/n')'
 read valid
 if [[ $valid == y* ]]
 then
 	echo -n -e '\t' Creation of the archive...
-	tar -zcvf $base_file_$version_nb.orig.tar.gz $base_file-$version_nb
-	cd bdreader-0.97/ && dh_make -e kennyyy@users.sf.net
-	cp ../SaveDeb/* ./debian/
+	tar -zcvf $base_file'_'$version_nb.orig.tar.gz $base_file-$version_nb
+	echo "done."
+	echo -n -e '\t' Creation of the package...
+	cd $base_file-$version_nb/ && dh_make -e kennyyy@users.sf.net
+	cp ../SaveDeb/* debian/
 	dpkg-buildpackage -rfakeroot
+	echo "done."
+	echo -n -e '\t' Package testing...
+	cd ..
+	lintian -Ivi $base_file-$version_nb-1_amd64.deb
 	echo "done."
 fi
 exit
