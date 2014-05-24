@@ -2,8 +2,8 @@
 #Script to create a simple unix release of the project
 
 base_dir=../Releases/Unix/
-base_file=bdreader_src_v
-base_name=$base_dir$base_file
+base_file=bdreader
+base_name=$base_dir-$base_file
 echo -------------------------
 echo BDReader release creation
 echo -------------------------
@@ -85,12 +85,27 @@ sudo make clean
 #Archive creation
 echo -e '\t\t' ----Archive creation----
 cd ..
-echo -e Create an archive '('$base_file$version_nb'.tar.gz) ? (y/n)'
+echo -e Create an archive '('$base_file-$version_nb'.tar.gz) ? (y/n)'
 read valid
 if [[ $valid == y* ]]
 then
 	echo -n -e '\t' Creation...
-	tar -zcvf $base_file$version_nb.tar.gz $base_file$version_nb
+	tar -zcvf $base_file-$version_nb.tar.gz $base_file-$version_nb
+	echo "done."
+fi
+
+#Deb package preparation
+echo -e '\t\t' ----Deb package preparation----
+cd ..
+echo -e Prepare a deb package ? (y/n)
+read valid
+if [[ $valid == y* ]]
+then
+	echo -n -e '\t' Creation of the archive...
+	tar -zcvf $base_file_$version_nb.orig.tar.gz $base_file-$version_nb
+	cd bdreader-0.97/ && dh_make -e kennyyy@users.sf.net
+	cp ../SaveDeb/* ./debian/
+	dpkg-buildpackage -rfakeroot
 	echo "done."
 fi
 exit
