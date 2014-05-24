@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
-	<ActiveTarget name="Win32" />
+	<ActiveTarget name="Release" />
 	<File name="include/Document.h" open="0" top="0" tabpos="4">
 		<Cursor position="2208" topLine="59" />
 	</File>
@@ -19,8 +19,8 @@
 	<File name="include/Preferences.h" open="0" top="0" tabpos="6">
 		<Cursor position="1816" topLine="43" />
 	</File>
-	<File name="src/Document.cpp" open="1" top="1" tabpos="6">
-		<Cursor position="4030" topLine="129" />
+	<File name="src/Document.cpp" open="1" top="0" tabpos="6">
+		<Cursor position="4608" topLine="129" />
 	</File>
 	<File name="src/Fl_OpenCV.cxx" open="0" top="0" tabpos="8">
 		<Cursor position="1883" topLine="35" />
@@ -28,11 +28,11 @@
 	<File name="src/Fl_Overlay_Arrow_Button.cxx" open="0" top="0" tabpos="4">
 		<Cursor position="2704" topLine="6" />
 	</File>
-	<File name="src/MainWindow.cpp" open="1" top="0" tabpos="3">
-		<Cursor position="32848" topLine="386" />
+	<File name="src/MainWindow.cpp" open="1" top="1" tabpos="3">
+		<Cursor position="10320" topLine="280" />
 	</File>
 	<File name="src/Page.cpp" open="1" top="0" tabpos="5">
-		<Cursor position="7564" topLine="293" />
+		<Cursor position="6002" topLine="198" />
 	</File>
 	<File name="src/Preferences.cpp" open="0" top="0" tabpos="4">
 		<Cursor position="2450" topLine="57" />

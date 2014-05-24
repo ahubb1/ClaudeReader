@@ -287,7 +287,9 @@ void Fullscreen_cb(Fl_Widget* widget, void * param)
         mw->MenuBar->resize(mw->MenuBar->x(), mw->MenuBar->y(), 0, mw->MenuBar->h());
         mw->StatusBar->resize(mw->StatusBar->x(), mw->StatusBar->y(), 0, mw->StatusBar->h());
         //Adapt the displayGrp size (no more menu and status bar shown=>screen size)
-        mw->DisplayGrp->resize(0, 0, Fl::w(), Fl::h());
+        while(mw->window->w()<Fl::w() && mw->window->h()<Fl::h())
+            Fl::wait(10);
+        mw->DisplayGrp->resize(0, 0, mw->window->w(), mw->window->h());
         Fl::wait(100);
         mw->DisplayGrp->redraw();
         Fl::wait(100);

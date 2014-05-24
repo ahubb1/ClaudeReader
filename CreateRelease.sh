@@ -1,8 +1,9 @@
  #!/bin/bash
 #Script to create a simple unix release of the project
 
- 
-base_name=../Releases/Unix/bdreader_src_v 
+base_dir=../Releases/Unix/
+base_file=bdreader_src_v
+base_name=$base_dir$base_file
 echo -------------------------
 echo BDReader release creation
 echo -------------------------
@@ -26,36 +27,43 @@ echo -n -e '\t' Copy sources...
 cp -r src $fullname/
 cp -r include $fullname/
 echo "done."
-echo -n -e '\t' Copy libraries...
-mkdir $fullname/lib
-cp -r lib/unix $fullname/lib
-echo "done."
+#echo -n -e '\t' Copy libraries...
+#mkdir $fullname/lib
+#cp -r lib/unix $fullname/lib
+#echo "done."
 echo -n -e '\t' Copy doc...
 mkdir $fullname/doc
 cp doc/* $fullname/doc/
 echo "done."
-echo -n -e '\t' Copy Makefile...
-cp -r Makefile $fullname/
+echo -n -e '\t' Copy Makefiles...
+cp -r Makefile.am $fullname/
+cp -r configure.ac $fullname/
 echo "done."
 echo -n -e '\t' Copy help files...
 cp -r about $fullname/
 cp -r help $fullname/
 cp -r COPYING $fullname/
 echo "done."
-echo -n -e '\t' Copy Code::Blocks project...
-mkdir $fullname/codeblocks
-cp -r BDReader.cbp $fullname/codeblocks/
-echo "done."
+#echo -n -e '\t' Copy Code::Blocks project...
+#mkdir $fullname/codeblocks
+#cp -r BDReader.cbp $fullname/codeblocks/
+#echo "done."
 echo 
 
 #Run the makefile for testing
 echo -e '\t\t' ----Release testing----
 origdir=$(pwd)
 cd $fullname
+echo -e '\t' Autoreconf...
+autoreconf --install
+echo done.
+echo -e '\t' Configure...
+./configure
+echo Configure done.
 echo -e '\t' Make test...
 make
 echo 
-if [ -a bin/Release/BDReader ]
+if [ -a src/BDReader ]
 then
 	echo make successfull.
 else
@@ -76,13 +84,13 @@ sudo make clean
 
 #Archive creation
 echo -e '\t\t' ----Archive creation----
-cd $origdir
-echo -e Create an archive '('$fullname'.tar.gz) ? (y/n)'
+cd ..
+echo -e Create an archive '('$base_file$version_nb'.tar.gz) ? (y/n)'
 read valid
 if [[ $valid == y* ]]
 then
 	echo -n -e '\t' Creation...
-	tar -zcvf $fullname.tar.gz $fullname
+	tar -zcvf $base_file$version_nb.tar.gz $base_file$version_nb
 	echo "done."
 fi
 exit
