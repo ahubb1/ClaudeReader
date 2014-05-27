@@ -1,43 +1,22 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
-	<ActiveTarget name="Release" />
-	<File name="include/Document.h" open="0" top="0" tabpos="4">
-		<Cursor position="2208" topLine="59" />
+	<ActiveTarget name="Win32" />
+	<File name="src/Document.h" open="0" top="0" tabpos="2">
+		<Cursor position="1115" topLine="0" />
 	</File>
-	<File name="include/Fl_OpenCV.h" open="0" top="0" tabpos="7">
-		<Cursor position="1396" topLine="45" />
+	<File name="src/MainWindow.cpp" open="1" top="0" tabpos="4">
+		<Cursor position="23751" topLine="213" />
 	</File>
-	<File name="include/Fl_Overlay_Arrow_Button.h" open="0" top="0" tabpos="5">
-		<Cursor position="2137" topLine="9" />
+	<File name="src/Page.h" open="0" top="0" tabpos="3">
+		<Cursor position="1191" topLine="0" />
 	</File>
-	<File name="include/MainWindow.h" open="1" top="0" tabpos="2">
-		<Cursor position="3679" topLine="37" />
+	<File name="src/Preferences.cpp" open="1" top="1" tabpos="3">
+		<Cursor position="1171" topLine="18" />
 	</File>
-	<File name="include/Page.h" open="1" top="0" tabpos="4">
-		<Cursor position="1242" topLine="18" />
-	</File>
-	<File name="include/Preferences.h" open="0" top="0" tabpos="6">
-		<Cursor position="1816" topLine="43" />
-	</File>
-	<File name="src/Document.cpp" open="1" top="0" tabpos="6">
-		<Cursor position="4608" topLine="129" />
-	</File>
-	<File name="src/Fl_OpenCV.cxx" open="0" top="0" tabpos="8">
-		<Cursor position="1883" topLine="35" />
-	</File>
-	<File name="src/Fl_Overlay_Arrow_Button.cxx" open="0" top="0" tabpos="4">
-		<Cursor position="2704" topLine="6" />
-	</File>
-	<File name="src/MainWindow.cpp" open="1" top="1" tabpos="3">
-		<Cursor position="10320" topLine="280" />
-	</File>
-	<File name="src/Page.cpp" open="1" top="0" tabpos="5">
-		<Cursor position="6002" topLine="198" />
-	</File>
-	<File name="src/Preferences.cpp" open="0" top="0" tabpos="4">
-		<Cursor position="2450" topLine="57" />
+	<File name="src/Preferences.h" open="1" top="0" tabpos="2">
+		<Cursor position="0" topLine="52" />
 	</File>
 	<File name="src/main.cpp" open="1" top="0" tabpos="1">
-		<Cursor position="830" topLine="28" />
+		<Cursor position="1374" topLine="10" />
 	</File>
 </CodeBlocks_layout_file>

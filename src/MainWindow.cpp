@@ -22,6 +22,10 @@
 
 #include <FL/names.h>
 
+#include "help.h"
+#include "about.h"
+
+
 //To store the mouse wheel movements
 int mouseWheel=0;
 //To store the DragNDrop state
@@ -612,62 +616,14 @@ void Help_cb(Fl_Widget* widget, void * param)
 {
     //MainWindow *mw=(MainWindow*)param;
 
-    //Load the text from the "help" file
-    char HelpText[2048];
-    #ifdef __WINDOWS__
-        FILE* helpfile=fopen("help", "r");
-    #else
-        char filename[FL_PATH_MAX];
-        sprintf(filename, "%s/.bdreader/help", getenv("HOME"));
-        FILE* helpfile=fopen(filename, "r");
-    #endif
-    //If success
-    if(helpfile)
-    {
-        int i=0;
-        while(!feof(helpfile))
-        {
-            HelpText[i++]=fgetc(helpfile);
-        }
-        HelpText[--i]='\0';
-        fclose(helpfile);
-
-        //Display it on a message window
-        fl_message(HelpText);
-    }
+    fl_message(HELP_STRING);
 }
 //! Show the about information window
 void About_cb(Fl_Widget* widget, void * param)
 {
     //MainWindow *mw=(MainWindow*)param;
 
-    //Load the text from the "about" file
-    char AboutText[2048];
-    #ifdef __WINDOWS__
-        FILE* aboutfile=fopen("about", "r");
-    #else
-        char filename[FL_PATH_MAX];
-        sprintf(filename, "%s/.bdreader/about", getenv("HOME"));
-        FILE* aboutfile=fopen(filename, "r");
-    #endif
-    //If success
-    if(aboutfile)
-    {
-        int i=0;
-        while(!feof(aboutfile))
-        {
-            AboutText[i++]=fgetc(aboutfile);
-        }
-        AboutText[--i]='\0';
-        fclose(aboutfile);
-
-        //Display it on a message window
-        fl_message(AboutText);
-    }
-    else
-    {
-        fl_message("BDReader\n A comics BDReader\n\n Vincent Crocher - 2014. (See License.txt).\n     ---http:\\\\bdreader.sourceforge.net---\n");
-    }
+    fl_message(ABOUT_STRING);
 }
 //-----------------------------------------------------------------------------
 

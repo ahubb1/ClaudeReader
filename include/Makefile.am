@@ -1,1 +1,0 @@
-BDReader_SOURCES = main.h MainWindow.h Preferences.h Document.h Page.h Fl_OpenCV.h Fl_Overlay_Arrow_Button.h icon32.xbm

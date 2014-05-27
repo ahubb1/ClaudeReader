@@ -1,4 +1,4 @@
-AC_INIT([BDReader], [0.96], [kennyyy@users.sf.net])
+AC_INIT([BDReader], [0.98], [kennyyy@users.sf.net])
 AM_INIT_AUTOMAKE([foreign -Wall])
 
 #Add C++ as a language (for headers testing)
@@ -50,6 +50,7 @@ AC_CHECK_LIB([opencv_highgui], [main], [], [
 #Compiler check
 AC_PROG_CXX
 
+#Output
 AC_CONFIG_HEADERS([config.h])
-AC_CONFIG_FILES([Makefile src/Makefile include/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile])
 AC_OUTPUT

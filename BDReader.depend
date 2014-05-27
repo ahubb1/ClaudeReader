@@ -1,7 +1,9 @@
 # depslib dependency file v1.0
-1400581630 source:/home/vincent/Perso/BDReader/BDReader/src/MainWindow.cpp
+1401188034 source:/home/vincent/Perso/BDReader/BDReader/src/MainWindow.cpp
 	"MainWindow.h"
 	<FL/names.h>
+	"help.h"
+	"about.h"
 
 1399865963 /home/vincent/Perso/BDReader/BDReader/include/MainWindow.h
 	<FL/Fl.H>
@@ -26,7 +28,7 @@
 	<FL/fl_ask.H>
 	<opencv2/opencv.hpp>
 
-1400922522 source:/home/vincent/Perso/BDReader/BDReader/src/Fl_OpenCV.cxx
+1400923623 source:/home/vincent/Perso/BDReader/BDReader/src/Fl_OpenCV.cxx
 	<FL/Fl.H>
 	<FL/fl_draw.H>
 	"Fl_OpenCV.h"
@@ -399,4 +401,71 @@
 
 1398763943 source:/home/vincent/Perso/BDReader/BDReader/src/Fl_Overlay_Arrow_Button.cxx
 	"Fl_Overlay_Arrow_Button.h"
+
+1399614367 /home/vincent/Perso/BDReader/BDReader/src/Document.h
+	<Page.h>
+
+1398764729 /home/vincent/Perso/BDReader/BDReader/src/Fl_Overlay_Arrow_Button.h
+	<FL/Fl.H>
+	<FL/fl_draw.H>
+	<FL/Fl_Button.H>
+
+1399865963 /home/vincent/Perso/BDReader/BDReader/src/MainWindow.h
+	<FL/Fl.H>
+	<FL/Fl_Window.H>
+	<FL/Fl_Menu_Bar.H>
+	<FL/fl_message.H>
+	<FL/Fl_Native_File_Chooser.H>
+	<FL/Fl_Box.H>
+	<FL/Fl_Help_Dialog.H>
+	"Fl_OpenCV.h"
+	"Fl_Overlay_Arrow_Button.h"
+	"Preferences.h"
+	"Document.h"
+	"icon32.xbm"
+
+1400922515 /home/vincent/Perso/BDReader/BDReader/src/Fl_OpenCV.h
+	<FL/Fl_Widget.H>
+	<FL/fl_ask.H>
+	<opencv2/opencv.hpp>
+
+1399727871 /home/vincent/Perso/BDReader/BDReader/src/Preferences.h
+	"Document.h"
+
+1397837284 /home/vincent/Perso/BDReader/BDReader/src/icon32.xbm
+
+1399614332 /home/vincent/Perso/BDReader/BDReader/src/Page.h
+	<FL/Fl.H>
+	<mupdf/fitz.h>
+	<stlplus3/ntree.hpp>
+	<opencv2/opencv.hpp>
+
+1389207192 /home/vincent/Perso/BDReader/BDReader/src/stlplus3/ntree.hpp
+	"containers_fixes.hpp"
+	"exceptions.hpp"
+	"safe_iterator.hpp"
+	<iterator>
+	"ntree.tpp"
+
+1269615680 /home/vincent/Perso/BDReader/BDReader/src/stlplus3/containers_fixes.hpp
+
+1269615680 /home/vincent/Perso/BDReader/BDReader/src/stlplus3/exceptions.hpp
+	"containers_fixes.hpp"
+	<stdexcept>
+	<string>
+
+1269615680 /home/vincent/Perso/BDReader/BDReader/src/stlplus3/safe_iterator.hpp
+	"containers_fixes.hpp"
+	"exceptions.hpp"
+	"safe_iterator.tpp"
+
+1277723997 /home/vincent/Perso/BDReader/BDReader/src/stlplus3/safe_iterator.tpp
+
+1389021098 /home/vincent/Perso/BDReader/BDReader/src/stlplus3/ntree.tpp
+	<vector>
+	<algorithm>
+
+1401187779 /home/vincent/Perso/BDReader/BDReader/src/help.h
+
+1401188207 /home/vincent/Perso/BDReader/BDReader/src/about.h
 

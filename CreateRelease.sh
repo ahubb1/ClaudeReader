@@ -25,7 +25,9 @@ mkdir $fullname
 echo "done."
 echo -n -e '\t' Copy sources...
 cp -r src $fullname/
-cp -r include $fullname/
+#mkdir $fullname/include
+#cp -r include/stlplus3 $fullname/include/
+#cp include/* $fullname/include/
 echo "done."
 #echo -n -e '\t' Copy libraries...
 #mkdir $fullname/lib
@@ -39,10 +41,9 @@ echo -n -e '\t' Copy Makefiles...
 cp -r Makefile.am $fullname/
 cp -r configure.ac $fullname/
 echo "done."
-echo -n -e '\t' Copy help files...
-cp -r about $fullname/
-cp -r help $fullname/
-cp -r COPYING $fullname/
+echo -n -e '\t' Copy shared files...
+mkdir $fullname/share
+cp share/* $fullname/share/
 echo "done."
 #echo -n -e '\t' Copy Code::Blocks project...
 #mkdir $fullname/codeblocks
@@ -105,12 +106,13 @@ then
 	echo "done."
 	echo -n -e '\t' Creation of the package...
 	cd $base_file-$version_nb/ && dh_make -e kennyyy@users.sf.net
-	cp ../SaveDeb/* debian/
-	dpkg-buildpackage -rfakeroot
+	cp ../DebFilesTemplates/* debian/
+	dpkg-buildpackage -rsudo
 	echo "done."
 	echo -n -e '\t' Package testing...
 	cd ..
-	lintian -Ivi $base_file-$version_nb-1_amd64.deb
+	sudo chown $USER $base_file'_'$version_nb-1_amd64.deb
+	lintian -Ivi $base_file'_'$version_nb-1_amd64.deb
 	echo "done."
 fi
 exit
