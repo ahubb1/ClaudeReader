@@ -48,6 +48,10 @@ int Preferences::Load(const char prefFilename[255])
         sprintf(Filename, "%s", prefFilename);
     #else
         sprintf(Filename, "%s/.bdreader/%s", getenv("HOME"), prefFilename);
+        //if the file (and the folder .bdreader) doesn't exist yet, create it
+        char dir[2048];
+        sprintf(dir, "%s/.bdreader", getenv("HOME"));
+        mkdir(dir, 755);
     #endif
 
     //Open the file

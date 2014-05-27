@@ -22,6 +22,7 @@
 
 #include <FL/names.h>
 
+//Help and about window strings
 #include "help.h"
 #include "about.h"
 
