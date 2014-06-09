@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=BDReader
+Comment=Comics reader
+TryExec=BDReader
+Exec=BDReader %u
+Terminal=false
+Type=Application
+Icon=bdreader
+Categories=GNOME;Viewer;Graphics;
+
