@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1401188396 source:/home/vincent/Perso/BDReader/BDReader/src/MainWindow.cpp
+1402281613 source:/home/vincent/Perso/BDReader/BDReader/src/MainWindow.cpp
 	"MainWindow.h"
 	<FL/names.h>
 	"help.h"
@@ -33,7 +33,7 @@
 	<FL/fl_draw.H>
 	"Fl_OpenCV.h"
 
-1400578374 source:/home/vincent/Perso/BDReader/BDReader/src/Document.cpp
+1402281424 source:/home/vincent/Perso/BDReader/BDReader/src/Document.cpp
 	"Document.h"
 
 1399614367 /home/vincent/Perso/BDReader/BDReader/include/Document.h
@@ -333,7 +333,7 @@
 	<stlplus3/ntree.hpp>
 	<opencv2/opencv.hpp>
 
-1400579709 source:/home/vincent/Perso/BDReader/BDReader/src/Page.cpp
+1402279963 source:/home/vincent/Perso/BDReader/BDReader/src/Page.cpp
 	"Page.h"
 
 1389021098 /home/vincent/Perso/BDReader/BDReader/include/ntree.tpp
@@ -402,7 +402,7 @@
 1398763943 source:/home/vincent/Perso/BDReader/BDReader/src/Fl_Overlay_Arrow_Button.cxx
 	"Fl_Overlay_Arrow_Button.h"
 
-1399614367 /home/vincent/Perso/BDReader/BDReader/src/Document.h
+1402281513 /home/vincent/Perso/BDReader/BDReader/src/Document.h
 	<Page.h>
 
 1398764729 /home/vincent/Perso/BDReader/BDReader/src/Fl_Overlay_Arrow_Button.h
@@ -410,7 +410,7 @@
 	<FL/fl_draw.H>
 	<FL/Fl_Button.H>
 
-1399865963 /home/vincent/Perso/BDReader/BDReader/src/MainWindow.h
+1402281647 /home/vincent/Perso/BDReader/BDReader/src/MainWindow.h
 	<FL/Fl.H>
 	<FL/Fl_Window.H>
 	<FL/Fl_Menu_Bar.H>
@@ -422,6 +422,7 @@
 	"Fl_Overlay_Arrow_Button.h"
 	"Preferences.h"
 	"Document.h"
+	"Document_pdf.h"
 	"icon32.xbm"
 
 1400922515 /home/vincent/Perso/BDReader/BDReader/src/Fl_OpenCV.h
@@ -434,9 +435,8 @@
 
 1397837284 /home/vincent/Perso/BDReader/BDReader/src/icon32.xbm
 
-1399614332 /home/vincent/Perso/BDReader/BDReader/src/Page.h
+1402281825 /home/vincent/Perso/BDReader/BDReader/src/Page.h
 	<FL/Fl.H>
-	<mupdf/fitz.h>
 	<stlplus3/ntree.hpp>
 	<opencv2/opencv.hpp>
 
@@ -468,4 +468,18 @@
 1401187779 /home/vincent/Perso/BDReader/BDReader/src/help.h
 
 1401188207 /home/vincent/Perso/BDReader/BDReader/src/about.h
+
+1402281321 source:/home/vincent/Perso/BDReader/BDReader/src/Document_pdf.cpp
+	"Document_pdf.h"
+
+1402281457 /home/vincent/Perso/BDReader/BDReader/src/Document_pdf.h
+	<Document.h>
+	<Page_pdf.h>
+
+1402281850 /home/vincent/Perso/BDReader/BDReader/src/Page_pdf.h
+	<mupdf/fitz.h>
+	<Page.h>
+
+1402281088 source:/home/vincent/Perso/BDReader/BDReader/src/Page_pdf.cpp
+	"Page_pdf.h"
 

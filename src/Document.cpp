@@ -35,18 +35,8 @@ Document::Document(char *filename)
     nextPage=NULL;
     previousPage=NULL;
     ImgRender=NULL;
-    FzCtx=NULL;
-    FzDoc=NULL;
+    NbPages=0;
     PagePreview=true;
-
-    //Init and open the pdf file
-    OpenPdf();
-
-    // Retrieve the number of pages
-	NbPages = fz_count_pages(FzDoc);
-
-    //Close the pdf, free the context..
-    ClosePdf();
 }
 
 //! Main destructor.
@@ -62,46 +52,8 @@ Document::~Document()
         delete previousPage;
 }
 
-
-
-//! Try to open the pdf file and create the FzCtx and FzDoc.
-//! \return 0 if everything ok
-//! \return -1 if unable to open the file
-int Document::OpenPdf()
-{
-    // Create a context to hold the exception stack and various caches.
-    FzCtx = fz_new_context(NULL, NULL, FZ_STORE_UNLIMITED);
-    // Open the PDF, XPS or CBZ document.
-    fz_try(FzCtx)
-    {
-        FzDoc = fz_open_document(FzCtx, Filename);
-    }
-    fz_catch(FzCtx)
-    {
-        fz_free_context(FzCtx);
-        FzCtx=NULL;
-        FzDoc=NULL;
-        NbPages = 0;
-        return -1;
-    }
-
-    return 0;
-}
-
-//! Close the doc and free the context.
-void Document::ClosePdf()
-{
-    //Close the doc and free the context
-    if(FzDoc)
-        fz_close_document(FzDoc);
-    if(FzCtx)
-        fz_free_context(FzCtx);
-}
-
-
-
 //! Load the page designated by the ActivePage variable.
-//!Basically call make a call to the LoadPage(int p) method with the ActivePage value
+//!Basically make a call to the LoadPage(int p) method with the ActivePage value
 //!in parameter.
 //! \return the Loadpage(ActivePage) return value
 int Document::LoadPage()
@@ -110,8 +62,7 @@ int Document::LoadPage()
 }
 
 //! Load the page p.
-//!The method will first re-create a mupdf context and try to open the document. Then
-//!create a Page object with the given page number.
+//!The method will first open the document. Then create a Page object with the given page number.
 //! \return 0 if the page is succesfully created
 //! \return -1 if p is less than 1 (no Page has been created)
 //! \return -2 if p is greater than the number of pages of the document (no Page has been created)
@@ -120,8 +71,8 @@ int Document::LoadPage(int p)
 {
     if(p>0 && p<=NbPages)
     {
-        //Open the pdf and create the context...
-        if(OpenPdf()<0)
+        //Open the document and create the context...
+        if(Open()<0)
             return -3;
 
         //Set the new active page number
@@ -139,7 +90,7 @@ int Document::LoadPage(int p)
             if(nextPage)
                 currentPage=nextPage; //Use it as the new current page
             else
-                currentPage=new Page(ActivePage, NbPages, ReadingMode, PagePreview, FzCtx, FzDoc); // Otherwise create it
+                currentPage=CreatePage(ActivePage); //Otherwise create it
 
             //Delete the old previous page if one
             if(previousPage)
@@ -167,7 +118,7 @@ int Document::LoadPage(int p)
                 if(previousPage)
                     currentPage=previousPage; //Use it as the new current page
                 else
-                    currentPage=new Page(ActivePage, NbPages, ReadingMode, PagePreview, FzCtx, FzDoc); // Otherwise create it
+                    currentPage=CreatePage(ActivePage); //Otherwise create it
 
                 //Delete the old next page if one
                 if(nextPage)
@@ -190,15 +141,15 @@ int Document::LoadPage(int p)
                     delete currentPage;
 
                 //Create the new page
-                currentPage=new Page(ActivePage, NbPages, ReadingMode, PagePreview, FzCtx, FzDoc);
+                currentPage=CreatePage(ActivePage);
             }
         }
 
         //Anyway get the new rendering from the new current page
         ImgRender=currentPage->RenderCase();
 
-        //Close the pdf, free the context..
-        ClosePdf();
+        //Close the document, free the context..
+        Close();
 
         return 0;
     }
@@ -215,12 +166,12 @@ int Document::LoadPage(int p)
 
 //! Preload the surrounding pages (previous and next one if they exists).
 //!The method creates the previousPage and nextPage if it's needed: if they are not
-//!already created and if they exist in the pdf document. This method is intended to
+//!already created and if they exist in the document. This method is intended to
 //!be called after the LoadPage one.
 void Document::PreloadPages()
 {
-    //Open the pdf and create the context...
-    if(OpenPdf()<0)
+    //Open the document and create the context...
+    if(Open()<0)
         return;
 
     //If next page is not already the one loaded (or there is currently no next page)
@@ -230,7 +181,7 @@ void Document::PreloadPages()
         if( (ActivePage+1)<=NbPages )
         {
             //Load the new next page
-            nextPage=new Page(ActivePage+1, NbPages, ReadingMode, PagePreview, FzCtx, FzDoc);
+            nextPage=CreatePage(ActivePage+1);
         }
         else
         {
@@ -246,7 +197,7 @@ void Document::PreloadPages()
         if( (ActivePage-1)>0 )
         {
             //Load the new previous page
-            previousPage=new Page(ActivePage-1, NbPages, ReadingMode, PagePreview, FzCtx, FzDoc);
+            previousPage=CreatePage(ActivePage-1);
         }
         else
         {
@@ -255,8 +206,8 @@ void Document::PreloadPages()
         }
     }
 
-    //Close the pdf, free the context..
-    ClosePdf();
+    //Close the document, free the context..
+    Close();
 }
 
 

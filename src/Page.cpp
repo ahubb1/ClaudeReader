@@ -156,14 +156,11 @@ void SortAndMerge(vector<Rect> *CasesTmp, int counter)
 
 //---------------------------------------------------------------------------
 
-
-
-//! Constructor of the page.
-//!Initialize, load a page, render it and call the cases detection if needed (not a
-//!first or last page).
-Page::Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, fz_context *ctx, fz_document *doc)
+//! Virtual constructor of the page
+//!Initialize some values (common to all page types).
+Page::Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p)
 {
-    //Init
+    //Init values common to all type of pages
     Loaded=false;
     ReadingMode=rd_mode;
     PreviewPage=page_p;
@@ -178,45 +175,8 @@ Page::Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, fz_conte
     NbCases=0;
     PageNb=page_nb;
     NbPages=nb_pages;
-    FzCtx=ctx;
-    FzDoc=doc;
-
-
-    //Load it (numbering from 0, not 1)
-    FzPage = fz_load_page(FzDoc, PageNb-1);
-
-    //Transform of the display
-    int rotation=0, zoom=300;
-    fz_matrix transform;
-    fz_rotate(&transform, rotation);
-    fz_pre_scale(&transform, zoom / 100.0f, zoom / 100.0f);
-
-    //Page bound
-    fz_rect bounds;
-    fz_bound_page(FzDoc, FzPage, &bounds);
-    fz_transform_rect(&bounds, &transform);
-
-    //Prepare a pixmap
-    fz_irect bbox;
-    fz_round_rect(&bbox, &bounds);
-    fz_pixmap *pix = fz_new_pixmap_with_bbox(FzCtx, fz_device_bgr(FzCtx), &bbox);
-    fz_clear_pixmap_with_value(FzCtx, pix, 0xff);
-
-    fz_device *dev = fz_new_draw_device(FzCtx, pix);
-    fz_run_page_contents(FzDoc, FzPage, dev, &transform, NULL);
-    fz_free_device(dev);
-    fz_free_page(FzDoc, FzPage);
-
-    //Convert to opencv
-    PageRenderCv=Mat::zeros(fz_pixmap_height(FzCtx, pix), fz_pixmap_width(FzCtx, pix), CV_8UC4);
-    memcpy(PageRenderCv.data, fz_pixmap_samples(FzCtx, pix), (fz_pixmap_width(FzCtx, pix)*fz_pixmap_height(FzCtx, pix)*4));
-
-    //Free the pixmap
-    fz_drop_pixmap(FzCtx, pix);
-
-    //Case detection on the page (test is done later for first or last page)
-    DetectCases();
 }
+
 
 //! Destructor.
 Page::~Page()

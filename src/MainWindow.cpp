@@ -897,7 +897,7 @@ void MainWindow::Init(char *filename)
         }
 
         //Create a document with the new filename
-        Document *new_doc=new Document(Filename);
+        Document *new_doc=new Document_pdf(Filename);
         //Check if the document has been opened
         if(new_doc->GetNumberOfPages()>0)
         {
