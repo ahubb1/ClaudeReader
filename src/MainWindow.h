@@ -45,6 +45,7 @@
 #include "Preferences.h"
 #include "Document.h"
 #include "Document_pdf.h"
+#include "Document_archive.h"
 
 //Icon
 #include "icon32.xbm"

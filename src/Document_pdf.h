@@ -1,8 +1,8 @@
 #ifndef DOCUMENT_PDF_H
 #define DOCUMENT_PDF_H
 
-#include <Document.h>
-#include <Page_pdf.h>
+#include "Document.h"
+#include "Page_pdf.h"
 
 
 class Document_pdf : public Document

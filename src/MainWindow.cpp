@@ -212,8 +212,8 @@ void Open_cb(Fl_Widget* widget, void * param)
     {
         //Window to define a directory and filename
         Fl_Native_File_Chooser chooser=Fl_Native_File_Chooser();
-        chooser.title("Open a pdf file");
-        chooser.filter("Pdf\t*.pdf");
+        chooser.title("Open a file");
+        chooser.filter("Supported formats\t*.{pdf,cbz,cbr}\nPdf\t*.pdf\nComics archive\t*.{cbz,cbr}");
 
         //Select the working directory
         char folder[FL_PATH_MAX];
@@ -253,7 +253,7 @@ void Open_cb(Fl_Widget* widget, void * param)
     {
         //just use the name as filename
         sprintf(tmpFilename, "%s", ((Fl_Menu_*)widget)->mvalue()->label());
-        if(tmpFilename[0]=='\0' || strstr (tmpFilename, ".pdf" )==NULL)
+        if(tmpFilename[0]=='\0' || (strstr (tmpFilename, ".pdf" )==NULL && strstr (tmpFilename, ".cbz" )==NULL && strstr (tmpFilename, ".cbr" )==NULL) )
         {
             fl_alert("Invalid filename !");
             return;
@@ -896,10 +896,26 @@ void MainWindow::Init(char *filename)
             Pref->Save(Doc);
         }
 
-        //Create a document with the new filename
-        Document *new_doc=new Document_pdf(Filename);
+        //Create a document using the new filename
+        Document *new_doc;
+        bool extOk=false;
+        //select type according to extension
+        if(strstr(Filename, ".pdf" )!=NULL)
+        {
+            new_doc=new Document_pdf(Filename);
+            extOk=true;
+        }
+        else
+        {
+            if( (strstr(Filename, ".cbr" )!=NULL) || (strstr(Filename, ".cbz" )!=NULL) )
+            {
+                new_doc=new Document_archive(Filename);
+                extOk=true;
+            }
+        }
+
         //Check if the document has been opened
-        if(new_doc->GetNumberOfPages()>0)
+        if(extOk && new_doc->GetNumberOfPages()>0)
         {
             //Delete old doc if one
             if(Doc)
@@ -945,7 +961,7 @@ void MainWindow::Init(char *filename)
         else
         {
             //Say it to the user
-            fl_alert("Unable to open the document. Is it a valid pdf file ?");
+            fl_alert("Unable to open the document. Is it a valid pdf,cbz or cbr file ?");
 
             //Check if we have an active document
             if(!Doc)

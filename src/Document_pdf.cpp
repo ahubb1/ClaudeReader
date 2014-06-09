@@ -14,7 +14,6 @@ Document_pdf::Document_pdf(char *filename):Document(filename)
     Close();
 }
 
-
 //! Try to open the pdf file, retrieve the number of pages and create the FzCtx and FzDoc.
 //! \return 0 if everything ok
 //! \return -1 if unable to open the file
