@@ -18,9 +18,9 @@ struct NameNb
 class Page_archive : public Page
 {
     public:
-        Page_archive(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, archive *arch, archive_entry *entry, vector<NameNb> img_names);
+        Page_archive(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, archive *arch, archive_entry *entry, int img_idx);
     protected:
-        void Load(archive *arch, archive_entry *entry, vector<NameNb> img_names);
+        void Load(archive *arch, archive_entry *entry, int img_idx);
 };
 
 #endif // PAGE_ARCHIVE_H

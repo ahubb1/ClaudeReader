@@ -45,6 +45,7 @@ void Page_pdf::Load(fz_context *fzctx, fz_document *fzdoc)
     PageRenderCv=Mat::zeros(fz_pixmap_height(fzctx, pix), fz_pixmap_width(fzctx, pix), CV_8UC4);
     memcpy(PageRenderCv.data, fz_pixmap_samples(fzctx, pix), (fz_pixmap_width(fzctx, pix)*fz_pixmap_height(fzctx, pix)*4));
 
+
     //Free the pixmap
     fz_drop_pixmap(fzctx, pix);
 }

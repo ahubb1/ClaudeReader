@@ -77,5 +77,5 @@ void Document_archive::Order()
 //! Create a new Page_archive.
 Page_archive *Document_archive::CreatePage(int pagenb)
 {
-    return new Page_archive(pagenb, NbPages, ReadingMode, PagePreview, Arch, Entry, ImgNames);
+    return new Page_archive(pagenb, NbPages, ReadingMode, PagePreview, Arch, Entry, ImgNames[pagenb-1].nb);
 }

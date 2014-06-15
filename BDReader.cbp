@@ -36,26 +36,31 @@
 				<Option projectLibDirsRelation="1" />
 				<Compiler>
 					<Add directory="include" />
+					<Add directory="include/libarchive" />
 				</Compiler>
 				<Linker>
 					<Add option="-static-libgcc" />
 					<Add option="-static-libstdc++" />
 					<Add option="-mwindows" />
+					<Add library="opencv_imgproc247" />
+					<Add library="opencv_highgui247" />
+					<Add library="opencv_core247" />
 					<Add library="libmupdf.a" />
 					<Add library="libmupdf-js-none.a" />
-					<Add library="libjpeg.a" />
-					<Add library="libopenjpeg.a" />
-					<Add library="libjbig2dec.a" />
-					<Add library="libfreetype.a" />
-					<Add library="libfonts.a" />
 					<Add library="fltk_gl" />
 					<Add library="fltk_jpeg" />
 					<Add library="fltk_images" />
 					<Add library="fltk" />
 					<Add library="z" />
-					<Add library="opencv_highgui247" />
-					<Add library="opencv_imgproc247" />
-					<Add library="opencv_core247" />
+					<Add library="libarchive.a" />
+					<Add library="liblibjpeg.a" />
+					<Add library="liblibtiff.a" />
+					<Add library="liblibjasper.a" />
+					<Add library="libIlmImf.a" />
+					<Add library="libopenjpeg.a" />
+					<Add library="libjbig2dec.a" />
+					<Add library="libfreetype.a" />
+					<Add library="libfonts.a" />
 					<Add library="zlib" />
 					<Add directory="lib/win32" />
 				</Linker>
@@ -66,6 +71,7 @@
 			<Add directory="src" />
 		</Compiler>
 		<Linker>
+			<Add library="archive" />
 			<Add library="mupdf" />
 			<Add library="mupdf-js-none" />
 			<Add library="jpeg" />
@@ -82,6 +88,10 @@
 		</Linker>
 		<Unit filename="src/Document.cpp" />
 		<Unit filename="src/Document.h" />
+		<Unit filename="src/Document_archive.cpp" />
+		<Unit filename="src/Document_archive.h" />
+		<Unit filename="src/Document_pdf.cpp" />
+		<Unit filename="src/Document_pdf.h" />
 		<Unit filename="src/Fl_OpenCV.cxx" />
 		<Unit filename="src/Fl_OpenCV.h" />
 		<Unit filename="src/Fl_Overlay_Arrow_Button.cxx" />
@@ -90,6 +100,10 @@
 		<Unit filename="src/MainWindow.h" />
 		<Unit filename="src/Page.cpp" />
 		<Unit filename="src/Page.h" />
+		<Unit filename="src/Page_archive.cpp" />
+		<Unit filename="src/Page_archive.h" />
+		<Unit filename="src/Page_pdf.cpp" />
+		<Unit filename="src/Page_pdf.h" />
 		<Unit filename="src/Preferences.cpp" />
 		<Unit filename="src/Preferences.h" />
 		<Unit filename="src/main.cpp" />

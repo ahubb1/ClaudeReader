@@ -1,28 +1,52 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
 	<ActiveTarget name="Release" />
-	<File name="src/Document.cpp" open="1" top="0" tabpos="5">
-		<Cursor position="3009" topLine="81" />
+	<File name="src/Document.cpp" open="1" top="0" tabpos="10">
+		<Cursor position="3193" topLine="73" />
 	</File>
 	<File name="src/Document.h" open="0" top="0" tabpos="2">
-		<Cursor position="1115" topLine="0" />
+		<Cursor position="2117" topLine="56" />
 	</File>
-	<File name="src/MainWindow.cpp" open="1" top="0" tabpos="2">
-		<Cursor position="32424" topLine="348" />
+	<File name="src/Document_archive.cpp" open="1" top="0" tabpos="5">
+		<Cursor position="1902" topLine="41" />
 	</File>
-	<File name="src/Page.cpp" open="1" top="1" tabpos="6">
-		<Cursor position="5443" topLine="67" />
+	<File name="src/Document_archive.h" open="1" top="0" tabpos="4">
+		<Cursor position="349" topLine="0" />
 	</File>
-	<File name="src/Page.h" open="0" top="0" tabpos="3">
-		<Cursor position="1191" topLine="0" />
+	<File name="src/Document_pdf.cpp" open="1" top="0" tabpos="11">
+		<Cursor position="1020" topLine="0" />
 	</File>
-	<File name="src/Preferences.cpp" open="1" top="0" tabpos="4">
-		<Cursor position="1836" topLine="34" />
+	<File name="src/Document_pdf.h" open="0" top="0" tabpos="0">
+		<Cursor position="248" topLine="0" />
 	</File>
-	<File name="src/Preferences.h" open="1" top="0" tabpos="3">
+	<File name="src/MainWindow.cpp" open="1" top="0" tabpos="3">
+		<Cursor position="19528" topLine="220" />
+	</File>
+	<File name="src/MainWindow.h" open="1" top="0" tabpos="2">
+		<Cursor position="1215" topLine="27" />
+	</File>
+	<File name="src/Page.cpp" open="0" top="0" tabpos="6">
+		<Cursor position="5275" topLine="513" />
+	</File>
+	<File name="src/Page.h" open="1" top="0" tabpos="6">
+		<Cursor position="1042" topLine="51" />
+	</File>
+	<File name="src/Page_archive.cpp" open="1" top="0" tabpos="8">
+		<Cursor position="999" topLine="9" />
+	</File>
+	<File name="src/Page_archive.h" open="1" top="0" tabpos="7">
+		<Cursor position="162" topLine="0" />
+	</File>
+	<File name="src/Page_pdf.cpp" open="1" top="0" tabpos="9">
+		<Cursor position="1845" topLine="28" />
+	</File>
+	<File name="src/Preferences.cpp" open="0" top="0" tabpos="4">
+		<Cursor position="1090" topLine="21" />
+	</File>
+	<File name="src/Preferences.h" open="0" top="0" tabpos="3">
 		<Cursor position="0" topLine="52" />
 	</File>
-	<File name="src/main.cpp" open="1" top="0" tabpos="1">
-		<Cursor position="1146" topLine="12" />
+	<File name="src/main.cpp" open="1" top="1" tabpos="1">
+		<Cursor position="1122" topLine="26" />
 	</File>
 </CodeBlocks_layout_file>

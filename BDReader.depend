@@ -410,7 +410,7 @@
 	<FL/fl_draw.H>
 	<FL/Fl_Button.H>
 
-1402284319 /home/vincent/Perso/BDReader/BDReader/src/MainWindow.h
+1402304146 /home/vincent/Perso/BDReader/BDReader/src/MainWindow.h
 	<FL/Fl.H>
 	<FL/Fl_Window.H>
 	<FL/Fl_Menu_Bar.H>
@@ -436,10 +436,11 @@
 
 1397837284 /home/vincent/Perso/BDReader/BDReader/src/icon32.xbm
 
-1402281825 /home/vincent/Perso/BDReader/BDReader/src/Page.h
+1402412457 /home/vincent/Perso/BDReader/BDReader/src/Page.h
 	<FL/Fl.H>
 	<stlplus3/ntree.hpp>
 	<opencv2/opencv.hpp>
+	<FL/fl_message.H>
 
 1389207192 /home/vincent/Perso/BDReader/BDReader/src/stlplus3/ntree.hpp
 	"containers_fixes.hpp"
@@ -481,22 +482,22 @@
 	<mupdf/fitz.h>
 	"Page.h"
 
-1402281088 source:/home/vincent/Perso/BDReader/BDReader/src/Page_pdf.cpp
+1402748118 source:/home/vincent/Perso/BDReader/BDReader/src/Page_pdf.cpp
 	"Page_pdf.h"
 
-1402298451 source:/home/vincent/Perso/BDReader/BDReader/src/Document_archive.cpp
+1402359596 source:/home/vincent/Perso/BDReader/BDReader/src/Document_archive.cpp
 	"Document_archive.h"
 
 1402284056 /home/vincent/Perso/BDReader/BDReader/src/Document_archive.h
 	"Document.h"
 	"Page_archive.h"
 
-1402284088 /home/vincent/Perso/BDReader/BDReader/src/Page_archive.h
+1402412445 /home/vincent/Perso/BDReader/BDReader/src/Page_archive.h
 	<archive.h>
 	<archive_entry.h>
 	"Page.h"
 
-1402300902 source:/home/vincent/Perso/BDReader/BDReader/src/Page_archive.cpp
+1402748096 source:/home/vincent/Perso/BDReader/BDReader/src/Page_archive.cpp
 	"Page_archive.h"
 
 1399722372 /home/vincent/Perso/BDReader/BDReader/include/libarchive/archive.h
