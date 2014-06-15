@@ -8,6 +8,7 @@ AC_LANG_PUSH([C++])
 AC_CHECK_HEADERS([FL/Fl.H Fl.H Fl.h], [break;])
 AC_CHECK_HEADERS([opencv2/opencv.hpp opencv.hpp], [break;])
 AC_CHECK_HEADERS([mupdf/fitz.h], [break;])
+AC_CHECK_HEADERS([archive_entry.h], [break;])
 
 #Libraries check
 #fltk
@@ -45,6 +46,10 @@ AC_CHECK_LIB([opencv_imgproc], [main], [], [
 ])
 AC_CHECK_LIB([opencv_highgui], [main], [], [
   AC_MSG_ERROR([unable to find opencv_highgui library.])
+])
+#libarchive
+AC_CHECK_LIB([archive], [main], [], [
+  AC_MSG_ERROR([unable to find libarchive library.])
 ])
 
 #Compiler check
