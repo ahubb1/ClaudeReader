@@ -26,6 +26,8 @@ Fl_OpenCV::Fl_OpenCV(int X, int Y, float mzoom):Fl_Widget(X,Y,1,1,0)
   mouse_cb=NULL;
   x(X);y(Y);
   maxzoom=mzoom;
+  Resizing_cb=NULL;
+  Resizing_cb_param=NULL;
 }
 
 Fl_OpenCV::Fl_OpenCV(int X,int Y,int W,int H, float mzoom):Fl_Widget(X,Y,W,H,0)
@@ -36,6 +38,8 @@ Fl_OpenCV::Fl_OpenCV(int X,int Y,int W,int H, float mzoom):Fl_Widget(X,Y,W,H,0)
   fit=true;
   mouse_cb=NULL;
   maxzoom=mzoom;
+  Resizing_cb=NULL;
+  Resizing_cb_param=NULL;
 }
 
 

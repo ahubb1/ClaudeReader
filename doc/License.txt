@@ -34,3 +34,7 @@ For commercial licensing please contact sales@artifex.com.
 © 1999-2004 Southampton University, 2004 onwards Andy Rushton. All rights reserved.
 See STLplusLicense.txt in Doc folder or visit http://stlplus.sourceforge.net/ for 
 more information.
+
+5) Libarchive 
+Libarchive is Copyright (c) 2003-2009 by Tim Kientzle and is under BSD 2-Clause 
+License. (http://www.libarchive.org)

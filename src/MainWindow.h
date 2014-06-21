@@ -68,6 +68,7 @@ class MainWindow
         friend void TimerDND_cb(void*);                                               //!< The timer callback function used to check the DND events
         friend int MouseWheelEvents(int e);                                           //!< Handler of the mouse wheel events
         friend void TimerMouseWheel_cb(void*);                                        //!< The timer callback function used to check the mouse wheel movements
+        friend void ResizingEvents(void*);
 
         //File menu
         friend void Open_cb(Fl_Widget* widget, void * param);

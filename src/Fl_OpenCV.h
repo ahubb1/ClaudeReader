@@ -50,6 +50,8 @@ protected:
   void *cb_param; //Vincent: a parameter for the callback function
   bool fit;
   float maxzoom;
+  void (*Resizing_cb)(void *);
+  void *Resizing_cb_param;
 
 public:
   //Assign a new image to draw (in Mat Opencv format)
@@ -67,7 +69,14 @@ public:
       w(ww);
       h(hh);
       Fl_Widget::resize(x, y, ww, hh);
+      Resizing_cb(Resizing_cb_param);
       SetImage(image);
+  }
+
+  void SetResizing_cb(void (*resizing_cb)(void *), void * param=NULL)
+  {
+      Resizing_cb=resizing_cb;
+      Resizing_cb_param=param;
   }
 
   int x(){return _x;};

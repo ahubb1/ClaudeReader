@@ -165,6 +165,20 @@ void TimerMouseWheel_cb(void* param)
     //Repeat...
     Fl::repeat_timeout(0.1, TimerMouseWheel_cb, (void*)mw);
 }
+
+void ResizingEvents(void* param)
+{
+    MainWindow *mw=(MainWindow*)param;
+
+    //If in STRIP MODE: recall the Detection (through the SetDisplayRatio) to adjust the size of the strip sto the window width
+    if(mw->Doc && (mw->Doc->GetReadingMode()==STRIP || mw->Doc->GetReadingMode()==CASE))
+    {
+        //Adjust the strip size according to the new display ratio
+        mw->Doc->SetDisplayRatio(mw->Display->w()/(float)mw->Display->h());
+        //And re-render
+        mw->Doc->Render();
+    }
+}
 //-----------------------------------------------------------------------------
 
 
@@ -213,7 +227,7 @@ void Open_cb(Fl_Widget* widget, void * param)
         //Window to define a directory and filename
         Fl_Native_File_Chooser chooser=Fl_Native_File_Chooser();
         chooser.title("Open a file");
-        chooser.filter("Supported formats\t*.{pdf,cbz,cbr}\nPdf\t*.pdf\nComics archive\t*.{cbz,cbr}");
+        chooser.filter("Supported formats\t*.{pdf,cbz,cbr,rar,zip,tar}\nPdf\t*.pdf\nComics archive\t*.{cbz,cbr}\nArchive\t*.{rar,zip,tar}");
 
         //Select the working directory
         char folder[FL_PATH_MAX];
@@ -253,7 +267,7 @@ void Open_cb(Fl_Widget* widget, void * param)
     {
         //just use the name as filename
         sprintf(tmpFilename, "%s", ((Fl_Menu_*)widget)->mvalue()->label());
-        if(tmpFilename[0]=='\0' || (strstr (tmpFilename, ".pdf" )==NULL && strstr (tmpFilename, ".cbz" )==NULL && strstr (tmpFilename, ".cbr" )==NULL) )
+        if( tmpFilename[0]=='\0' || ( strstr(tmpFilename, ".pdf")==NULL && strstr(tmpFilename, ".cbz")==NULL && strstr(tmpFilename, ".cbr")==NULL && strstr(tmpFilename, ".rar")==NULL && strstr(tmpFilename, ".zip")==NULL  && strstr(tmpFilename, ".tar")==NULL ) )
         {
             fl_alert("Invalid filename !");
             return;
@@ -827,6 +841,9 @@ MainWindow::MainWindow(const char *f)
              //Timer initializaton
              Fl::add_timeout(0.1, TimerDND_cb, (void*)this);
 
+             //Handle the display rezising events
+             Display->SetResizing_cb(ResizingEvents, (void*)this);
+
 
         //Graphics
              //Make the window resizable around the Display (and define minimum dimensions)
@@ -839,8 +856,7 @@ MainWindow::MainWindow(const char *f)
 
          //TODO: Option background color (blanc ou noir)
          //TODO: Remember the page nb for each recent documents in preferences and the window size
-         //TODO: Gerer les bds en suites d'images (folders) (et cbr ?)
-         //TODO: Deb package (donc Makefile) pour Linux
+         //TODO: Gerer les bds en suites d'images (folders)
     window->end();
 
 
@@ -907,7 +923,7 @@ void MainWindow::Init(char *filename)
         }
         else
         {
-            if( (strstr(Filename, ".cbr" )!=NULL) || (strstr(Filename, ".cbz" )!=NULL) )
+            if( (strstr(Filename, ".cbr" )!=NULL) || (strstr(Filename, ".cbz" )!=NULL) || (strstr(Filename, ".zip" )!=NULL) || (strstr(Filename, ".rar" )!=NULL) || (strstr(Filename, ".tar" )!=NULL) )
             {
                 new_doc=new Document_archive(Filename);
                 extOk=true;
@@ -941,6 +957,9 @@ void MainWindow::Init(char *filename)
 
             //Set the thumbnails (if needed)
             PrevDisplay->SetImage(Doc->ThumbnailsRender());
+
+            //Set the display ratio
+            Doc->SetDisplayRatio(Display->w()/(float)Display->h());
 
             //Change the window title
             char title[1060];

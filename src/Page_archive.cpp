@@ -3,7 +3,7 @@
 //! Constructor of the archive page.
 //!Initialize, load a page, render it and call the cases detection if needed (not a
 //!first or last page).
-Page_archive::Page_archive(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, archive *arch, archive_entry *entry, int img_idx):Page(page_nb, nb_pages, rd_mode, page_p)
+Page_archive::Page_archive(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, float display_ratio, archive *arch, archive_entry *entry, int img_idx):Page(page_nb, nb_pages, rd_mode, page_p, display_ratio)
 {
     //Load the page=> to an OpenCv Mat
     Load(arch, entry, img_idx);

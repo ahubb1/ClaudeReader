@@ -3,7 +3,7 @@
 //! Constructor of the pdf page.
 //!Initialize, load a page, render it and call the cases detection if needed (not a
 //!first or last page).
-Page_pdf::Page_pdf(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, fz_context *fzctx, fz_document *fzdoc):Page(page_nb, nb_pages, rd_mode, page_p)
+Page_pdf::Page_pdf(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, float display_ratio, fz_context *fzctx, fz_document *fzdoc):Page(page_nb, nb_pages, rd_mode, page_p, display_ratio)
 {
     //Load the page=> to an OpenCv Mat
     Load(fzctx, fzdoc);

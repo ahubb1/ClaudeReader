@@ -158,12 +158,13 @@ void SortAndMerge(vector<Rect> *CasesTmp, int counter)
 
 //! Virtual constructor of the page
 //!Initialize some values (common to all page types).
-Page::Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p)
+Page::Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, float display_ratio)
 {
     //Init values common to all type of pages
     Loaded=false;
     ReadingMode=rd_mode;
     PreviewPage=page_p;
+    DisplayRatio=display_ratio;
     if(ReadingMode!=PAGE && !PreviewPage)
     {
         ActiveCase=0;
@@ -416,11 +417,16 @@ void Page::DetectCases()
             //If less than 2 cases (or the detection has failed)
             else
             {
-                //Creation of cases of strips of 40% of the page height which are sliding down=> arbitrary strips to allow a continuous lecture
+                float idealStripHeight=(src.cols/(float)DisplayRatio);
+                if(idealStripHeight>src.rows)
+                    idealStripHeight=src.rows;
+                //Creation of cases depending on display size
                 Cases.clear();
-                for(int i=0; i<13; i++)
+                float decalage=20*src.rows/(src.rows-idealStripHeight);
+                for(int i=0; i<20; i++)
                 {
-                    Cases.push_back(Rect(0, i*src.rows/20., src.cols, src.rows*.4-1));
+                    //Cases.push_back(Rect(0, i*src.rows/20., src.cols, src.rows*.4-1));
+                    Cases.push_back(Rect(0, i*src.rows/decalage, src.cols, idealStripHeight-1));
                 }
                 NbCases=Cases.size();
             }
@@ -431,11 +437,16 @@ void Page::DetectCases()
         //If in STRIP mode
         else
         {
-            //Creation of cases of 40% of the page which are sliding down=> arbitrary strips to allow a continuous lecture
+            float idealStripHeight=(src.cols/(float)DisplayRatio);
+            if(idealStripHeight>src.rows)
+                idealStripHeight=src.rows;
+            //Creation of cases depending on display size
             Cases.clear();
-            for(int i=0; i<13; i++)
+            float decalage=20*src.rows/(src.rows-idealStripHeight);
+            for(int i=0; i<20; i++)
             {
-                Cases.push_back(Rect(0, i*src.rows/20., src.cols, src.rows*.4-1));
+                //Cases.push_back(Rect(0, i*src.rows/20., src.cols, src.rows*.4-1));
+                Cases.push_back(Rect(0, i*src.rows/decalage, src.cols, idealStripHeight-1));
             }
             NbCases=Cases.size();
         }

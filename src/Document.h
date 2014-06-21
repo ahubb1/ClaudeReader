@@ -64,6 +64,7 @@ class Document
         int GetCurrentPageNb() {return ActivePage;}
         void SetPagePreview(bool val);
         bool IsPagePreview() {return PagePreview;}
+        void SetDisplayRatio(float val);
 
         Page *currentPage, *nextPage, *previousPage;
 
@@ -73,6 +74,7 @@ class Document
         int ActivePage;
         bool PagePreview;
         READINGMODE ReadingMode;
+        float DisplayRatio;
     private:
         Mat *ImgRender;
         Mat *ThumbnailsImgRender;

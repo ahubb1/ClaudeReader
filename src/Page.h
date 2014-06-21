@@ -45,7 +45,7 @@ enum READINGMODE { PAGE, STRIP, CASE };
 class Page
 {
     public:
-        Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p);
+        Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, float display_ratio);
         ~Page();
 
         void DetectCases();
@@ -64,6 +64,7 @@ class Page
         READINGMODE GetReadingMode() {return ReadingMode;}
         void SetReadingMode(READINGMODE val) {ReadingMode=val;}
         bool IsLoaded() {return Loaded;}
+        void SetDisplayRatio(float val) {DisplayRatio=val;};
 
 
     protected:
@@ -75,6 +76,7 @@ class Page
         bool PreviewPage;
         int ActiveCase;
         bool Loaded;
+        float DisplayRatio;
 
         Mat PageRenderCv;
         Mat ImgRender;

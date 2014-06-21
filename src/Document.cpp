@@ -37,6 +37,7 @@ Document::Document(char *filename)
     ImgRender=NULL;
     NbPages=0;
     PagePreview=true;
+    DisplayRatio=1.2;
 }
 
 //! Main destructor.
@@ -296,6 +297,26 @@ void Document::SetReadingMode(READINGMODE val)
     if(nextPage)
     {
         nextPage->SetReadingMode(ReadingMode);
+        nextPage->DetectCases();
+    }
+}
+
+void Document::SetDisplayRatio(float val)
+{
+    //Document value (strored for next pages)
+    DisplayRatio=val;
+
+    //Set it to each pages and call the DetectCases() since its behaviour depends on the reading mode
+    currentPage->SetDisplayRatio(DisplayRatio);
+    currentPage->DetectCases();
+    if(previousPage)
+    {
+        previousPage->SetDisplayRatio(DisplayRatio);
+        previousPage->DetectCases();
+    }
+    if(nextPage)
+    {
+        nextPage->SetDisplayRatio(DisplayRatio);
         nextPage->DetectCases();
     }
 }
