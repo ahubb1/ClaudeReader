@@ -69,7 +69,8 @@ public:
       w(ww);
       h(hh);
       Fl_Widget::resize(x, y, ww, hh);
-      Resizing_cb(Resizing_cb_param);
+      if(Resizing_cb!=NULL)
+        Resizing_cb(Resizing_cb_param);
       SetImage(image);
   }
 
