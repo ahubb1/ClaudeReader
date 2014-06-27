@@ -85,6 +85,9 @@ class MainWindow
         friend void NextPage_cb(Fl_Widget* widget, void * param);
         friend void PreviousCase_cb(Fl_Widget* widget, void * param);
         friend void NextCase_cb(Fl_Widget* widget, void * param);
+        friend void FirstPage_cb(Fl_Widget* widget, void * param);
+        friend void LastPage_cb(Fl_Widget* widget, void * param);
+        friend void GoToPage_cb(Fl_Widget* widget, void * param);
 
         //Help menu
         friend void Help_cb(Fl_Widget* widget, void * param);

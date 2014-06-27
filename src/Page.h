@@ -69,6 +69,7 @@ class Page
 
     protected:
         vector<Rect> Cases;
+        Rect WithinRect;
         int NbCases;
         int PageNb;
         int NbPages;

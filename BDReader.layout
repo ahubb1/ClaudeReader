@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
-	<ActiveTarget name="Win32" />
-	<File name="src/Document.cpp" open="0" top="0" tabpos="10">
-		<Cursor position="8295" topLine="60" />
+	<ActiveTarget name="Debug" />
+	<File name="src/Document.cpp" open="1" top="0" tabpos="7">
+		<Cursor position="2017" topLine="60" />
 	</File>
-	<File name="src/Document.h" open="0" top="0" tabpos="2">
-		<Cursor position="2333" topLine="61" />
+	<File name="src/Document.h" open="1" top="0" tabpos="6">
+		<Cursor position="1373" topLine="44" />
 	</File>
 	<File name="src/Document_archive.cpp" open="0" top="0" tabpos="5">
 		<Cursor position="2097" topLine="60" />
@@ -19,20 +19,20 @@
 	<File name="src/Document_pdf.h" open="0" top="0" tabpos="0">
 		<Cursor position="248" topLine="0" />
 	</File>
-	<File name="src/Fl_OpenCV.cxx" open="0" top="0" tabpos="0">
-		<Cursor position="334" topLine="14" />
+	<File name="src/Fl_OpenCV.cxx" open="0" top="0" tabpos="7">
+		<Cursor position="334" topLine="128" />
 	</File>
-	<File name="src/Fl_OpenCV.h" open="0" top="0" tabpos="0">
-		<Cursor position="1916" topLine="69" />
+	<File name="src/Fl_OpenCV.h" open="0" top="0" tabpos="6">
+		<Cursor position="1919" topLine="67" />
 	</File>
 	<File name="src/MainWindow.cpp" open="1" top="1" tabpos="3">
-		<Cursor position="6060" topLine="45" />
+		<Cursor position="19907" topLine="391" />
 	</File>
 	<File name="src/MainWindow.h" open="1" top="0" tabpos="2">
-		<Cursor position="2089" topLine="57" />
+		<Cursor position="1336" topLine="29" />
 	</File>
 	<File name="src/Page.cpp" open="1" top="0" tabpos="5">
-		<Cursor position="17411" topLine="286" />
+		<Cursor position="7212" topLine="218" />
 	</File>
 	<File name="src/Page.h" open="1" top="0" tabpos="4">
 		<Cursor position="1270" topLine="37" />
@@ -56,6 +56,6 @@
 		<Cursor position="0" topLine="52" />
 	</File>
 	<File name="src/main.cpp" open="1" top="0" tabpos="1">
-		<Cursor position="1234" topLine="31" />
+		<Cursor position="1523" topLine="27" />
 	</File>
 </CodeBlocks_layout_file>

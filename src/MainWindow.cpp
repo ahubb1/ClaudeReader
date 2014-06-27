@@ -524,7 +524,91 @@ void NextCase_cb(Fl_Widget* widget, void * param)
         }
     }
 }
+//! Go to first page (through Doc)
+void FirstPage_cb(Fl_Widget* widget, void * param)
+{
+    MainWindow *mw=(MainWindow*)param;
 
+    if(mw->Doc->LoadPage(1)==-3)
+    {
+        fl_alert("Unable to access the document. Try to reopen it.");
+    }
+    //Update everything
+    mw->Display->SetImage(mw->Doc->Render());
+    StatusBarUpdate(mw);
+    Fl::check();
+    //and then preload the surrounding pages
+    mw->Doc->PreloadPages();
+
+    //Update the thumbnails (if needed)
+    if(mw->PrevDisplay->visible())
+    {
+        mw->PrevDisplay->SetImage(mw->Doc->ThumbnailsRender());
+    }
+}
+//! Go to last page (through Doc)
+void LastPage_cb(Fl_Widget* widget, void * param)
+{
+    MainWindow *mw=(MainWindow*)param;
+
+    if(mw->Doc->LoadPage(mw->Doc->GetNumberOfPages())==-3)
+    {
+        fl_alert("Unable to access the document. Try to reopen it.");
+    }
+    //Update everything
+    mw->Display->SetImage(mw->Doc->Render());
+    StatusBarUpdate(mw);
+    Fl::check();
+    //and then preload the surrounding pages
+    mw->Doc->PreloadPages();
+
+    //Update the thumbnails (if needed)
+    if(mw->PrevDisplay->visible())
+    {
+        mw->PrevDisplay->SetImage(mw->Doc->ThumbnailsRender());
+    }
+}
+//! Go to a given page, choosen by the user through an Fl_input window
+void GoToPage_cb(Fl_Widget* widget, void * param)
+{
+    MainWindow *mw=(MainWindow*)param;
+
+    //Ask the user which page he wants to go to:
+    char disp[5];
+    sprintf(disp, "%d\0", mw->Doc->GetCurrentPageNb());
+    const char *ret=fl_input("Go to page: ", disp);
+    //If not Cancel
+    if(ret!=NULL)
+    {
+        int pagenb=atoi(ret);
+        printf("Go to page: %s %d\n", ret, pagenb);
+
+        //Check if the page nb entered is valid
+        if(pagenb<1 || pagenb>mw->Doc->GetNumberOfPages())
+        {
+            fl_alert("Not a valid page number (or out of range) !");
+        }
+        else
+        {
+            if(mw->Doc->LoadPage(pagenb)==-3)
+            {
+                fl_alert("Unable to access the document. Try to reopen it.");
+            }
+            //Update everything
+            mw->Display->SetImage(mw->Doc->Render());
+            StatusBarUpdate(mw);
+            Fl::check();
+            //and then preload the surrounding pages
+            mw->Doc->PreloadPages();
+
+            //Update the thumbnails (if needed)
+            if(mw->PrevDisplay->visible())
+            {
+                mw->PrevDisplay->SetImage(mw->Doc->ThumbnailsRender());
+            }
+        }
+    }
+}
 
 //! Actvate or deactivate (depending on bool val), the navigation menu items (Next, Previous...) and buttons
 void ActivateNavigationWidgets(void *param, bool val)
@@ -539,6 +623,9 @@ void ActivateNavigationWidgets(void *param, bool val)
         if(items[i].label()!=NULL &&
           (strcmp(items[i].label(), "Next page")==0 ||
            strcmp(items[i].label(), "Previous page")==0 ||
+           strcmp(items[i].label(), "First page")==0 ||
+           strcmp(items[i].label(), "Last page")==0 ||
+           strcmp(items[i].label(), "Go to page")==0 ||
            strcmp(items[i].label(), "Next panel")==0 ||
            strcmp(items[i].label(), "Previous panel")==0 ||
            strcmp(items[i].label(), "Panel mode")==0 ||
@@ -745,8 +832,11 @@ MainWindow::MainWindow(const char *f)
                     { "Thumnails view", FL_COMMAND + 't', (Fl_Callback *)Thumbnails_cb, this, FL_MENU_TOGGLE|FL_MENU_DIVIDER | FL_MENU_INACTIVE },
                     { "Next panel", FL_Right, (Fl_Callback *)NextCase_cb, this, FL_MENU_INACTIVE },
                     { "Previous panel", FL_Left, (Fl_Callback *)PreviousCase_cb, this, FL_MENU_INACTIVE },
-                    { "Next page", FL_Down, (Fl_Callback *)NextPage_cb, this, FL_MENU_INACTIVE },
+                    { "Next page", FL_Down , (Fl_Callback *)NextPage_cb, this, FL_MENU_INACTIVE },
                     { "Previous page", FL_Up, (Fl_Callback *)PreviousPage_cb, this, FL_MENU_INACTIVE },
+                    { "First page", FL_Home , (Fl_Callback *)FirstPage_cb, this, FL_MENU_INACTIVE },
+                    { "Last page", FL_End , (Fl_Callback *)LastPage_cb, this, FL_MENU_INACTIVE },
+                    { "Go to page", FL_COMMAND + 'g' , (Fl_Callback *)GoToPage_cb, this, FL_MENU_INACTIVE },
                     { 0 },
                 { "&Help",              0, 0, 0, FL_SUBMENU },
                     { "Help", FL_COMMAND + 'h', (Fl_Callback *)Help_cb, this },

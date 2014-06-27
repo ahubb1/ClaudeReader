@@ -199,8 +199,9 @@ void Page::DetectCases()
     //If we are not on special pages (first or last one)
     if(PageNb>1 && (NbPages-PageNb)>0)
     {
-        Mat src;
+        Mat src, test, test2[3];
         cvtColor(PageRenderCv, src, CV_BGR2GRAY);
+
 
         //Only if we are in case or page mode
         if(ReadingMode==CASE || ReadingMode==PAGE)
@@ -210,43 +211,17 @@ void Page::DetectCases()
             //Try the detection several times (if it's failed) with a different range of "white" detection
             bool detectionFailed=true;
             int nbdetections=0;
-            while(detectionFailed && nbdetections<10)
+            while(detectionFailed && nbdetections<43)
             {
                 detectionFailed=false;
 
                 //To binary
                 cvtColor(PageRenderCv, src, CV_BGR2GRAY);
-                inRange(src, 0, 240+nbdetections, src);
-
-                /*Test contour detection....
-                Canny(src, src, 220, 220); //Keep it ?
-                Mat src_hl, src_vl;
-                Sobel( src, src_hl, CV_8U, 0, 1, 5, 1, 0, BORDER_DEFAULT );//Emphasize horizontal lines
-                Sobel( src, src_vl, CV_8U, 1, 0, 5, 1, 0, BORDER_DEFAULT );//Emphasize vertical lines
-                src=src_hl^src_vl;
-
-                //Enlarge the contours
-                Mat conv=Mat::ones(5,5 ,CV_8UC1);
-                dilate(src, src, conv);
-                conv.release();*/
-
-
-                /*Test strip
-                Sobel( src, src, CV_8U, 0, 2, 3, 1, 0, BORDER_DEFAULT );//Emphasize horizontal lines
-                Mat convH=Mat::zeros(11, 11, CV_8UC1);
-                convH.col(5)=Mat::ones(11,1,CV_8UC1);
-                dilate(src, src, convH);
-                dilate(src, src, convH);
-                Mat conv=Mat::ones(13,13,CV_8UC1);
-                erode(src, src, conv);
-
-                vector<Vec4i> lines;
-                HoughLinesP(src, lines, 25, CV_PI/180*10, 80, 0.8*PageRenderCv.cols, PageRenderCv.cols/10 );
-                for( size_t i = 0; i < lines.size(); i++ )
-                {
-                    Vec4i l = lines[i];
-                    line( PageRenderCv, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0,0,255), 3, CV_AA);
-                }*/
+                inRange(src, 0, 210+nbdetections, src);
+                /*char truc[255];
+                sprintf(truc, "truc%d_%d.png", PageNb, 230+nbdetections);
+                imwrite(truc,src);
+                printf("%d: %d\t", PageNb, nbdetections);*/
 
                 //Contours detection
                 vector<vector <Point> > contours;
@@ -262,6 +237,16 @@ void Page::DetectCases()
                 //Remove according to ratio perimeter/area (keep only rectangles) ???
                 /*approxPolyDP(Mat(contours[i]), approx, arcLength(Mat(contours[i]), true)*0.02, true);
                    printf("%f\n", matchShapes( approx, contours[i], CV_CONTOURS_MATCH_I1, .0));*/
+
+                //Remove the too LARGE ones (covering almost the whole page: more than 65%)
+                for(unsigned int i = 0; i < CasesTmp.size(); i++ )
+                {
+                    if((CasesTmp[i].width*CasesTmp[i].height)>(0.65*src.rows*src.cols))
+                    {
+                        CasesTmp.erase(CasesTmp.begin()+i);
+                        i--;
+                    }
+                }
 
                 //Sort the cases by size and merge them if overlaping
                 SortAndMerge(&CasesTmp, 0);
@@ -329,7 +314,22 @@ void Page::DetectCases()
                         //paint each case space in white (255)
                         rectangle(testCoveredArea, CasesTmp[i], cvScalar(255), -1);
                     }
-                    //paint the page "contour" (area outside the withinRect) in white (0)
+
+                    //If covered area is small (<65% of page), check if the total non-covered area is almost white
+                    if(withinRect.width*withinRect.height<(0.65*src.rows*src.cols))
+                    {
+                        //TODO: et verifier que pas de contour dedans (apres avoir passe un Canny): s'il y a des contours, c'est qu'on a bouffer une bulle ou un texte...
+                        //il faudrait aussi faire la meme chose pour les cases...
+                        //Check if not covered area (outside the within Rect) is almost white
+                        if(mean(testCoveredArea).val[0]<250)
+                        {
+                            //Detection failed
+                            detectionFailed=true;
+                            CasesTmp.clear();
+                        }
+                    }
+
+                    //Then paint the page "contour" (area outside the withinRect) in white (0)
                     rectangle(testCoveredArea, Rect(0, 0, withinRect.x, src.rows), cvScalar(255), -1);//left band
                     rectangle(testCoveredArea, Rect(withinRect.x+withinRect.width, 0, src.cols-(withinRect.x+withinRect.width), src.rows), cvScalar(255), -1);//right band
                     rectangle(testCoveredArea, Rect(0, 0, src.cols, withinRect.y), cvScalar(255), -1);//top band
@@ -338,6 +338,8 @@ void Page::DetectCases()
                     //compare the two values: if two large difference, it means that there are some internal part not covered by a case
                     if(coveredArea<0.95*withinRect.width*withinRect.height)
                     {
+                        //TODO: et verifier que pas de contour dedans (apres avoir passe un Canny): s'il y a des contours, c'est qu'on a bouffer une bulle ou un texte...
+                        //il faudrait aussi faire la meme chose pour les cases...
                         //Inspect the not covered area: if not 255 means that not fully blank
                         if(mean(testCoveredArea).val[0]<250)
                         {
@@ -346,9 +348,28 @@ void Page::DetectCases()
                             CasesTmp.clear();
                         }
                     }
+                    //Everything looks covered...
+                    else
+                    {
+                        //but maybe covered by only one case (not likely to happen since too lage cases have been removed)
+                        if(CasesTmp.size()<2)
+                        {
+                            //Detection failed
+                            detectionFailed=true;
+                            CasesTmp.clear();
+                        }
+                    }
+
+                    //Copy the within rectancgle area for further use
+                    WithinRect=withinRect;
                 }
-                nbdetections++;
+                else
+                {
+                    detectionFailed=true;
+                }
+                nbdetections+=2;
             }
+
 
             //Check if we have more than one case
             if(CasesTmp.size()>1)
@@ -359,7 +380,9 @@ void Page::DetectCases()
 
                 //Create (and fill) the tree
                     //First the root node: a band on the left of the page
-                    CasesTree.insert(Rect(0, 0, src.cols*.1, src.rows));
+                    //CasesTree.insert(Rect(0, 0, src.cols*.1, src.rows));
+                    //First the root node: a band on the left of the covered part of the page
+                    CasesTree.insert(Rect(WithinRect.x, WithinRect.y, WithinRect.width*0.1, WithinRect.height));
                     ntree<Rect>::prefix_iterator currentParentPre=CasesTree.prefix_begin();
 
                     while (CasesTmp.size()>0)
@@ -407,6 +430,7 @@ void Page::DetectCases()
                     {
                         Cases.push_back(*i);
                     }
+
 
                 //Save the nb of cases
                 NbCases=Cases.size();
