@@ -1,5 +1,10 @@
 #include "Document_archive.h"
 
+//Initialize the list of supported formats
+const int NbSupportedImgExtensions=11;
+string SupportedImgExtensions[NbSupportedImgExtensions] = {".jpg", ".jpeg", ".jpe", ".jp2", ".tiff", ".tif", ".png", ".bmp", ".pbm", ".ppm", ".pgm"};
+
+
 //-----------------------Archive specific function---------------------
 bool operator<(const NameNb &a, const NameNb &b)
 {
@@ -46,7 +51,7 @@ void Document_archive::Close()
 
 
 //! Get the number of images (pages) in the archive and keep track of their order for
-//!further access.
+//!further access. Also select only the image files within the archive.
 void Document_archive::Order()
 {
     int i=0, nbpages=0;
@@ -56,13 +61,30 @@ void Document_archive::Order()
 		string buff_s(archive_entry_pathname(Entry));
 		//Check the size to know if valid file (and not directory or corrupted)
 		int size = archive_entry_size(Entry);
-		//if ok, add it to the list
+		//If valid file and not a directory
 		if(size>0)
 		{
-            ImgNames.push_back(NameNb());
-            ImgNames[nbpages].name=buff_s;
-            ImgNames[nbpages].nb=i;
-            nbpages++;
+            //Then check if it's a supported image format (by extension)
+            bool SupportedFormat=false;
+            for(int k=0; k<NbSupportedImgExtensions; k++)
+            {
+                //Try to find each possible extension in the filename
+                if(buff_s.find(SupportedImgExtensions[k], buff_s.length()-5)!=string::npos)
+                {
+                    //This the file extension, so break and say it's a valid image
+                    SupportedFormat=true;
+                    break;
+                }
+            }
+
+            //if image format ok, add it to the list
+            if(SupportedFormat)
+            {
+                ImgNames.push_back(NameNb());
+                ImgNames[nbpages].name=buff_s;
+                ImgNames[nbpages].nb=i;
+                nbpages++;
+            }
 		}
         i++;
 	}

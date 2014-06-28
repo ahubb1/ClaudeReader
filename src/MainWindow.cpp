@@ -227,7 +227,7 @@ void Open_cb(Fl_Widget* widget, void * param)
         //Window to define a directory and filename
         Fl_Native_File_Chooser chooser=Fl_Native_File_Chooser();
         chooser.title("Open a file");
-        chooser.filter("Supported formats\t*.{pdf,cbz,cbr,rar,zip,tar}\nPdf\t*.pdf\nComics archive\t*.{cbz,cbr}\nArchive\t*.{rar,zip,tar}");
+        chooser.filter("Supported formats\t*.{pdf,cbz,cbr,cbt,cb7,rar,zip,tar,7z}\nPdf\t*.pdf\nComics archive\t*.{cbz,cbr,cbt,cb7}\nArchive\t*.{rar,zip,tar,7z}");
 
         //Select the working directory
         char folder[FL_PATH_MAX];
@@ -267,7 +267,10 @@ void Open_cb(Fl_Widget* widget, void * param)
     {
         //just use the name as filename
         sprintf(tmpFilename, "%s", ((Fl_Menu_*)widget)->mvalue()->label());
-        if( tmpFilename[0]=='\0' || ( strstr(tmpFilename, ".pdf")==NULL && strstr(tmpFilename, ".cbz")==NULL && strstr(tmpFilename, ".cbr")==NULL && strstr(tmpFilename, ".rar")==NULL && strstr(tmpFilename, ".zip")==NULL  && strstr(tmpFilename, ".tar")==NULL ) )
+        if( tmpFilename[0]=='\0' ||
+           ( strstr(tmpFilename, ".pdf")==NULL &&
+             strstr(tmpFilename, ".cbz")==NULL && strstr(tmpFilename, ".cbr")==NULL && strstr(tmpFilename, ".cbt")==NULL && strstr(tmpFilename, ".cb7")==NULL &&
+             strstr(tmpFilename, ".rar")==NULL && strstr(tmpFilename, ".zip")==NULL && strstr(tmpFilename, ".tar")==NULL && strstr(tmpFilename, ".7z")==NULL ) )
         {
             fl_alert("Invalid filename !");
             return;
@@ -1013,7 +1016,8 @@ void MainWindow::Init(char *filename)
         }
         else
         {
-            if( (strstr(Filename, ".cbr" )!=NULL) || (strstr(Filename, ".cbz" )!=NULL) || (strstr(Filename, ".zip" )!=NULL) || (strstr(Filename, ".rar" )!=NULL) || (strstr(Filename, ".tar" )!=NULL) )
+            if( (strstr(Filename, ".cbr" )!=NULL) || (strstr(Filename, ".cbz" )!=NULL) || (strstr(Filename, ".cbt" )!=NULL) || (strstr(Filename, ".cb7" )!=NULL) ||
+                (strstr(Filename, ".zip" )!=NULL) || (strstr(Filename, ".rar" )!=NULL) || (strstr(Filename, ".tar" )!=NULL) || (strstr(Filename, ".7z" )!=NULL))
             {
                 new_doc=new Document_archive(Filename);
                 extOk=true;
