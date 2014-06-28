@@ -60,7 +60,7 @@ class Document
         char *GetFilename() {return Filename;}
         void SetReadingMode(READINGMODE val);
         READINGMODE GetReadingMode() {return ReadingMode;}
-        int GetNumberOfPages() {return NbPages;}
+        int GetNbOfPages() {return NbPages;}
         int GetCurrentPageNb() {return ActivePage;}
         void SetPagePreview(bool val);
         bool IsPagePreview() {return PagePreview;}

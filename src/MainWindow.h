@@ -46,6 +46,7 @@
 #include "Document.h"
 #include "Document_pdf.h"
 #include "Document_archive.h"
+#include "Export_Document.h"
 
 //Icon
 #include "icon32.xbm"
@@ -88,6 +89,7 @@ class MainWindow
         friend void FirstPage_cb(Fl_Widget* widget, void * param);
         friend void LastPage_cb(Fl_Widget* widget, void * param);
         friend void GoToPage_cb(Fl_Widget* widget, void * param);
+        friend void ExportDoc_cb(Fl_Widget* widget, void * param);
 
         //Help menu
         friend void Help_cb(Fl_Widget* widget, void * param);

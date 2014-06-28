@@ -28,8 +28,6 @@
  *
  */
 
-//#include <stdio.h>
-
 #include "MainWindow.h"
 
 

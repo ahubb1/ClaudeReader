@@ -194,11 +194,11 @@ void StatusBarUpdate(void * param)
       {
           if(mw->Doc->GetReadingMode()==CASE)
           {
-                sprintf(text, "Page %d/%d (Panel %d/%d)", mw->Doc->GetCurrentPageNb(), mw->Doc->GetNumberOfPages(), mw->Doc->currentPage->GetActiveCase()+1, mw->Doc->currentPage->GetNbCases());
+                sprintf(text, "Page %d/%d (Panel %d/%d)", mw->Doc->GetCurrentPageNb(), mw->Doc->GetNbOfPages(), mw->Doc->currentPage->GetActiveCase()+1, mw->Doc->currentPage->GetNbCases());
           }
           else
           {
-                sprintf(text, "Page %d/%d", mw->Doc->GetCurrentPageNb(), mw->Doc->GetNumberOfPages());
+                sprintf(text, "Page %d/%d", mw->Doc->GetCurrentPageNb(), mw->Doc->GetNbOfPages());
           }
       }
       else
@@ -279,6 +279,129 @@ void Open_cb(Fl_Widget* widget, void * param)
 
     //Open file and do stuff
     mw->Init(tmpFilename);
+}
+
+//! Export cancel button callback
+void ExportCancel_cb(Fl_Widget* widget, void* param)
+{
+    Export_Document* exportdoc=(Export_Document*)param;
+
+    //Give cancel signal to export doc
+    exportdoc->Cancel();
+}
+
+//! Export the current document (as an images folder)
+void ExportDoc_cb(Fl_Widget* widget, void * param)
+{
+    MainWindow *mw=(MainWindow*)param;
+
+    //If a document is open
+    if(mw->Doc!=NULL)
+    {
+        //Remember the document current page
+
+        //Open a file chooser
+        Fl_Native_File_Chooser chooser=Fl_Native_File_Chooser();
+        chooser.title("Select a folder to export to");
+        //only directory selection
+        chooser.type(Fl_Native_File_Chooser::BROWSE_DIRECTORY);
+        //can create a new one
+        chooser.options(Fl_Native_File_Chooser:: NEW_FOLDER);
+        //in the current doc directory
+        char folder[FL_PATH_MAX];
+        int last_separator=max((strrchr(mw->Doc->GetFilename(), '\/')-mw->Doc->GetFilename()), (strrchr(mw->Doc->GetFilename(), '\\')-mw->Doc->GetFilename()));
+        strncpy(folder, mw->Doc->GetFilename(), last_separator);
+        chooser.directory(folder);
+        int ret=chooser.show();
+        if(ret !=1 && ret!=-1)
+        {
+            //Ask if export panels or pages
+            bool panel, preview;
+            int panelchoice=fl_choice("Export as:\n -One image for each Page\n -One image for each Panel\n -One image for each Panel+Page preview ?", "Panel+Preview", "Panel", "Page");
+            switch(panelchoice)
+            {
+                case 0:
+                    panel=true;
+                    preview=true;
+                    break;
+                case 1:
+                    panel=true;
+                    preview=false;
+                    break;
+                case 2:
+                    panel=false;
+                    preview=false;
+                    break;
+                default:
+                    panel=false;
+                    preview=false;
+            }
+
+            //Select the image format
+            char fileext[5];
+            int formatchoice=fl_choice("Select an image format to export to:", "jpeg", "png", "bmp");
+            switch(formatchoice)
+            {
+                case 0:
+                    sprintf(fileext, ".jpg\0");
+                    break;
+                case 1:
+                    sprintf(fileext, ".png\0");
+                    break;
+                case 2:
+                    sprintf(fileext, ".bmp\0");
+                    break;
+                default:
+                    sprintf(fileext, ".jpg\0");
+            }
+
+            //Ask for confirmation first
+            if(fl_ask("Export %s to %s as images (%s) ?", fl_filename_name(mw->Doc->GetFilename()), chooser.filename(), fileext)==0)
+                return;
+
+            //Create an export object
+            Export_Document exportdoc(mw->Doc, chooser.filename(), fileext, panel, preview);
+
+            //Disable the window (to avoid any interaction)
+            mw->window->hide();
+
+            //Create a progress window
+            Fl_Window ProgressWindow(mw->window->x()+mw->window->w()/2.-250, mw->window->y()+mw->window->h()/2.-100, 500, 200, "Export in progress...");
+            ProgressWindow.set_modal();
+            ProgressWindow.begin();
+                Fl_Button fileLabel((500-460)/2., 10, 460, 100, "Exporting ");
+                char label[255];
+                sprintf(label, "Exporting:\t%s\nTo:\t%s\nFormat:\t%s\n\nPlease wait (%d pages to process)...\n", fl_filename_name(mw->Doc->GetFilename()), chooser.filename(), fileext, mw->Doc->GetNbOfPages());
+                fileLabel.label(label);
+                fileLabel.box(FL_FLAT_BOX);
+                fileLabel.align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+                Fl_Button cancelButton((500-70)/2., 150, 70, 30, "Cancel");
+                cancelButton.take_focus();
+                cancelButton.callback(ExportCancel_cb, (void*)&exportdoc);
+            ProgressWindow.end();
+            ProgressWindow.show();
+
+            //Export
+            int retexp=exportdoc.Export();
+            if(retexp>=0)
+            {
+                fl_alert("Export succesfull (%d images created) !", retexp);
+            }
+            else
+            {
+                fl_alert("Error while exporting !");
+            }
+
+            //Re-set the document current page
+
+            //Re-enable the window
+            mw->window->show();
+        }
+    }
+    else
+    {
+        fl_alert("Open a comics first !");
+    }
 }
 
 //! Exit the program calling the window callback
@@ -554,7 +677,7 @@ void LastPage_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
 
-    if(mw->Doc->LoadPage(mw->Doc->GetNumberOfPages())==-3)
+    if(mw->Doc->LoadPage(mw->Doc->GetNbOfPages())==-3)
     {
         fl_alert("Unable to access the document. Try to reopen it.");
     }
@@ -584,10 +707,9 @@ void GoToPage_cb(Fl_Widget* widget, void * param)
     if(ret!=NULL)
     {
         int pagenb=atoi(ret);
-        printf("Go to page: %s %d\n", ret, pagenb);
 
         //Check if the page nb entered is valid
-        if(pagenb<1 || pagenb>mw->Doc->GetNumberOfPages())
+        if(pagenb<1 || pagenb>mw->Doc->GetNbOfPages())
         {
             fl_alert("Not a valid page number (or out of range) !");
         }
@@ -635,7 +757,8 @@ void ActivateNavigationWidgets(void *param, bool val)
            strcmp(items[i].label(), "Strip mode")==0 ||
            strcmp(items[i].label(), "Page mode")==0 ||
            strcmp(items[i].label(), "Page preview")==0 ||
-           strcmp(items[i].label(), "Thumnails view")==0
+           strcmp(items[i].label(), "Thumnails view")==0 ||
+           strcmp(items[i].label(), "Export")==0
           ))
         {
             //Then activate or deactivate it
@@ -823,6 +946,7 @@ MainWindow::MainWindow(const char *f)
                     { "Open", FL_COMMAND + 'o', (Fl_Callback *)Open_cb, this },
                     { "Recent files", 0, 0, 0, FL_SUBMENU },
                         { 0 },
+                    { "Export", FL_COMMAND + 'e', (Fl_Callback *)ExportDoc_cb, this, FL_MENU_INACTIVE },
                     { "Quit", FL_COMMAND + 'q', (Fl_Callback *)Quit_cb, this },
                     { 0 },
                 { "&View",              0, 0, 0, FL_SUBMENU },
@@ -1025,7 +1149,7 @@ void MainWindow::Init(char *filename)
         }
 
         //Check if the document has been opened
-        if(extOk && new_doc->GetNumberOfPages()>0)
+        if(extOk && new_doc->GetNbOfPages()>0)
         {
             //Delete old doc if one
             if(Doc)

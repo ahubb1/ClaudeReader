@@ -225,8 +225,8 @@ int Document::NextCase()
 {
     if(currentPage->NextCase()<0 || ReadingMode==PAGE)
     {
-        NextPage();
-        LoadPage();
+        if(NextPage()>0)
+            LoadPage();
         return -1;
     }
     return 0;
@@ -239,8 +239,8 @@ int Document::PreviousCase()
 {
     if(currentPage->PreviousCase()<0 || ReadingMode==PAGE)
     {
-        PreviousPage();
-        LoadPage();
+        if(PreviousPage()>0)
+            LoadPage();
         return -1;
     }
     return 0;
