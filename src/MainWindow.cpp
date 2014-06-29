@@ -317,7 +317,8 @@ void ExportDoc_cb(Fl_Widget* widget, void * param)
         {
             //Ask if export panels or pages
             bool panel, preview;
-            int panelchoice=fl_choice("Export as:\n -One image for each Page\n -One image for each Panel\n -One image for each Panel+Page preview ?", "Panel+Preview", "Panel", "Page");
+            fl_message_title("Export");
+            int panelchoice=fl_choice("Export as ?\n -One image for each Page\n -One image for each Panel\n -One image for each Panel+Page preview", "Panel+Preview", "Panel", "Page");
             switch(panelchoice)
             {
                 case 0:
@@ -339,7 +340,8 @@ void ExportDoc_cb(Fl_Widget* widget, void * param)
 
             //Select the image format
             char fileext[5];
-            int formatchoice=fl_choice("Select an image format to export to:", "jpeg", "png", "bmp");
+            fl_message_title("Export");
+            int formatchoice=fl_choice("Select an image format to export to:", "Jpeg", "Png", "Bmp");
             switch(formatchoice)
             {
                 case 0:
@@ -356,6 +358,7 @@ void ExportDoc_cb(Fl_Widget* widget, void * param)
             }
 
             //Ask for confirmation first
+            fl_message_title("Export");
             if(fl_ask("Export %s to %s as images (%s) ?", fl_filename_name(mw->Doc->GetFilename()), chooser.filename(), fileext)==0)
                 return;
 
@@ -385,14 +388,17 @@ void ExportDoc_cb(Fl_Widget* widget, void * param)
             int retexp=exportdoc.Export();
             if(retexp>=0)
             {
+                fl_message_title("Export");
                 fl_alert("Export succesfull (%d images created) !", retexp);
             }
             else
             {
+                fl_message_title("Export");
                 fl_alert("Error while exporting !");
             }
 
             //Re-set the document current page
+            fl_message_title("");
 
             //Re-enable the window
             mw->window->show();
@@ -758,7 +764,7 @@ void ActivateNavigationWidgets(void *param, bool val)
            strcmp(items[i].label(), "Page mode")==0 ||
            strcmp(items[i].label(), "Page preview")==0 ||
            strcmp(items[i].label(), "Thumnails view")==0 ||
-           strcmp(items[i].label(), "Export")==0
+           strcmp(items[i].label(), "Export (as images)")==0
           ))
         {
             //Then activate or deactivate it
@@ -946,7 +952,7 @@ MainWindow::MainWindow(const char *f)
                     { "Open", FL_COMMAND + 'o', (Fl_Callback *)Open_cb, this },
                     { "Recent files", 0, 0, 0, FL_SUBMENU },
                         { 0 },
-                    { "Export", FL_COMMAND + 'e', (Fl_Callback *)ExportDoc_cb, this, FL_MENU_INACTIVE },
+                    //{ "Export (as images)", FL_COMMAND + 'e', (Fl_Callback *)ExportDoc_cb, this, FL_MENU_INACTIVE },
                     { "Quit", FL_COMMAND + 'q', (Fl_Callback *)Quit_cb, this },
                     { 0 },
                 { "&View",              0, 0, 0, FL_SUBMENU },
