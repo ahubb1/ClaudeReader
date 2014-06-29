@@ -796,12 +796,13 @@ void ActivateNavigationWidgets(void *param, bool val)
         mw->NextPageButton->hide();
     }
 }
-//! Add recent documents items according to Preferences
+//! Add recent documents items according to global Preferences
 void AddRecentDocsItems(void *param)
 {
     MainWindow *mw=(MainWindow*)param;
 
     //WARNING: MenuItem is doing its own filtering to "delete" the potential duplicates
+    //Use only the gloabl preferences (doesn't make sense with doc prefrences)
     if(mw->Pref->GetNbRecentDocs()>0)
     {
         //First remove the recent docs menu item (to delete the previous submenus)
@@ -868,22 +869,29 @@ void UpdateWidgets(void * param)
 {
     MainWindow *mw=(MainWindow*)param;
 
+    //Which prefrences to use ?
+    Preferences *localPref=NULL;
+    if(mw->PrefDoc)
+        localPref=mw->PrefDoc; //Doc ones if exist
+    else
+        localPref=mw->Pref; //Gloabl ones otherwise
+
     //The reading mode
-    if(mw->Pref->GetReadingMode()==PAGE)
+    if(localPref->GetReadingMode()==PAGE)
     {
         ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Page mode"))->setonly();
     }
-    if(mw->Pref->GetReadingMode()==CASE)
+    if(localPref->GetReadingMode()==CASE)
     {
         ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Panel mode"))->setonly();
     }
-    if(mw->Pref->GetReadingMode()==STRIP)
+    if(localPref->GetReadingMode()==STRIP)
     {
         ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Strip mode"))->setonly();
     }
 
     //Preview page
-    if(mw->Pref->GetPagePreview())
+    if(localPref->GetPagePreview())
     {
         ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Page preview"))->set();
     }
@@ -893,13 +901,17 @@ void UpdateWidgets(void * param)
     }
 
     //Thumnails view
-    if(mw->Pref->GetThumbnails())
+    if(localPref->GetThumbnails())
     {
         ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Thumnails view"))->set();
     }
     else
     {
         ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Thumnails view"))->clear();
+    }
+    if(localPref->GetThumbnails()!=mw->PrevDisplayGrp->visible())
+    {
+        Thumbnails_cb(mw->DisplayGrp, mw);
     }
 
     //Recent docs: will only add real new ones (no duplicates) if some
@@ -911,7 +923,8 @@ void Window_cb(Fl_Widget* widget, void * param)
 {
      MainWindow *mw=(MainWindow*)param;
 
-     //Save the preferences in file
+     //Save the preferences in files
+        //Global preferences
          //The window size, except if in Fullscreen
          if(mw->window->fullscreen_active()==0)
          {
@@ -922,6 +935,19 @@ void Window_cb(Fl_Widget* widget, void * param)
          mw->Pref->SetThumbnails(mw->PrevDisplayGrp->visible());
          //Write to pref file
          mw->Pref->Save(mw->Doc);
+       //Current doc preferences
+         if(mw->PrefDoc)
+         {
+             if(mw->window->fullscreen_active()==0)
+             {
+                mw->PrefDoc->SetWinW(mw->window->w());
+                mw->PrefDoc->SetWinH(mw->window->h());
+             }
+             //The thumnails view
+             mw->PrefDoc->SetThumbnails(mw->PrevDisplayGrp->visible());
+             //Write to pref file
+             mw->PrefDoc->Save(mw->Doc);
+         }
 
      //Close the window
      mw->window->hide();
@@ -936,9 +962,14 @@ void Window_cb(Fl_Widget* widget, void * param)
 //!\param f the filename of a file top open on startup, can be '\0' if nothing
 MainWindow::MainWindow(const char *f)
 {
+    //No doc or doc pref yet
+    Doc=NULL;
+    PrefDoc=NULL;
+
     //Load user preferences
     Pref = new Preferences();
     Pref->Load("preferences");
+
 
     //Main window creation
         //Use saved window sized (will be 600, 600 if nothing saved)
@@ -1093,7 +1124,6 @@ MainWindow::MainWindow(const char *f)
 
     //Initialize the window and Document
     UpdateWidgets(this);
-    Doc=NULL;
     if(f)
     {
         //Convert the filename from relative to absolute path
@@ -1132,15 +1162,32 @@ void MainWindow::Init(char *filename)
     //If filename is correct
     if(filename[0]!='\0')
     {
-        //Save the filename
+        //Save the new filename
         sprintf(Filename, "%s", filename);
 
         //If an active document was open, save the preferences
         if(Doc)
         {
+            //Global pref
             //Save preferences (especially add the doc to the recent docs)
+            if(window->fullscreen_active()==0)
+            {
+                Pref->SetWinW(window->w());
+                Pref->SetWinH(window->h());
+            }
             Pref->SetThumbnails(PrevDisplayGrp->visible());
             Pref->Save(Doc);
+            //Doc relative pref
+            if(PrefDoc)
+            {
+                if(window->fullscreen_active()==0)
+                {
+                    PrefDoc->SetWinW(window->w());
+                    PrefDoc->SetWinH(window->h());
+                }
+                PrefDoc->SetThumbnails(PrevDisplayGrp->visible());
+                PrefDoc->Save(Doc);
+            }
         }
 
         //Create a document using the new filename
@@ -1175,14 +1222,33 @@ void MainWindow::Init(char *filename)
             Doc->LoadPage(1);
 
             //Apply the preferences to the document and the window widgets
-            Pref->Load("preferences");
-            Pref->Apply(Doc);
-            //Hide the thumbnails if preferences say so (visible by default when created)
-            if(Pref->GetThumbnails()!=PrevDisplayGrp->visible())
-            {
-                Thumbnails_cb(DisplayGrp, this);
-            }
-            UpdateWidgets((void*)this);
+                //Apply global preferences first
+                Pref->Load("preferences");
+                Pref->Apply(Doc);
+
+                //Then deal with possible document preferences
+                //Delete old PrefDoc if one
+                if(PrefDoc)
+                    delete PrefDoc;
+                //Create a document preference
+                PrefDoc = new Preferences();
+                //Then load these preferences if the document exists, or keep using the global ones if not
+                const char *filenameshort=fl_filename_name(Doc->GetFilename()); //(preferences file as same name as the document file)
+                if(PrefDoc->Load(filenameshort)>=0)
+                {
+                    PrefDoc->Apply(Doc);
+                }
+                //Otherwise apply the gloabl pref to the newly created doc pref
+                else
+                {
+                    PrefDoc->Save(Doc);
+                    //and reload
+                    PrefDoc->Load(filenameshort);
+                }
+
+                //Update the widgets according to these preferences
+                UpdateWidgets((void*)this);
+
 
             //Get the image to draw
             Display->SetImage(Doc->Render());
@@ -1212,7 +1278,7 @@ void MainWindow::Init(char *filename)
         else
         {
             //Say it to the user
-            fl_alert("Unable to open the document. Is it a valid pdf,cbz or cbr file ?");
+            fl_alert("Unable to open the document. Is it a valid pdf or archive file ?");
 
             //Check if we have an active document
             if(!Doc)

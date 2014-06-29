@@ -115,7 +115,8 @@ class MainWindow
 
         //Other param
             char Filename[FL_PATH_MAX];    //!< Local copy of the filename of the currently open document
-            Preferences *Pref;              //!< User preferences
+            Preferences *Pref;              //!< User global preferences (last one used and saved)
+            Preferences *PrefDoc;           //!< User preferences for this document
             Document *Doc;                  //!< Pdf document
 };
 
