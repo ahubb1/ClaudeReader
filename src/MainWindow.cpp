@@ -912,8 +912,16 @@ void Window_cb(Fl_Widget* widget, void * param)
      MainWindow *mw=(MainWindow*)param;
 
      //Save the preferences in file
-     mw->Pref->SetThumbnails(mw->PrevDisplayGrp->visible());
-     mw->Pref->Save(mw->Doc);
+         //The window size, except if in Fullscreen
+         if(mw->window->fullscreen_active()==0)
+         {
+            mw->Pref->SetWinW(mw->window->w());
+            mw->Pref->SetWinH(mw->window->h());
+         }
+         //The thumnails view
+         mw->Pref->SetThumbnails(mw->PrevDisplayGrp->visible());
+         //Write to pref file
+         mw->Pref->Save(mw->Doc);
 
      //Close the window
      mw->window->hide();
@@ -933,7 +941,8 @@ MainWindow::MainWindow(const char *f)
     Pref->Load("preferences");
 
     //Main window creation
-    window=new Fl_Double_Window(600, 600, "BDReader");
+        //Use saved window sized (will be 600, 600 if nothing saved)
+        window=new Fl_Double_Window(Pref->GetWinW(), Pref->GetWinH(), "BDReader");
 
     //Set an icon
     //Problem with windows compile (not declared): version prolem of fltk
