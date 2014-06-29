@@ -172,12 +172,15 @@ void ResizingEvents(void* param)
     MainWindow *mw=(MainWindow*)param;
 
     //If in STRIP MODE: recall the Detection (through the SetDisplayRatio) to adjust the size of the strip sto the window width
-    if(mw->Doc && (mw->Doc->GetReadingMode()==STRIP || mw->Doc->GetReadingMode()==CASE))
+    if(mw->Doc)
     {
-        //Adjust the strip size according to the new display ratio
-        mw->Doc->SetDisplayRatio(mw->Display->w()/(float)mw->Display->h());
-        //And re-render
-        mw->Doc->Render();
+        if(mw->Doc->GetReadingMode()==STRIP || mw->Doc->GetReadingMode()==CASE)
+        {
+            //Adjust the strip size according to the new display ratio
+            mw->Doc->SetDisplayRatio(mw->Display->w()/(float)mw->Display->h());
+            //And re-render
+            mw->Doc->Render();
+        }
     }
 }
 //-----------------------------------------------------------------------------
@@ -536,7 +539,7 @@ void Thumbnails_cb(Fl_Widget* widget, void * param)
         mw->MainDisplayGrp->resize(mw->DisplayGrp->x(), mw->DisplayGrp->y(), mw->DisplayGrp->w(), mw->DisplayGrp->h());
         Fl::wait(10);
         //Update the menu item state if needed
-        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Thumnails view"))->clear();
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Thumbnails view"))->clear();
     }
     else
     {
@@ -548,7 +551,7 @@ void Thumbnails_cb(Fl_Widget* widget, void * param)
         mw->MainDisplayGrp->resize(mw->DisplayGrp->x()+mw->PrevDisplayGrp->w(), mw->DisplayGrp->y(), mw->DisplayGrp->w()*4/5., mw->DisplayGrp->h());
         mw->PrevDisplayGrp->redraw();
         //Update the menu item state if needed
-        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Thumnails view"))->set();
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Thumbnails view"))->set();
         Fl::wait(100);
     }
 }
@@ -764,8 +767,8 @@ void ActivateNavigationWidgets(void *param, bool val)
            strcmp(items[i].label(), "Strip mode")==0 ||
            strcmp(items[i].label(), "Page mode")==0 ||
            strcmp(items[i].label(), "Page preview")==0 ||
-           strcmp(items[i].label(), "Thumnails view")==0 ||
-           strcmp(items[i].label(), "Export (as images)")==0
+           strcmp(items[i].label(), "Thumbnails view")==0 /*||
+           strcmp(items[i].label(), "Export (as images)")==0*/
           ))
         {
             //Then activate or deactivate it
@@ -852,6 +855,7 @@ void Help_cb(Fl_Widget* widget, void * param)
 {
     //MainWindow *mw=(MainWindow*)param;
 
+    fl_message_title("Help");
     fl_message(HELP_STRING);
 }
 //! Show the about information window
@@ -859,6 +863,7 @@ void About_cb(Fl_Widget* widget, void * param)
 {
     //MainWindow *mw=(MainWindow*)param;
 
+    fl_message_title("About");
     fl_message(ABOUT_STRING);
 }
 //-----------------------------------------------------------------------------
@@ -900,18 +905,36 @@ void UpdateWidgets(void * param)
         ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Page preview"))->clear();
     }
 
-    //Thumnails view
+    //Thumbnails view
     if(localPref->GetThumbnails())
     {
-        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Thumnails view"))->set();
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Thumbnails view"))->set();
     }
     else
     {
-        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Thumnails view"))->clear();
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Thumbnails view"))->clear();
     }
     if(localPref->GetThumbnails()!=mw->PrevDisplayGrp->visible())
     {
         Thumbnails_cb(mw->DisplayGrp, mw);
+    }
+
+    //The preferences preferences (!): use the global ones for these
+    if(mw->Pref->GetSavePref())
+    {
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&Preferences/Save preferences"))->set();
+    }
+    else
+    {
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&Preferences/Save preferences"))->clear();
+    }
+    if(mw->Pref->GetLocalPref())
+    {
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&Preferences/Use documents preferences"))->setonly();
+    }
+    else
+    {
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&Preferences/Use global preferences"))->setonly();
     }
 
     //Recent docs: will only add real new ones (no duplicates) if some
@@ -931,20 +954,26 @@ void Window_cb(Fl_Widget* widget, void * param)
             mw->Pref->SetWinW(mw->window->w());
             mw->Pref->SetWinH(mw->window->h());
          }
-         //The thumnails view
+         //The thumbnails view
          mw->Pref->SetThumbnails(mw->PrevDisplayGrp->visible());
+         //The preferences preferences
+         mw->Pref->SetSavePref(((Fl_Menu_Item*)mw->MenuBar->find_item("&Preferences/Save preferences"))->value());
+         mw->Pref->SetLocalPref(((Fl_Menu_Item*)mw->MenuBar->find_item("&Preferences/Use documents preferences"))->value());
          //Write to pref file
          mw->Pref->Save(mw->Doc);
        //Current doc preferences
          if(mw->PrefDoc)
          {
-             if(mw->window->fullscreen_active()==0)
+             /*if(mw->window->fullscreen_active()==0)
              {
                 mw->PrefDoc->SetWinW(mw->window->w());
                 mw->PrefDoc->SetWinH(mw->window->h());
              }
-             //The thumnails view
+             //The thumbnails view
              mw->PrefDoc->SetThumbnails(mw->PrevDisplayGrp->visible());
+             //The preferences preferences
+             mw->PrefDoc->SetSavePref(((Fl_Menu_Item*)mw->MenuBar->find_item("&Preferences/Save preferences"))->value());
+             mw->PrefDoc->SetLocalPref(((Fl_Menu_Item*)mw->MenuBar->find_item("&Preferences/Use documents preferences"))->value());*/
              //Write to pref file
              mw->PrefDoc->Save(mw->Doc);
          }
@@ -1001,9 +1030,9 @@ MainWindow::MainWindow(const char *f)
                     {"Fullscreen", FL_COMMAND + 'f', (Fl_Callback *)Fullscreen_cb, this, FL_MENU_DIVIDER },
                     { "Panel mode", 'c', (Fl_Callback *)CaseMode_cb, this, FL_MENU_RADIO| FL_MENU_INACTIVE },
                     { "Strip mode", 's', (Fl_Callback *)StripMode_cb, this, FL_MENU_RADIO|FL_MENU_INACTIVE },
-                    { "Page mode", 'p', (Fl_Callback *)PageMode_cb, this, FL_MENU_RADIO|FL_MENU_DIVIDER |FL_MENU_INACTIVE },
+                    { "Page mode", 'p', (Fl_Callback *)PageMode_cb, this, FL_MENU_RADIO| FL_MENU_DIVIDER |FL_MENU_INACTIVE },
                     { "Page preview", 0, (Fl_Callback *)PagePreview_cb, this, FL_MENU_TOGGLE|FL_MENU_DIVIDER | FL_MENU_INACTIVE },
-                    { "Thumnails view", FL_COMMAND + 't', (Fl_Callback *)Thumbnails_cb, this, FL_MENU_TOGGLE|FL_MENU_DIVIDER | FL_MENU_INACTIVE },
+                    { "Thumbnails view", FL_COMMAND + 't', (Fl_Callback *)Thumbnails_cb, this, FL_MENU_TOGGLE|FL_MENU_DIVIDER | FL_MENU_INACTIVE },
                     { "Next panel", FL_Right, (Fl_Callback *)NextCase_cb, this, FL_MENU_INACTIVE },
                     { "Previous panel", FL_Left, (Fl_Callback *)PreviousCase_cb, this, FL_MENU_INACTIVE },
                     { "Next page", FL_Down , (Fl_Callback *)NextPage_cb, this, FL_MENU_INACTIVE },
@@ -1011,6 +1040,11 @@ MainWindow::MainWindow(const char *f)
                     { "First page", FL_Home , (Fl_Callback *)FirstPage_cb, this, FL_MENU_INACTIVE },
                     { "Last page", FL_End , (Fl_Callback *)LastPage_cb, this, FL_MENU_INACTIVE },
                     { "Go to page", FL_COMMAND + 'g' , (Fl_Callback *)GoToPage_cb, this, FL_MENU_INACTIVE },
+                    { 0 },
+                { "&Preferences",              0, 0, 0, FL_SUBMENU },
+                    { "Save preferences", 0, (Fl_Callback *)0, this, FL_MENU_TOGGLE |  FL_MENU_DIVIDER | FL_MENU_INVISIBLE },
+                    { "Use global preferences", 0, (Fl_Callback *)0, this, FL_MENU_RADIO },
+                    { "Use documents preferences", 0, (Fl_Callback *)0, this, FL_MENU_RADIO },
                     { 0 },
                 { "&Help",              0, 0, 0, FL_SUBMENU },
                     { "Help", FL_COMMAND + 'h', (Fl_Callback *)Help_cb, this },
@@ -1117,6 +1151,9 @@ MainWindow::MainWindow(const char *f)
              //Apply the plastic theme/skin
              Fl::scheme("plastic");
 
+         //Default title for message windows
+         fl_message_title_default("BDReader");
+
          //TODO: Remember the page nb for each recent documents in preferences and the window size
          //TODO: Gerer les bds en suites d'images (folders)
     window->end();
@@ -1176,16 +1213,20 @@ void MainWindow::Init(char *filename)
                 Pref->SetWinH(window->h());
             }
             Pref->SetThumbnails(PrevDisplayGrp->visible());
+            Pref->SetSavePref(((Fl_Menu_Item*)MenuBar->find_item("&Preferences/Save preferences"))->value());
+            Pref->SetLocalPref(((Fl_Menu_Item*)MenuBar->find_item("&Preferences/Use documents preferences"))->value());
             Pref->Save(Doc);
             //Doc relative pref
             if(PrefDoc)
             {
-                if(window->fullscreen_active()==0)
+                /*if(window->fullscreen_active()==0)
                 {
                     PrefDoc->SetWinW(window->w());
                     PrefDoc->SetWinH(window->h());
                 }
                 PrefDoc->SetThumbnails(PrevDisplayGrp->visible());
+                PrefDoc->SetSavePref(((Fl_Menu_Item*)MenuBar->find_item("&Preferences/Save preferences"))->value());
+                PrefDoc->SetLocalPref(((Fl_Menu_Item*)MenuBar->find_item("&Preferences/Use documents preferences"))->value());*/
                 PrefDoc->Save(Doc);
             }
         }
@@ -1212,9 +1253,14 @@ void MainWindow::Init(char *filename)
         //Check if the document has been opened
         if(extOk && new_doc->GetNbOfPages()>0)
         {
-            //Delete old doc if one
+            //Delete old doc if one (using an intermediate pointer to avoid access)
             if(Doc)
-                delete Doc;
+            {
+                Document *olddoc=Doc;
+                Doc=NULL;
+                delete olddoc;
+            }
+
             //use the new one
             Doc=new_doc;
 
@@ -1234,7 +1280,7 @@ void MainWindow::Init(char *filename)
                 PrefDoc = new Preferences();
                 //Then load these preferences if the document exists, or keep using the global ones if not
                 const char *filenameshort=fl_filename_name(Doc->GetFilename()); //(preferences file as same name as the document file)
-                if(PrefDoc->Load(filenameshort)>=0)
+                if(PrefDoc->Load(filenameshort)>=0 && Pref->GetLocalPref())
                 {
                     PrefDoc->Apply(Doc);
                 }

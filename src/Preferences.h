@@ -52,6 +52,10 @@ class Preferences
         void SetPagePreview(bool val) { PagePreview = val; }
         bool GetThumbnails() { return Thumbnails; }
         void SetThumbnails(bool val) { Thumbnails = val; }
+        bool GetSavePref() { return SavePref; }
+        void SetSavePref(bool val) { SavePref = val; }
+        bool GetLocalPref() { return LocalPref; }
+        void SetLocalPref(bool val) { LocalPref = val; }
         int GetWinW() { return WinW; }
         void SetWinW(int val) { WinW = val; }
         int GetWinH() { return WinH; }
@@ -70,6 +74,7 @@ class Preferences
         READINGMODE ReadingMode;
         bool PagePreview;
         bool Thumbnails;
+        bool SavePref, LocalPref;
         int WinW, WinH;
         int BkgColor;
         char LastDoc[2048];

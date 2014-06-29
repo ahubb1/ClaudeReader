@@ -29,6 +29,8 @@ Preferences::Preferences()
     LastDocPageNb=0;
     PagePreview=true;
     Thumbnails=true;
+    SavePref=true;
+    LocalPref=true;
     WinW=600;
     WinH=600;
 }
@@ -67,6 +69,18 @@ int Preferences::Load(const char prefFilename[255])
 
         Thumbnails=thumb_int;
         PagePreview=preview_int;
+
+        //The preferences preferences (!)
+        int savepref, localpref;
+        if(fscanf(prefFile, "%d %d ", &savepref, &localpref)!=2)
+        {
+            //return -2; //Don't return: for back compatibility
+        }
+        else
+        {
+            SavePref=savepref;
+            LocalPref=localpref;
+        }
 
         //The window size
         int win_w=600, win_h=600;
@@ -146,6 +160,9 @@ void Preferences::Save(Document *doc)
         {
             //The reading mode, background color and preview page option
             fprintf(prefFile, "%d\n%d\n%d\n", doc->GetReadingMode(), Thumbnails, doc->IsPagePreview());
+
+            //The preferences preferences (!)
+            fprintf(prefFile, "%d\n%d\n", SavePref, LocalPref);
 
             //The window size
             fprintf(prefFile, "%d\n%d\n", WinW, WinH);
