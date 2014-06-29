@@ -1,6 +1,6 @@
 //--------------------------------------------------------------------------
 //
-//    Copyright (C) 2014  Vincent Crocher
+//    Copyright (C) 2014 Vincent Crocher
 //
 //	  This file is part of BDReader.
 //
@@ -15,7 +15,7 @@
 //    GNU General Public License for more details.
 //
 //    You should have received a copy of the GNU General Public License
-//    along with BDReader.  If not, see <http://www.gnu.org/licenses/>.
+//    along with BDReader. If not, see <http://www.gnu.org/licenses/>.
 //
 //---------------------------------------------------------------------------
 #include "MainWindow.h"
@@ -166,6 +166,7 @@ void TimerMouseWheel_cb(void* param)
     Fl::repeat_timeout(0.1, TimerMouseWheel_cb, (void*)mw);
 }
 
+//! Catch the resizing events and update the Display aspect ratio accordingly to new size
 void ResizingEvents(void* param)
 {
     MainWindow *mw=(MainWindow*)param;
@@ -1076,8 +1077,6 @@ MainWindow::MainWindow(const char *f)
              //Apply the plastic theme/skin
              Fl::scheme("plastic");
 
-
-         //TODO: Option background color (blanc ou noir)
          //TODO: Remember the page nb for each recent documents in preferences and the window size
          //TODO: Gerer les bds en suites d'images (folders)
     window->end();
