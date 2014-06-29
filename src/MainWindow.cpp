@@ -1268,7 +1268,9 @@ void MainWindow::Init(char *filename)
                 //Create a document preference
                 PrefDoc = new Preferences();
                 //Then load these preferences if the document exists, or keep using the global ones if not
-                const char *filenameshort=fl_filename_name(Doc->GetFilename()); //(preferences file as same name as the document file)
+                char buff[2048];
+                sprintf(buff, "%s", fl_filename_name(Doc->GetFilename()));
+                const char *filenameshort=fl_filename_setext(buff, sizeof(buff), ".pref"); //(preferences file as same name as the document file)
                 if(PrefDoc->Load(filenameshort)>=0 && Pref->GetLocalPref())
                 {
                     PrefDoc->Apply(Doc);
