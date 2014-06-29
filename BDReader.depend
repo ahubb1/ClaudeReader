@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1404028925 source:/home/vincent/Perso/BDReader/BDReader/src/MainWindow.cpp
+1404038361 source:/home/vincent/Perso/BDReader/BDReader/src/MainWindow.cpp
 	"MainWindow.h"
 	<FL/names.h>
 	"help.h"
@@ -401,7 +401,7 @@
 1398763943 source:/home/vincent/Perso/BDReader/BDReader/src/Fl_Overlay_Arrow_Button.cxx
 	"Fl_Overlay_Arrow_Button.h"
 
-1403930966 /home/vincent/Perso/BDReader/BDReader/src/Document.h
+1404038682 /home/vincent/Perso/BDReader/BDReader/src/Document.h
 	<Page.h>
 
 1398764729 /home/vincent/Perso/BDReader/BDReader/src/Fl_Overlay_Arrow_Button.h
@@ -409,7 +409,7 @@
 	<FL/fl_draw.H>
 	<FL/Fl_Button.H>
 
-1404014349 /home/vincent/Perso/BDReader/BDReader/src/MainWindow.h
+1404038654 /home/vincent/Perso/BDReader/BDReader/src/MainWindow.h
 	<FL/Fl.H>
 	<FL/Fl_Window.H>
 	<FL/Fl_Menu_Bar.H>
@@ -431,12 +431,12 @@
 	<FL/fl_ask.H>
 	<opencv2/opencv.hpp>
 
-1404018461 /home/vincent/Perso/BDReader/BDReader/src/Preferences.h
+1404038637 /home/vincent/Perso/BDReader/BDReader/src/Preferences.h
 	"Document.h"
 
 1397837284 /home/vincent/Perso/BDReader/BDReader/src/icon32.xbm
 
-1403864529 /home/vincent/Perso/BDReader/BDReader/src/Page.h
+1404038851 /home/vincent/Perso/BDReader/BDReader/src/Page.h
 	<FL/Fl.H>
 	<stlplus3/ntree.hpp>
 	<opencv2/opencv.hpp>
@@ -473,11 +473,11 @@
 1404011227 source:/home/vincent/Perso/BDReader/BDReader/src/Document_pdf.cpp
 	"Document_pdf.h"
 
-1404011251 /home/vincent/Perso/BDReader/BDReader/src/Document_pdf.h
+1404038828 /home/vincent/Perso/BDReader/BDReader/src/Document_pdf.h
 	"Document.h"
 	"Page_pdf.h"
 
-1403337430 /home/vincent/Perso/BDReader/BDReader/src/Page_pdf.h
+1404038968 /home/vincent/Perso/BDReader/BDReader/src/Page_pdf.h
 	<mupdf/fitz.h>
 	"Page.h"
 
@@ -487,11 +487,11 @@
 1404011219 source:/home/vincent/Perso/BDReader/BDReader/src/Document_archive.cpp
 	"Document_archive.h"
 
-1403917661 /home/vincent/Perso/BDReader/BDReader/src/Document_archive.h
+1404038750 /home/vincent/Perso/BDReader/BDReader/src/Document_archive.h
 	"Document.h"
 	"Page_archive.h"
 
-1403337378 /home/vincent/Perso/BDReader/BDReader/src/Page_archive.h
+1404038941 /home/vincent/Perso/BDReader/BDReader/src/Page_archive.h
 	<archive.h>
 	<archive_entry.h>
 	"Page.h"
@@ -517,7 +517,7 @@
 1404011210 source:/home/vincent/Perso/BDReader/BDReader/src/Export_Document.cpp
 	"Export_Document.h"
 
-1404009734 /home/vincent/Perso/BDReader/BDReader/src/Export_Document.h
+1404038798 /home/vincent/Perso/BDReader/BDReader/src/Export_Document.h
 	<FL/Fl.H>
 	<FL/Fl_File_Chooser.H>
 	"Document.h"
