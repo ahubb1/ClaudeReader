@@ -1,6 +1,6 @@
 //--------------------------------------------------------------------------
 //
-//    Copyright (C) 2014  Vincent Crocher
+//    Copyright (C) 2014 Vincent Crocher
 //
 //	  This file is part of BDReader.
 //
@@ -15,9 +15,18 @@
 //    GNU General Public License for more details.
 //
 //    You should have received a copy of the GNU General Public License
-//    along with BDReader.  If not, see <http://www.gnu.org/licenses/>.
+//    along with BDReader. If not, see <http://www.gnu.org/licenses/>.
 //
 //---------------------------------------------------------------------------
+/**
+ * \file Export_Document.h
+ * \brief Declaration file of the Export_Document class
+ * \author Vincent Crocher
+ * \version 0.1
+ * \date June 2014
+ *
+ *
+ */
 #ifndef EXPORT_DOCUMENT_H
 #define EXPORT_DOCUMENT_H
 

@@ -18,6 +18,15 @@
 //    along with BDReader. If not, see <http://www.gnu.org/licenses/>.
 //
 //---------------------------------------------------------------------------
+/**
+ * \file Document_pdf.h
+ * \brief Declaration file of the Document_pdf class
+ * \author Vincent Crocher
+ * \version 0.1
+ * \date June 2014
+ *
+ *
+ */
 #ifndef DOCUMENT_PDF_H
 #define DOCUMENT_PDF_H
 

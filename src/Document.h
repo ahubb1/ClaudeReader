@@ -22,8 +22,8 @@
  * \file Document.h
  * \brief Declaration file of the Document class
  * \author Vincent Crocher
- * \version 0.1
- * \date April 2014
+ * \version 0.2
+ * \date June 2014
  *
  *
  */

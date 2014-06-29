@@ -22,8 +22,8 @@
  * \file MainWindow.h
  * \brief Declaration file of the MainWindow class (managing the windows and widgets).
  * \author Vincent Crocher
- * \version 0.1
- * \date April 2014
+ * \version 0.8
+ * \date June 2014
  *
  *
  */
