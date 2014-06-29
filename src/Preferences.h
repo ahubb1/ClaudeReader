@@ -60,6 +60,10 @@ class Preferences
         void SetWinW(int val) { WinW = val; }
         int GetWinH() { return WinH; }
         void SetWinH(int val) { WinH = val; }
+        int GetWinX() { return WinX; }
+        void SetWinX(int val) { WinX = val; }
+        int GetWinY() { return WinY; }
+        void SetWinY(int val) { WinY = val; }
         int GetBkgColor() { return BkgColor; }
         void SetBkgColor(int val) { BkgColor = val; }
         char *GetLastDoc() { return LastDoc; }
@@ -76,6 +80,7 @@ class Preferences
         bool Thumbnails;
         bool SavePref, LocalPref;
         int WinW, WinH;
+        int WinX, WinY;
         int BkgColor;
         char LastDoc[2048];
         int LastDocPageNb;

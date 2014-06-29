@@ -94,6 +94,18 @@ int Preferences::Load(const char prefFilename[255])
             WinH=win_h;
         }
 
+        //The window position
+        int win_x=0, win_y=0;
+        if(fscanf(prefFile, "%d %d ", &win_x, &win_y)!=2)
+        {
+            //return -2; //Don't return: for back compatibility
+        }
+        else
+        {
+            WinX=win_x;
+            WinY=win_y;
+        }
+
         //The last document filename
         fgets(LastDoc, 2048, prefFile);
         (*strchr(LastDoc,'\n'))='\0'; //replace the last \n by a \0
@@ -166,6 +178,9 @@ void Preferences::Save(Document *doc)
 
             //The window size
             fprintf(prefFile, "%d\n%d\n", WinW, WinH);
+
+            //The window position
+            fprintf(prefFile, "%d\n%d\n", WinX, WinY);
 
             //The last document filename
             fprintf(prefFile, "%s\n", doc->GetFilename());

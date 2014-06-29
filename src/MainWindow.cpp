@@ -953,6 +953,8 @@ void Window_cb(Fl_Widget* widget, void * param)
          {
             mw->Pref->SetWinW(mw->window->w());
             mw->Pref->SetWinH(mw->window->h());
+            mw->Pref->SetWinX(mw->window->x());
+            mw->Pref->SetWinY(mw->window->y());
          }
          //The thumbnails view
          mw->Pref->SetThumbnails(mw->PrevDisplayGrp->visible());
@@ -964,16 +966,8 @@ void Window_cb(Fl_Widget* widget, void * param)
        //Current doc preferences
          if(mw->PrefDoc)
          {
-             /*if(mw->window->fullscreen_active()==0)
-             {
-                mw->PrefDoc->SetWinW(mw->window->w());
-                mw->PrefDoc->SetWinH(mw->window->h());
-             }
              //The thumbnails view
              mw->PrefDoc->SetThumbnails(mw->PrevDisplayGrp->visible());
-             //The preferences preferences
-             mw->PrefDoc->SetSavePref(((Fl_Menu_Item*)mw->MenuBar->find_item("&Preferences/Save preferences"))->value());
-             mw->PrefDoc->SetLocalPref(((Fl_Menu_Item*)mw->MenuBar->find_item("&Preferences/Use documents preferences"))->value());*/
              //Write to pref file
              mw->PrefDoc->Save(mw->Doc);
          }
@@ -1001,8 +995,8 @@ MainWindow::MainWindow(const char *f)
 
 
     //Main window creation
-        //Use saved window sized (will be 600, 600 if nothing saved)
-        window=new Fl_Double_Window(Pref->GetWinW(), Pref->GetWinH(), "BDReader");
+        //Use saved window size and position (will be 0, 0, 600, 600 if nothing saved)
+        window=new Fl_Double_Window(Pref->GetWinX(), Pref->GetWinY(), Pref->GetWinW(), Pref->GetWinH(), "BDReader");
 
     //Set an icon
     //Problem with windows compile (not declared): version prolem of fltk
@@ -1211,6 +1205,8 @@ void MainWindow::Init(char *filename)
             {
                 Pref->SetWinW(window->w());
                 Pref->SetWinH(window->h());
+                Pref->SetWinX(window->x());
+                Pref->SetWinY(window->y());
             }
             Pref->SetThumbnails(PrevDisplayGrp->visible());
             Pref->SetSavePref(((Fl_Menu_Item*)MenuBar->find_item("&Preferences/Save preferences"))->value());
@@ -1219,14 +1215,7 @@ void MainWindow::Init(char *filename)
             //Doc relative pref
             if(PrefDoc)
             {
-                /*if(window->fullscreen_active()==0)
-                {
-                    PrefDoc->SetWinW(window->w());
-                    PrefDoc->SetWinH(window->h());
-                }
                 PrefDoc->SetThumbnails(PrevDisplayGrp->visible());
-                PrefDoc->SetSavePref(((Fl_Menu_Item*)MenuBar->find_item("&Preferences/Save preferences"))->value());
-                PrefDoc->SetLocalPref(((Fl_Menu_Item*)MenuBar->find_item("&Preferences/Use documents preferences"))->value());*/
                 PrefDoc->Save(Doc);
             }
         }
@@ -1287,6 +1276,7 @@ void MainWindow::Init(char *filename)
                 //Otherwise apply the gloabl pref to the newly created doc pref
                 else
                 {
+                    PrefDoc->SetThumbnails(Pref->GetThumbnails());
                     PrefDoc->Save(Doc);
                     //and reload
                     PrefDoc->Load(filenameshort);

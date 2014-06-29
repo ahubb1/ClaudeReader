@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1404038361 source:/home/vincent/Perso/BDReader/BDReader/src/MainWindow.cpp
+1404043348 source:/home/vincent/Perso/BDReader/BDReader/src/MainWindow.cpp
 	"MainWindow.h"
 	<FL/names.h>
 	"help.h"
@@ -374,7 +374,7 @@
 1399727871 /home/vincent/Perso/BDReader/BDReader/include/Preferences.h
 	"Document.h"
 
-1404029197 source:/home/vincent/Perso/BDReader/BDReader/src/Preferences.cpp
+1404042965 source:/home/vincent/Perso/BDReader/BDReader/src/Preferences.cpp
 	"Preferences.h"
 
 1397837284 /home/vincent/Perso/BDReader/BDReader/icon32.xbm
@@ -431,7 +431,7 @@
 	<FL/fl_ask.H>
 	<opencv2/opencv.hpp>
 
-1404038637 /home/vincent/Perso/BDReader/BDReader/src/Preferences.h
+1404042892 /home/vincent/Perso/BDReader/BDReader/src/Preferences.h
 	"Document.h"
 
 1397837284 /home/vincent/Perso/BDReader/BDReader/src/icon32.xbm
@@ -481,7 +481,7 @@
 	<mupdf/fitz.h>
 	"Page.h"
 
-1403337418 source:/home/vincent/Perso/BDReader/BDReader/src/Page_pdf.cpp
+1404038978 source:/home/vincent/Perso/BDReader/BDReader/src/Page_pdf.cpp
 	"Page_pdf.h"
 
 1404011219 source:/home/vincent/Perso/BDReader/BDReader/src/Document_archive.cpp
@@ -496,7 +496,7 @@
 	<archive_entry.h>
 	"Page.h"
 
-1403337356 source:/home/vincent/Perso/BDReader/BDReader/src/Page_archive.cpp
+1404038984 source:/home/vincent/Perso/BDReader/BDReader/src/Page_archive.cpp
 	"Page_archive.h"
 
 1399722372 /home/vincent/Perso/BDReader/BDReader/include/libarchive/archive.h
