@@ -1292,9 +1292,6 @@ void MainWindow::Init(char *filename)
                     PrefDoc->Load(filenameshort);
                 }
 
-                //Update the widgets according to these preferences
-                UpdateWidgets((void*)this);
-
 
             //Get the image to draw
             Display->SetImage(Doc->Render());
@@ -1304,6 +1301,10 @@ void MainWindow::Init(char *filename)
 
             //Set the display ratio
             Doc->SetDisplayRatio(Display->w()/(float)Display->h());
+
+            //Update the widgets according to these preferences (should be done after the preview displayed has been updated)
+            UpdateWidgets((void*)this);
+
 
             //Change the window title
             char title[1060];
