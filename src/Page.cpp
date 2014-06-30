@@ -217,11 +217,15 @@ void Page::DetectCases()
 
                 //To binary
                 cvtColor(PageRenderCv, src, CV_BGR2GRAY);
-                inRange(src, 0, 210+nbdetections, src);
-                /*char truc[255];
-                sprintf(truc, "truc%d_%d.png", PageNb, 230+nbdetections);
+                /*inRange(src, 0, 210+nbdetections, src);*/
+                Mat src2;
+                char truc[255];
+                adaptiveThreshold(src, src, 250+nbdetections, ADAPTIVE_THRESH_GAUSSIAN_C, CV_THRESH_BINARY, 15, 0);
+                sprintf(truc, "truc%d_%dB.png", PageNb, 250+nbdetections);
+                imwrite(truc,src2);
+                inRange(src, 0, 250+nbdetections, src);
+                sprintf(truc, "truc%d_%d.png", PageNb, 250+nbdetections);
                 imwrite(truc,src);
-                printf("%d: %d\t", PageNb, nbdetections);*/
 
                 //Contours detection
                 vector<vector <Point> > contours;
