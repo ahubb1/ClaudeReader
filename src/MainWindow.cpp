@@ -293,7 +293,6 @@ void ExportCancel_cb(Fl_Widget* widget, void* param)
     //Give cancel signal to export doc
     exportdoc->Cancel();
 }
-
 //! Export the current document (as an images folder)
 void ExportDoc_cb(Fl_Widget* widget, void * param)
 {
@@ -565,6 +564,7 @@ void PreviousPage_cb(Fl_Widget* widget, void * param)
     int p=mw->Doc->PreviousPage();
     StatusBarUpdate(mw);
     //wait some time
+    Fl::check();
     Fl::wait(10);
     //If still the same page asked, load it, otherwise do nothing
     if(p==mw->Doc->GetCurrentPageNb())
@@ -577,14 +577,16 @@ void PreviousPage_cb(Fl_Widget* widget, void * param)
         mw->Display->SetImage(mw->Doc->Render());
         StatusBarUpdate(mw);
         Fl::check();
-        //and then preload the surrounding pages
-        mw->Doc->PreloadPages();
 
         //Update the thumbnails (if needed)
         if(mw->PrevDisplay->visible())
         {
             mw->PrevDisplay->SetImage(mw->Doc->ThumbnailsRender());
         }
+        Fl::check();
+
+        //and then preload the surrounding pages
+        mw->Doc->PreloadPages();
     }
 }
 //! Go to previous page (through Doc)
@@ -596,6 +598,7 @@ void NextPage_cb(Fl_Widget* widget, void * param)
     int p=mw->Doc->NextPage();
     StatusBarUpdate(mw);
     //wait some time
+    Fl::check();
     Fl::wait(10);
     //If still the same page asked, load it, otherwise do nothing
     if(p==mw->Doc->GetCurrentPageNb())
@@ -608,14 +611,16 @@ void NextPage_cb(Fl_Widget* widget, void * param)
         mw->Display->SetImage(mw->Doc->Render());
         StatusBarUpdate(mw);
         Fl::check();
-        //and then preload the surrounding pages
-        mw->Doc->PreloadPages();
 
         //Update the thumbnails (if needed)
         if(mw->PrevDisplay->visible())
         {
             mw->PrevDisplay->SetImage(mw->Doc->ThumbnailsRender());
         }
+        Fl::check();
+
+        //and then preload the surrounding pages
+        mw->Doc->PreloadPages();
     }
 }
 //! Go to next case (through Doc)
@@ -630,13 +635,13 @@ void PreviousCase_cb(Fl_Widget* widget, void * param)
     //If a new page has been loaded, preload
     if(ret<0)
     {
-        Fl::check();
-        mw->Doc->PreloadPages();
         //Update the thumbnails (if needed)
         if(mw->PrevDisplay->visible())
         {
             mw->PrevDisplay->SetImage(mw->Doc->ThumbnailsRender());
         }
+        Fl::check();
+        mw->Doc->PreloadPages();
     }
 }
 //! Go to previous case (through Doc)
@@ -651,13 +656,13 @@ void NextCase_cb(Fl_Widget* widget, void * param)
     //If a new page has been loaded, preload
     if(ret<0)
     {
-        Fl::check();
-        mw->Doc->PreloadPages();
         //Update the thumbnails (if needed)
         if(mw->PrevDisplay->visible())
         {
             mw->PrevDisplay->SetImage(mw->Doc->ThumbnailsRender());
         }
+        Fl::check();
+        mw->Doc->PreloadPages();
     }
 }
 //! Go to first page (through Doc)
@@ -1079,7 +1084,7 @@ MainWindow::MainWindow(const char *f)
                      Display = new Fl_OpenCV(MainDisplayGrp->x(), MainDisplayGrp->y(), MainDisplayGrp->w(), MainDisplayGrp->h());
 
                  //Navigation buttons
-                     NextButton = new Fl_Overlay_Arrow_Button(Display->x()+Display->w()-25, (int)(Display->y()), 25, Display->h(), "", 0, 0.8, 0.15, 0);
+                     NextButton = new Fl_Overlay_Arrow_Button(Display->x()+Display->w()-0.045*window->w(), (int)(Display->y()), 0.045*window->w(), Display->h(), "", 0, 0.8, 0.15, 0);
                      NextButton->color(fl_rgb_color(100, 100, 100));NextButton->selection_color(fl_rgb_color(245,245,200));
                      NextButton->callback(NextCase_cb, (void*)this);
                      //Prevent the widget to get the focus and thus prevent to use the arrow keys to
@@ -1088,19 +1093,19 @@ MainWindow::MainWindow(const char *f)
                      NextButton->clear_visible_focus();
                      NextButton->hide();
                      NextButton->tooltip("Next panel");
-                     PreviousButton = new Fl_Overlay_Arrow_Button(Display->x(), (int)(Display->y()), 25, Display->h(), "", 180, 0.8, 0.15, 0);
+                     PreviousButton = new Fl_Overlay_Arrow_Button(Display->x(), (int)(Display->y()), 0.045*window->w(), Display->h(), "", 180, 0.8, 0.15, 0);
                      PreviousButton->color(fl_rgb_color(100, 100, 100));PreviousButton->selection_color(fl_rgb_color(245,245,200));
                      PreviousButton->callback(PreviousCase_cb, (void*)this);
                      PreviousButton->clear_visible_focus();
                      PreviousButton->hide();
                      PreviousButton->tooltip("Previous panel");
-                     NextPageButton = new Fl_Overlay_Arrow_Button(Display->x(), (int)(Display->y()+Display->h()-35), Display->w(), 35, "", -90, 0.10, 0.8, 0);
+                     NextPageButton = new Fl_Overlay_Arrow_Button(Display->x(), (int)(Display->y()+Display->h()-0.045*window->h()), Display->w(), 0.045*window->h(), "", -90, 0.10, 0.8, 0);
                      NextPageButton->color(fl_rgb_color(100, 100, 100));NextPageButton->selection_color(fl_rgb_color(245,245,200));
                      NextPageButton->callback(NextPage_cb, (void*)this);
                      NextPageButton->clear_visible_focus();
                      NextPageButton->hide();
                      NextPageButton->tooltip("Next page");
-                     PreviousPageButton = new Fl_Overlay_Arrow_Button(Display->x(), (int)(Display->y()), Display->w(), 35, "", 90, 0.10, 0.8, 0);
+                     PreviousPageButton = new Fl_Overlay_Arrow_Button(Display->x(), (int)(Display->y()), Display->w(), 0.045*window->h(), "", 90, 0.10, 0.8, 0);
                      PreviousPageButton->color(fl_rgb_color(100, 100, 100));PreviousPageButton->selection_color(fl_rgb_color(245,245,200));
                      PreviousPageButton->callback(PreviousPage_cb, (void*)this);
                      PreviousPageButton->clear_visible_focus();
