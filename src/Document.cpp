@@ -211,7 +211,26 @@ void Document::PreloadPages()
     Close();
 }
 
+//! Reload the surrounding pages (previous and next): apply them the Document parameters
+//!(ReadingMode and Display ratio) and call DetectCases on it. An updating equivalent
+//!to PreloadPages().
+void Document::UpdatePreloadedPages()
+{
+    if(previousPage)
+    {
+        previousPage->SetReadingMode(ReadingMode);
+        previousPage->SetDisplayRatio(DisplayRatio);
+        previousPage->DetectCases();
+    }
+    if(nextPage)
+    {
+        nextPage->SetReadingMode(ReadingMode);
+        nextPage->SetDisplayRatio(DisplayRatio);
+        nextPage->DetectCases();
+    }
+}
 
+//! Return the current Page thumnails view: the whole page view.
 Mat *Document::ThumbnailsRender()
 {
     return ThumbnailsImgRender=currentPage->RenderPage();
@@ -289,18 +308,11 @@ void Document::SetReadingMode(READINGMODE val)
     //Set it to each pages and call the DetectCases() since its behaviour depends on the reading mode
     currentPage->SetReadingMode(ReadingMode);
     currentPage->DetectCases();
-    if(previousPage)
-    {
-        previousPage->SetReadingMode(ReadingMode);
-        previousPage->DetectCases();
-    }
-    if(nextPage)
-    {
-        nextPage->SetReadingMode(ReadingMode);
-        nextPage->DetectCases();
-    }
 }
 
+
+//! Apply a new display ratio to the current Page and call DetectCases() on it.
+//! \param val: the new aspect ratio.
 void Document::SetDisplayRatio(float val)
 {
     //Document value (strored for next pages)
@@ -309,16 +321,6 @@ void Document::SetDisplayRatio(float val)
     //Set it to each pages and call the DetectCases() since its behaviour depends on the reading mode
     currentPage->SetDisplayRatio(DisplayRatio);
     currentPage->DetectCases();
-    if(previousPage)
-    {
-        previousPage->SetDisplayRatio(DisplayRatio);
-        previousPage->DetectCases();
-    }
-    if(nextPage)
-    {
-        nextPage->SetDisplayRatio(DisplayRatio);
-        nextPage->DetectCases();
-    }
 }
 
 //! Change the Document page preview mode.

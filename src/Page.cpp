@@ -156,6 +156,8 @@ void SortAndMerge(vector<Rect> *CasesTmp, int counter)
 
 //---------------------------------------------------------------------------
 
+
+
 //! Virtual constructor of the page
 //!Initialize some values (common to all page types).
 Page::Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, float display_ratio)
@@ -218,13 +220,19 @@ void Page::DetectCases()
                 cvtColor(PageRenderCv, src, CV_BGR2GRAY);
                 inRange(src, 0, 210+nbdetections, src);
                 char truc[255];
-                /*Mat src2;
-                adaptiveThreshold(src, src, 250+nbdetections, ADAPTIVE_THRESH_GAUSSIAN_C, CV_THRESH_BINARY, 15, 0);
+                Mat src2;
+                /*adaptiveThreshold(src, src, 250+nbdetections, ADAPTIVE_THRESH_GAUSSIAN_C, CV_THRESH_BINARY, 15, 0);
                 sprintf(truc, "truc%d_%dB.png", PageNb, 250+nbdetections);
                 imwrite(truc,src2);
                 inRange(src, 0, 210+nbdetections, src);*/
-                sprintf(truc, "truc%d_%d.png", PageNb, 210+nbdetections);
+                //ID: faire un canny (la ou il y'a de l'info) mais apres un filtre gaussien (?) et ensuite les augmenter par convolution (remplir les cases) mais
+                //sans degager les espaces entre case...
+                /*sprintf(truc, "truc%d_%d.png", PageNb, 210+nbdetections);
                 imwrite(truc,src);
+                cvtColor(PageRenderCv, src2, CV_BGR2GRAY);
+                Canny(src2, src2, nbdetections, 255, 5, false);
+                sprintf(truc, "truc%d_%dB.png", PageNb, 210+nbdetections);
+                imwrite(truc,src2);*/
                 printf("%d:\n", nbdetections);
 
 
@@ -405,8 +413,8 @@ void Page::DetectCases()
                         gap_hori=min(gap_hori, CasesTmp[i].width);
                         gap_verti=min(gap_verti, CasesTmp[i].height);
                     }
-                    gap_hori=gap_hori/2.;
-                    gap_verti=gap_verti/2.;
+                    gap_hori=0.8*gap_hori;
+                    gap_verti=0.8*gap_verti;
 
 
                 //Create a cases tree to reprensent the page organization
@@ -415,7 +423,7 @@ void Page::DetectCases()
 
                 //Create (and fill) the tree
                     //First the root node: a band on the left of the covered part of the page
-                    CasesTree.insert(Rect(WithinRect.x, WithinRect.y, gap_hori/2., WithinRect.height));
+                    CasesTree.insert(Rect(WithinRect.x-gap_hori, WithinRect.y, gap_hori, WithinRect.height));
                     ntree<Rect>::prefix_iterator currentParentPre=CasesTree.prefix_begin();
 
                     while (CasesTmp.size()>0)
@@ -520,12 +528,15 @@ void Page::DetectCases()
                 ActiveCase=-1;
             }
         }
-    }//if not special pages
+    }
+    //if special page
     else
     {
         //If we are on first or last page, no case detectdion, so only case -1 exists
         ActiveCase=-1;
     }
+
+    printf("%d\n", NbCases);
 
     //Say the page is ready
     Loaded=true;

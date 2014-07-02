@@ -180,6 +180,12 @@ void ResizingEvents(void* param)
             mw->Doc->SetDisplayRatio(mw->Display->w()/(float)mw->Display->h());
             //And re-render
             mw->Doc->Render();
+            mw->DisplayGrp->redraw();
+
+            //Give some time to fltk
+            Fl::check();
+            //Update the preloaded pages
+            mw->Doc->UpdatePreloadedPages();
         }
     }
 }
@@ -485,6 +491,8 @@ void PageMode_cb(Fl_Widget* widget, void * param)
     mw->Doc->SetReadingMode(PAGE);
     mw->Display->SetImage(mw->Doc->Render());
     StatusBarUpdate(mw);
+    Fl::check();
+    mw->Doc->UpdatePreloadedPages();
 }
 //! Switch to strip reading mode
 void StripMode_cb(Fl_Widget* widget, void * param)
@@ -494,6 +502,8 @@ void StripMode_cb(Fl_Widget* widget, void * param)
     mw->Doc->SetReadingMode(STRIP);
     mw->Display->SetImage(mw->Doc->Render());
     StatusBarUpdate(mw);
+    Fl::check();
+    mw->Doc->UpdatePreloadedPages();
 }
 //! Switch to case reading mode
 void CaseMode_cb(Fl_Widget* widget, void * param)
@@ -503,6 +513,8 @@ void CaseMode_cb(Fl_Widget* widget, void * param)
     mw->Doc->SetReadingMode(CASE);
     mw->Display->SetImage(mw->Doc->Render());
     StatusBarUpdate(mw);
+    Fl::check();
+    mw->Doc->UpdatePreloadedPages();
 }
 
 //! Actvate/deactivate the page preview

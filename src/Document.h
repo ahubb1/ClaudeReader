@@ -48,6 +48,7 @@ class Document
         int LoadPage();
         int LoadPage(int p);
         void PreloadPages();
+        void UpdatePreloadedPages();
 
         int NextCase();
         int PreviousCase();
