@@ -164,6 +164,7 @@ Page::Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, float di
 {
     //Init values common to all type of pages
     Loaded=false;
+    DetectionFailed=false;
     ReadingMode=rd_mode;
     PreviewPage=page_p;
     DisplayRatio=display_ratio;
@@ -202,7 +203,7 @@ void Page::DetectCases()
     if(PageNb>1 && (NbPages-PageNb)>0)
     {
         //Only if we are in CASE mode
-        if(ReadingMode==CASE)
+        if(ReadingMode==CASE && !DetectionFailed!)
         {
             //List of Case
             vector<Rect> CasesTmp;
@@ -483,6 +484,8 @@ void Page::DetectCases()
             //If less than 2 cases (or the detection has failed)
             else
             {
+                DetectionFailed=true;
+
                 float idealStripHeight=(src.cols/(float)DisplayRatio);
                 if(idealStripHeight>src.rows)
                     idealStripHeight=src.rows;

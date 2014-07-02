@@ -77,6 +77,7 @@ class Page
         bool PreviewPage;
         int ActiveCase;
         bool Loaded;
+        bool DetectionFailed;
         float DisplayRatio;
 
         Mat PageRenderCv;
