@@ -203,7 +203,7 @@ void Page::DetectCases()
     if(PageNb>1 && (NbPages-PageNb)>0)
     {
         //Only if we are in CASE mode
-        if(ReadingMode==CASE && !DetectionFailed!)
+        if(ReadingMode==CASE && !DetectionFailed)
         {
             //List of Case
             vector<Rect> CasesTmp;
@@ -508,7 +508,7 @@ void Page::DetectCases()
         else
         {
             //If in STRIP mode
-            if(ReadingMode==STRIP)
+            if(ReadingMode==STRIP || DetectionFailed)
             {
                 float idealStripHeight=(PageRenderCv.cols/(float)DisplayRatio);
                 if(idealStripHeight>PageRenderCv.rows)
