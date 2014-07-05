@@ -535,12 +535,17 @@ void Page::DetectionStripCutting()
         idealStripHeight=PageRenderCv.rows;
     //Creation of cases depending on display size
     Cases.clear();
-    float decalage=19*PageRenderCv.rows/(PageRenderCv.rows-idealStripHeight);
-    for(int i=0; i<20; i++)
+    float decalage=PageRenderCv.rows/80.;
+    int nbcases=((decalage*(float)(PageRenderCv.rows-idealStripHeight))/(float)PageRenderCv.rows)+1;
+    for(int i=0; i<nbcases; i++)
     {
-        //Cases.push_back(Rect(0, i*src.rows/20., src.cols, src.rows*.4-1));
         Cases.push_back(Rect(0, i*PageRenderCv.rows/decalage, PageRenderCv.cols, idealStripHeight-1));
     }
+    //Compute the corresponding new active case
+    if(NbCases!=0 && ActiveCase>0)
+        ActiveCase=(int)(ActiveCase*(float)nbcases/(float)NbCases);
+
+    //Update the number of cases
     NbCases=Cases.size();
 }
 
