@@ -28,10 +28,11 @@
 				</Linker>
 			</Target>
 			<Target title="Win32">
-				<Option output="bin/Win32/BDReader.exe" prefix_auto="0" extension_auto="0" />
+				<Option output="bin/Win32/BDReader" prefix_auto="0" extension_auto="0" />
 				<Option object_output="obj/Win32/" />
-				<Option type="0" />
+				<Option type="1" />
 				<Option compiler="mingwi68632" />
+				<Option use_console_runner="0" />
 				<Option projectLinkerOptionsRelation="1" />
 				<Option projectLibDirsRelation="1" />
 				<Compiler>
@@ -47,7 +48,6 @@
 					<Add library="opencv_core247" />
 					<Add library="libmupdf.a" />
 					<Add library="libmupdf-js-none.a" />
-					<Add library="fltk_gl" />
 					<Add library="fltk_images" />
 					<Add library="fltk" />
 					<Add library="z" />
@@ -81,6 +81,7 @@
 			<Add library="opencv_core" />
 			<Add library="opencv_highgui" />
 			<Add library="opencv_imgproc" />
+			<Add library="fltk_images" />
 			<Add library="fltk" />
 			<Add library="Xft" />
 			<Add library="Xinerama" />
@@ -94,6 +95,8 @@
 		<Unit filename="src/Document_pdf.h" />
 		<Unit filename="src/Export_Document.cpp" />
 		<Unit filename="src/Export_Document.h" />
+		<Unit filename="src/Fl_Help_Window.cpp" />
+		<Unit filename="src/Fl_Help_Window.h" />
 		<Unit filename="src/Fl_OpenCV.cxx" />
 		<Unit filename="src/Fl_OpenCV.h" />
 		<Unit filename="src/Fl_Overlay_Arrow_Button.cxx" />

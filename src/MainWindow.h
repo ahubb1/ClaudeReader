@@ -36,10 +36,10 @@
 #include <FL/Fl_Menu_Bar.H>
 #include <FL/fl_message.H>
 #include <FL/Fl_Native_File_Chooser.H>
-#include <FL/Fl_Box.H>
-#include <FL/Fl_Help_Dialog.H>
+#include <FL/Fl_Pack.H>
 
 
+#include "Fl_Help_Window.h"
 #include "Fl_OpenCV.h"
 #include "Fl_Overlay_Arrow_Button.h"
 #include "Preferences.h"
@@ -82,6 +82,7 @@ class MainWindow
         friend void CaseMode_cb(Fl_Widget* widget, void * param);
         friend void PagePreview_cb(Fl_Widget* widget, void * param);
         friend void Thumbnails_cb(Fl_Widget* widget, void * param);
+        friend void UpdatePage(MainWindow* mw);
         friend void PreviousPage_cb(Fl_Widget* widget, void * param);
         friend void NextPage_cb(Fl_Widget* widget, void * param);
         friend void PreviousCase_cb(Fl_Widget* widget, void * param);
@@ -106,10 +107,11 @@ class MainWindow
     private:
         //FLTK param
             Fl_Double_Window *window;
+            Fl_Help_Window *HelpDlg;
             Fl_Menu_Bar *MenuBar;
             Fl_Box *StatusBar;
-            Fl_Group *DisplayGrp, *MainDisplayGrp, *PrevDisplayGrp;
-            Fl_OpenCV *Display, *PrevDisplay;
+            Fl_Group *DisplayGrp, *MainDisplayGrp, *ThumbDisplayGrp;
+            Fl_OpenCV *Display, *ThumbDisplayCurrent, *ThumbDisplayPrev, *ThumbDisplayNext;
             Fl_Button *PrevCloseButton;
             Fl_Overlay_Arrow_Button *NextButton, *PreviousButton, *NextPageButton, *PreviousPageButton;
 

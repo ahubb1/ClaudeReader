@@ -56,7 +56,10 @@ class Document
         int PreviousPage();
 
         Mat *Render() {return ImgRender=currentPage->RenderCase();}
-        Mat *ThumbnailsRender();
+        Mat *ThumbnailsRenderCurrent();
+        Mat *ThumbnailsRenderPrevious();
+        Mat *ThumbnailsRenderNext();
+
 
         char *GetFilename() {return Filename;}
         void SetReadingMode(READINGMODE val);
@@ -78,7 +81,7 @@ class Document
         float DisplayRatio;
     private:
         Mat *ImgRender;
-        Mat *ThumbnailsImgRender;
+        Mat *ThumbnailsImgRenderCurrent;
 };
 
 

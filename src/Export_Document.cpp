@@ -113,19 +113,19 @@ int Export_Document::Export()
             char longpagenb[5];
             if(Doc->GetCurrentPageNb()<10)
             {
-                sprintf(longpagenb, "000%d\0", Doc->GetCurrentPageNb());
+                sprintf(longpagenb, "000%d", Doc->GetCurrentPageNb());
             }
             else if(Doc->GetCurrentPageNb()<100)
             {
-                sprintf(longpagenb, "00%d\0", Doc->GetCurrentPageNb());
+                sprintf(longpagenb, "00%d", Doc->GetCurrentPageNb());
             }
             else if(Doc->GetCurrentPageNb()<1000)
             {
-                sprintf(longpagenb, "0%d\0", Doc->GetCurrentPageNb());
+                sprintf(longpagenb, "0%d", Doc->GetCurrentPageNb());
             }
             else
             {
-                sprintf(longpagenb, "%d\0", Doc->GetCurrentPageNb());
+                sprintf(longpagenb, "%d", Doc->GetCurrentPageNb());
             }
 
         //Load the document page
@@ -144,11 +144,11 @@ int Export_Document::Export()
                     //Append a 0 in front of case number if less than 10
                     if(casenb<10)
                     {
-                        sprintf(filename, "%s%s_%s0%d%s\0", PathToExport, BaseFilename, longpagenb, casenb, FilesExtension);
+                        sprintf(filename, "%s%s_%s0%d%s", PathToExport, BaseFilename, longpagenb, casenb, FilesExtension);
                     }
                     else
                     {
-                        sprintf(filename, "%s%s_%s%d%s\0", PathToExport, BaseFilename, longpagenb, casenb, FilesExtension);
+                        sprintf(filename, "%s%s_%s%d%s", PathToExport, BaseFilename, longpagenb, casenb, FilesExtension);
                     }
 
                     //Render
@@ -174,11 +174,11 @@ int Export_Document::Export()
                 char filename[2048];
                 if(PanelMode)
                 {
-                    sprintf(filename, "%s%s_%s00%s\0", PathToExport, BaseFilename, longpagenb, FilesExtension);
+                    sprintf(filename, "%s%s_%s00%s", PathToExport, BaseFilename, longpagenb, FilesExtension);
                 }
                 else
                 {
-                    sprintf(filename, "%s%s_%d%s\0", PathToExport, BaseFilename, Doc->GetCurrentPageNb(), FilesExtension);
+                    sprintf(filename, "%s%s_%d%s", PathToExport, BaseFilename, Doc->GetCurrentPageNb(), FilesExtension);
                 }
 
                 //Render

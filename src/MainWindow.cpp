@@ -204,11 +204,21 @@ void StatusBarUpdate(void * param)
       {
           if(mw->Doc->GetReadingMode()==CASE)
           {
-                sprintf(text, "Page %d/%d (Panel %d/%d)", mw->Doc->GetCurrentPageNb(), mw->Doc->GetNbOfPages(), mw->Doc->currentPage->GetActiveCase()+1, mw->Doc->currentPage->GetNbCases());
+                sprintf(text, "PANEL\t\tPage %d/%d (Panel %d/%d)", mw->Doc->GetCurrentPageNb(), mw->Doc->GetNbOfPages(), mw->Doc->currentPage->GetActiveCase()+1, mw->Doc->currentPage->GetNbCases());
           }
           else
           {
-                sprintf(text, "Page %d/%d", mw->Doc->GetCurrentPageNb(), mw->Doc->GetNbOfPages());
+                if(mw->Doc->GetReadingMode()==STRIP)
+                {
+                     sprintf(text, "STRIP\t\t\t");
+                }
+                else
+                {
+                     sprintf(text, "PAGE\t\t");
+                }
+
+                sprintf(text, "%sPage %d/%d", text , mw->Doc->GetCurrentPageNb(), mw->Doc->GetNbOfPages());
+
           }
       }
       else
@@ -354,13 +364,13 @@ void ExportDoc_cb(Fl_Widget* widget, void * param)
             switch(formatchoice)
             {
                 case 0:
-                    sprintf(fileext, ".jpg\0");
+                    sprintf(fileext, ".jpg");
                     break;
                 case 1:
-                    sprintf(fileext, ".png\0");
+                    sprintf(fileext, ".png");
                     break;
                 case 2:
-                    sprintf(fileext, ".bmp\0");
+                    sprintf(fileext, ".bmp");
                     break;
                 default:
                     sprintf(fileext, ".jpg\0");
@@ -541,11 +551,11 @@ void Thumbnails_cb(Fl_Widget* widget, void * param)
     MainWindow *mw=(MainWindow*)param;
 
     //Show or hide according to the current state
-    if(mw->PrevDisplayGrp->visible())
+    if(mw->ThumbDisplayGrp->visible())
     {
         //hide it
-        mw->PrevDisplayGrp->hide();
-        mw->DisplayGrp->remove(mw->PrevDisplayGrp);
+        mw->ThumbDisplayGrp->hide();
+        mw->DisplayGrp->remove(mw->ThumbDisplayGrp);
         //and resize the main display to take the full space
         mw->MainDisplayGrp->resize(mw->DisplayGrp->x(), mw->DisplayGrp->y(), mw->DisplayGrp->w(), mw->DisplayGrp->h());
         Fl::wait(10);
@@ -555,19 +565,46 @@ void Thumbnails_cb(Fl_Widget* widget, void * param)
     else
     {
         //show it (resize before: window size can have changed)
-        mw->PrevDisplayGrp->resize(mw->DisplayGrp->x(), mw->DisplayGrp->y(), mw->DisplayGrp->w()/5., mw->DisplayGrp->h());
-        mw->PrevDisplayGrp->show();
-        mw->DisplayGrp->add(mw->PrevDisplayGrp);
+        mw->ThumbDisplayGrp->resize(mw->DisplayGrp->x(), mw->DisplayGrp->y(), mw->DisplayGrp->w()/5., mw->DisplayGrp->h());
+        mw->ThumbDisplayGrp->show();
+        mw->DisplayGrp->add(mw->ThumbDisplayGrp);
         //and reduce the size of the main display
-        mw->MainDisplayGrp->resize(mw->DisplayGrp->x()+mw->PrevDisplayGrp->w(), mw->DisplayGrp->y(), mw->DisplayGrp->w()*4/5., mw->DisplayGrp->h());
-        mw->PrevDisplayGrp->redraw();
+        mw->MainDisplayGrp->resize(mw->DisplayGrp->x()+mw->ThumbDisplayGrp->w(), mw->DisplayGrp->y(), mw->DisplayGrp->w()*4/5., mw->DisplayGrp->h());
+        //Update the image
+        if(mw->Doc)
+            mw->ThumbDisplayCurrent->SetImage(mw->Doc->ThumbnailsRenderCurrent());
+        mw->ThumbDisplayGrp->redraw();
         //Update the menu item state if needed
         ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Thumbnails view"))->set();
         Fl::wait(100);
     }
 }
 
-//! Go to next page (through Doc)
+//! Update the current view (Display, status bar, thumbnails...) and preload
+//!Called when a new page should be displayed.
+void UpdatePage(MainWindow *mw)
+{
+    //Update the main display
+    mw->Display->SetImage(mw->Doc->Render());
+
+    //Update the status bar
+    StatusBarUpdate(mw);
+    Fl::check();
+
+    //Preload the surrounding pages
+    mw->Doc->PreloadPages();
+
+    //Update the thumbnails (if needed)
+    if(mw->ThumbDisplayGrp->visible())
+    {
+        mw->ThumbDisplayCurrent->SetImage(mw->Doc->ThumbnailsRenderCurrent());
+        mw->ThumbDisplayPrev->SetImage(mw->Doc->ThumbnailsRenderPrevious());
+        mw->ThumbDisplayNext->SetImage(mw->Doc->ThumbnailsRenderNext());
+    }
+    Fl::check();
+}
+
+//! Go to previous page (through Doc)
 void PreviousPage_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
@@ -585,23 +622,12 @@ void PreviousPage_cb(Fl_Widget* widget, void * param)
         {
             fl_alert("Unable to access the document. Try to reopen it.");
         }
+
         //Update everything
-        mw->Display->SetImage(mw->Doc->Render());
-        StatusBarUpdate(mw);
-        Fl::check();
-
-        //Update the thumbnails (if needed)
-        if(mw->PrevDisplay->visible())
-        {
-            mw->PrevDisplay->SetImage(mw->Doc->ThumbnailsRender());
-        }
-        Fl::check();
-
-        //and then preload the surrounding pages
-        mw->Doc->PreloadPages();
+        UpdatePage(mw);
     }
 }
-//! Go to previous page (through Doc)
+//! Go to next page (through Doc)
 void NextPage_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
@@ -619,23 +645,12 @@ void NextPage_cb(Fl_Widget* widget, void * param)
         {
             fl_alert("Unable to access the document. Try to reopen it.");
         }
+
         //Update everything
-        mw->Display->SetImage(mw->Doc->Render());
-        StatusBarUpdate(mw);
-        Fl::check();
-
-        //Update the thumbnails (if needed)
-        if(mw->PrevDisplay->visible())
-        {
-            mw->PrevDisplay->SetImage(mw->Doc->ThumbnailsRender());
-        }
-        Fl::check();
-
-        //and then preload the surrounding pages
-        mw->Doc->PreloadPages();
+        UpdatePage(mw);
     }
 }
-//! Go to next case (through Doc)
+//! Go to previous case (through Doc)
 void PreviousCase_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
@@ -647,16 +662,11 @@ void PreviousCase_cb(Fl_Widget* widget, void * param)
     //If a new page has been loaded, preload
     if(ret<0)
     {
-        //Update the thumbnails (if needed)
-        if(mw->PrevDisplay->visible())
-        {
-            mw->PrevDisplay->SetImage(mw->Doc->ThumbnailsRender());
-        }
-        Fl::check();
-        mw->Doc->PreloadPages();
+        //Update everything
+        UpdatePage(mw);
     }
 }
-//! Go to previous case (through Doc)
+//! Go to next case (through Doc)
 void NextCase_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
@@ -668,13 +678,8 @@ void NextCase_cb(Fl_Widget* widget, void * param)
     //If a new page has been loaded, preload
     if(ret<0)
     {
-        //Update the thumbnails (if needed)
-        if(mw->PrevDisplay->visible())
-        {
-            mw->PrevDisplay->SetImage(mw->Doc->ThumbnailsRender());
-        }
-        Fl::check();
-        mw->Doc->PreloadPages();
+        //Update everything
+        UpdatePage(mw);
     }
 }
 //! Go to first page (through Doc)
@@ -686,18 +691,9 @@ void FirstPage_cb(Fl_Widget* widget, void * param)
     {
         fl_alert("Unable to access the document. Try to reopen it.");
     }
-    //Update everything
-    mw->Display->SetImage(mw->Doc->Render());
-    StatusBarUpdate(mw);
-    Fl::check();
-    //and then preload the surrounding pages
-    mw->Doc->PreloadPages();
 
-    //Update the thumbnails (if needed)
-    if(mw->PrevDisplay->visible())
-    {
-        mw->PrevDisplay->SetImage(mw->Doc->ThumbnailsRender());
-    }
+    //Update everything
+    UpdatePage(mw);
 }
 //! Go to last page (through Doc)
 void LastPage_cb(Fl_Widget* widget, void * param)
@@ -708,18 +704,9 @@ void LastPage_cb(Fl_Widget* widget, void * param)
     {
         fl_alert("Unable to access the document. Try to reopen it.");
     }
-    //Update everything
-    mw->Display->SetImage(mw->Doc->Render());
-    StatusBarUpdate(mw);
-    Fl::check();
-    //and then preload the surrounding pages
-    mw->Doc->PreloadPages();
 
-    //Update the thumbnails (if needed)
-    if(mw->PrevDisplay->visible())
-    {
-        mw->PrevDisplay->SetImage(mw->Doc->ThumbnailsRender());
-    }
+    //Update everything
+    UpdatePage(mw);
 }
 //! Go to a given page, choosen by the user through an Fl_input window
 void GoToPage_cb(Fl_Widget* widget, void * param)
@@ -728,7 +715,7 @@ void GoToPage_cb(Fl_Widget* widget, void * param)
 
     //Ask the user which page he wants to go to:
     char disp[5];
-    sprintf(disp, "%d\0", mw->Doc->GetCurrentPageNb());
+    sprintf(disp, "%d", mw->Doc->GetCurrentPageNb());
     const char *ret=fl_input("Go to page: ", disp);
     //If not Cancel
     if(ret!=NULL)
@@ -746,18 +733,9 @@ void GoToPage_cb(Fl_Widget* widget, void * param)
             {
                 fl_alert("Unable to access the document. Try to reopen it.");
             }
-            //Update everything
-            mw->Display->SetImage(mw->Doc->Render());
-            StatusBarUpdate(mw);
-            Fl::check();
-            //and then preload the surrounding pages
-            mw->Doc->PreloadPages();
 
-            //Update the thumbnails (if needed)
-            if(mw->PrevDisplay->visible())
-            {
-                mw->PrevDisplay->SetImage(mw->Doc->ThumbnailsRender());
-            }
+            //Update everything
+            UpdatePage(mw);
         }
     }
 }
@@ -840,7 +818,7 @@ void AddRecentDocsItems(void *param)
             sprintf(tmp, "&File/Recent files/");
             //Copy the string and replace '\' by '\\' for windows style files paths
             int n_d=strlen(tmp);
-            for(int n_s=0; n_s<strlen(mw->Pref->GetRecentDocs(i)); n_s++)
+            for(unsigned int n_s=0; n_s<strlen(mw->Pref->GetRecentDocs(i)); n_s++)
             {
                 if(mw->Pref->GetRecentDocs(i)[n_s]=='\\')
                 {
@@ -870,10 +848,11 @@ void AddRecentDocsItems(void *param)
 //! Show a help information window
 void Help_cb(Fl_Widget* widget, void * param)
 {
-    //MainWindow *mw=(MainWindow*)param;
+    MainWindow *mw=(MainWindow*)param;
 
-    fl_message_title("Help");
-    fl_message(HELP_STRING);
+    /*fl_message_title("Help");
+    fl_message(HELP_STRING);*/
+    mw->HelpDlg->show();
 }
 //! Show the about information window
 void About_cb(Fl_Widget* widget, void * param)
@@ -923,17 +902,20 @@ void UpdateWidgets(void * param)
     }
 
     //Thumbnails view
-    if(localPref->GetThumbnails())
+    if(mw->Doc)
     {
-        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Thumbnails view"))->set();
-    }
-    else
-    {
-        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Thumbnails view"))->clear();
-    }
-    if(localPref->GetThumbnails()!=mw->PrevDisplayGrp->visible())
-    {
-        Thumbnails_cb(mw->DisplayGrp, mw);
+        if(localPref->GetThumbnails())
+        {
+            ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Thumbnails view"))->set();
+        }
+        else
+        {
+            ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Thumbnails view"))->clear();
+        }
+        if(localPref->GetThumbnails()!=mw->ThumbDisplayGrp->visible())
+        {
+            Thumbnails_cb(mw->DisplayGrp, mw);
+        }
     }
 
     //The preferences preferences (!): use the global ones for these
@@ -974,7 +956,7 @@ void Window_cb(Fl_Widget* widget, void * param)
             mw->Pref->SetWinY(mw->window->y());
          }
          //The thumbnails view
-         mw->Pref->SetThumbnails(mw->PrevDisplayGrp->visible());
+         mw->Pref->SetThumbnails(mw->ThumbDisplayGrp->visible());
          //The preferences preferences
          mw->Pref->SetSavePref(((Fl_Menu_Item*)mw->MenuBar->find_item("&Preferences/Save preferences"))->value());
          mw->Pref->SetLocalPref(((Fl_Menu_Item*)mw->MenuBar->find_item("&Preferences/Use documents preferences"))->value());
@@ -984,13 +966,19 @@ void Window_cb(Fl_Widget* widget, void * param)
          if(mw->PrefDoc)
          {
              //The thumbnails view
-             mw->PrefDoc->SetThumbnails(mw->PrevDisplayGrp->visible());
+             mw->PrefDoc->SetThumbnails(mw->ThumbDisplayGrp->visible());
              //Write to pref file
              mw->PrefDoc->Save(mw->Doc);
          }
 
-     //Close the window
+     //Close the main window
      mw->window->hide();
+     //Close other windows if some (Help)
+     Fl_Widget * toclose;
+     while(toclose=Fl::first_window())
+     {
+        toclose->hide();
+     }
 }
 
 
@@ -1076,18 +1064,28 @@ MainWindow::MainWindow(const char *f)
             DisplayGrp->begin();
 
                 //Sub group containing the preview thumbnails and the separator
-                PrevDisplayGrp = new Fl_Group(DisplayGrp->x(), DisplayGrp->y(), DisplayGrp->w()/5., DisplayGrp->h());
-                PrevDisplayGrp->begin();
+                ThumbDisplayGrp = new Fl_Group(DisplayGrp->x(), DisplayGrp->y(), DisplayGrp->w()/6., DisplayGrp->h());
+                ThumbDisplayGrp->begin();
                  //Thumbnails display
-                     PrevDisplay = new Fl_OpenCV(PrevDisplayGrp->x(), PrevDisplayGrp->y(), PrevDisplayGrp->w()-5, PrevDisplayGrp->h());
+                     //ThumbDisplayCurrent = new Fl_OpenCV(ThumbDisplayGrp->x(), ThumbDisplayGrp->y(), ThumbDisplayGrp->w()-5, ThumbDisplayGrp->h());
+                     ThumbDisplayPrev = new Fl_OpenCV(ThumbDisplayGrp->x(), ThumbDisplayGrp->y(), ThumbDisplayGrp->w()-5, ThumbDisplayGrp->h()/3.-4);
+                     ThumbDisplayCurrent = new Fl_OpenCV(ThumbDisplayGrp->x(), ThumbDisplayPrev->y()+ThumbDisplayPrev->h()+6, ThumbDisplayGrp->w()-5, ThumbDisplayGrp->h()/3.-4);
+                     ThumbDisplayNext = new Fl_OpenCV(ThumbDisplayGrp->x(), ThumbDisplayCurrent->y()+ThumbDisplayCurrent->h()+6, ThumbDisplayGrp->w()-5, ThumbDisplayGrp->h()/3.-4);
+                     ThumbDisplayPrev->color(FL_BLACK);ThumbDisplayCurrent->color(FL_BLACK);ThumbDisplayNext->color(FL_BLACK);
+                 //Horizontal separators
+                     Fl_Box *separator1 = new Fl_Box(FL_FLAT_BOX, ThumbDisplayGrp->x(), ThumbDisplayPrev->y()+ThumbDisplayPrev->h(), ThumbDisplayGrp->w()-5, 6, "");
+                     separator1->color(FL_BLACK);
+                     Fl_Box *separator2 = new Fl_Box(FL_FLAT_BOX, ThumbDisplayGrp->x(), ThumbDisplayCurrent->y()+ThumbDisplayCurrent->h(), ThumbDisplayGrp->w()-5, 6, "");
+                     separator2->color(FL_BLACK);
                  //Close button
-                     PrevCloseButton = new Fl_Button(PrevDisplay->x()+PrevDisplay->w()-20, PrevDisplay->y(), 20, 20, "X");
+                     PrevCloseButton = new Fl_Button(ThumbDisplayGrp->x()+ThumbDisplayGrp->w()-25, ThumbDisplayGrp->y(), 20, 20, "X");
                      PrevCloseButton->clear_visible_focus();
                      PrevCloseButton->color(FL_BLACK);PrevCloseButton->labelcolor(FL_WHITE);PrevCloseButton->selection_color(FL_WHITE);PrevCloseButton->box(FL_FLAT_BOX);
                      PrevCloseButton->callback(Thumbnails_cb, (void*)this);
-                 //Separator
-                     Fl_Box *separator = new Fl_Box(FL_PLASTIC_UP_BOX, PrevDisplay->x()+PrevDisplay->w(), PrevDisplay->y(), 5, PrevDisplay->h(), "");
-                 PrevDisplayGrp->end();
+                 //Vertical Separator
+                     Fl_Box *separator = new Fl_Box(FL_PLASTIC_UP_BOX, ThumbDisplayGrp->x()+ThumbDisplayGrp->w()-5, ThumbDisplayGrp->y(), 5, ThumbDisplayGrp->h(), "");
+                 ThumbDisplayGrp->end();
+                 ThumbDisplayGrp->color(FL_BLACK);
 
                  //Sub group containing the main display and the navigation buttons
                  MainDisplayGrp = new Fl_Group(DisplayGrp->x(), DisplayGrp->y(), DisplayGrp->w(), DisplayGrp->h());
@@ -1127,8 +1125,8 @@ MainWindow::MainWindow(const char *f)
 
             DisplayGrp->end();
             //Hide the thumbnails (will be displayed at document opening if preferences say so)
-            PrevDisplayGrp->hide();
-            DisplayGrp->remove(PrevDisplayGrp);
+            ThumbDisplayGrp->hide();
+            DisplayGrp->remove(ThumbDisplayGrp);
 
 
          //Status bar
@@ -1165,9 +1163,13 @@ MainWindow::MainWindow(const char *f)
          //Default title for message windows
          fl_message_title_default("BDReader");
 
-         //TODO: Remember the page nb for each recent documents in preferences and the window size
          //TODO: Gerer les bds en suites d'images (folders)
     window->end();
+
+    //Initialize help window
+    HelpDlg= new Fl_Help_Window(500, 400, "Help");
+    HelpDlg->value(HELP_STRING_HTML);
+    HelpDlg->hide();
 
 
     //Initialize the window and Document
@@ -1225,14 +1227,14 @@ void MainWindow::Init(char *filename)
                 Pref->SetWinX(window->x());
                 Pref->SetWinY(window->y());
             }
-            Pref->SetThumbnails(PrevDisplayGrp->visible());
+            Pref->SetThumbnails(ThumbDisplayGrp->visible());
             Pref->SetSavePref(((Fl_Menu_Item*)MenuBar->find_item("&Preferences/Save preferences"))->value());
             Pref->SetLocalPref(((Fl_Menu_Item*)MenuBar->find_item("&Preferences/Use documents preferences"))->value());
             Pref->Save(Doc);
             //Doc relative pref
             if(PrefDoc)
             {
-                PrefDoc->SetThumbnails(PrevDisplayGrp->visible());
+                PrefDoc->SetThumbnails(ThumbDisplayGrp->visible());
                 PrefDoc->Save(Doc);
             }
         }
@@ -1301,34 +1303,22 @@ void MainWindow::Init(char *filename)
                     PrefDoc->Load(filenameshort);
                 }
 
-
-            //Get the image to draw
-            Display->SetImage(Doc->Render());
-
-            //Set the thumbnails (if needed)
-            PrevDisplay->SetImage(Doc->ThumbnailsRender());
-
             //Set the display ratio
             Doc->SetDisplayRatio(Display->w()/(float)Display->h());
 
             //Update the widgets according to these preferences (should be done after the preview displayed has been updated)
             UpdateWidgets((void*)this);
 
-
             //Change the window title
             char title[1060];
             sprintf(title, "BDReader - %s", Filename);
             window->label(title);
 
-            //Update status bar
-            StatusBarUpdate(this);
-
             //Activate menus
             ActivateNavigationWidgets(this, true);
 
-            //Preload the surrounding pages
-            Fl::check();
-            Doc->PreloadPages();
+            //Update everything
+            UpdatePage(this);
         }
         //if the document couldn't be openned
         else

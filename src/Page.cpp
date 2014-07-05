@@ -220,9 +220,9 @@ void Page::DetectCases()
                 //To binary
                 cvtColor(PageRenderCv, src, CV_BGR2GRAY);
                 inRange(src, 0, 210+nbdetections, src);
-                char truc[255];
+                /*char truc[255];
                 Mat src2;
-                /*adaptiveThreshold(src, src, 250+nbdetections, ADAPTIVE_THRESH_GAUSSIAN_C, CV_THRESH_BINARY, 15, 0);
+                adaptiveThreshold(src, src, 250+nbdetections, ADAPTIVE_THRESH_GAUSSIAN_C, CV_THRESH_BINARY, 15, 0);
                 sprintf(truc, "truc%d_%dB.png", PageNb, 250+nbdetections);
                 imwrite(truc,src2);
                 inRange(src, 0, 210+nbdetections, src);*/
@@ -322,7 +322,7 @@ void Page::DetectCases()
                     rectangle(testCoveredArea, CasesTmp[0], cvScalar(255), -1);
                     Rect withinRect(CasesTmp[0]); //Initilaize as the first case
                     int coveredArea=CasesTmp[0].width*CasesTmp[0].height;
-                    for(int i = 1; i < CasesTmp.size(); i++ )
+                    for(unsigned int i = 1; i < CasesTmp.size(); i++ )
                     {
                         //do it by merging all the rectangles
                         Merge(&withinRect, CasesTmp[i]);
@@ -392,7 +392,7 @@ void Page::DetectCases()
                 {
                     detectionFailed=true;
                 }
-                nbdetections+=2;
+                nbdetections+=3;
             }
 
             printf("OK: %d---------------\n\n", CasesTmp.size());
@@ -599,19 +599,27 @@ int Page::SetActiveCase(int val)
 //! \return A pointer on the valid ImgRender cv::Mat
 Mat * Page::RenderCase()
 {
-    //Render the whole page
-    if(ActiveCase==-1 || ReadingMode==PAGE)
+    //If the detction has been done
+    if(Loaded)
     {
-        ImgRender.release();
-        PageRenderCv.copyTo(ImgRender);
+        //Render the whole page
+        if(ActiveCase==-1 || ReadingMode==PAGE)
+        {
+            ImgRender.release();
+            PageRenderCv.copyTo(ImgRender);
+        }
+        //or the active case
+        else
+        {
+            ImgRender.release();
+            (PageRenderCv(Cases[ActiveCase])).copyTo(ImgRender);
+        }
+        return &ImgRender;
     }
-    //or the active case
     else
     {
-        ImgRender.release();
-        (PageRenderCv(Cases[ActiveCase])).copyTo(ImgRender);
+        return NULL;
     }
-    return &ImgRender;
 }
 
 //! Update the page rendering (whole page).

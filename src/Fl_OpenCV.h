@@ -13,9 +13,12 @@ Modified by Vincent Crocher - 2014
 #ifndef Fl_OpenCV_H
 #define Fl_OpenCV_H
 
+#include <FL/Fl.H>
+#include <FL/fl_draw.H>
 #include <FL/Fl_Widget.H>
 #include <FL/fl_ask.H>
 #include <opencv2/opencv.hpp>
+
 
 using namespace cv;
 

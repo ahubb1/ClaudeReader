@@ -231,9 +231,30 @@ void Document::UpdatePreloadedPages()
 }
 
 //! Return the current Page thumnails view: the whole page view.
-Mat *Document::ThumbnailsRender()
+Mat *Document::ThumbnailsRenderCurrent()
 {
-    return ThumbnailsImgRender=currentPage->RenderPage();
+    return ThumbnailsImgRenderCurrent=currentPage->RenderPage();
+}
+
+//! Return the previous Page thumnails view (if exists, NULL otherwise): the whole page view.
+Mat *Document::ThumbnailsRenderPrevious()
+{
+    if(previousPage)
+    {
+        return previousPage->RenderPage();
+    }
+
+    return NULL;
+}
+
+//! Return the next Page thumnails view (if exists, NULL otherwise): the whole page view.
+Mat *Document::ThumbnailsRenderNext()
+{
+    if(nextPage)
+    {
+        return nextPage->RenderPage();
+    }
+    return NULL;
 }
 
 
