@@ -53,6 +53,8 @@ Document::~Document()
         delete previousPage;
 }
 
+
+
 //! Load the page designated by the ActivePage variable.
 //!Basically make a call to the LoadPage(int p) method with the ActivePage value
 //!in parameter.
@@ -230,6 +232,8 @@ void Document::UpdatePreloadedPages()
     }
 }
 
+
+
 //! Return the current Page thumnails view: the whole page view.
 Mat *Document::ThumbnailsRenderCurrent()
 {
@@ -256,6 +260,7 @@ Mat *Document::ThumbnailsRenderNext()
     }
     return NULL;
 }
+
 
 
 //! Go to the next case of the page, or to next page if no more case.
@@ -318,6 +323,8 @@ int Document::PreviousPage()
     return ActivePage;
 }
 
+
+
 //! Change the Document reading mode and apply it to the linked Pages.
 //!In order to properly re-set the reading mode to each pages (current, previous and
 //! next), the DetectCases() is called for each of them.
@@ -331,7 +338,6 @@ void Document::SetReadingMode(READINGMODE val)
     currentPage->DetectCases();
     currentPage->SetActiveCase(0);
 }
-
 
 //! Apply a new display ratio to the current Page and call DetectCases() on it.
 //! \param val: the new aspect ratio.

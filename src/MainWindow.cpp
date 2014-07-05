@@ -572,7 +572,12 @@ void Thumbnails_cb(Fl_Widget* widget, void * param)
         mw->MainDisplayGrp->resize(mw->DisplayGrp->x()+mw->ThumbDisplayGrp->w(), mw->DisplayGrp->y(), mw->DisplayGrp->w()*4/5., mw->DisplayGrp->h());
         //Update the image
         if(mw->Doc)
-            mw->ThumbDisplayCurrent->SetImage(mw->Doc->ThumbnailsRenderCurrent());
+        {
+             mw->ThumbDisplayCurrent->SetImage(mw->Doc->ThumbnailsRenderCurrent());
+             mw->ThumbDisplayPrev->SetImage(mw->Doc->ThumbnailsRenderPrevious());
+             mw->ThumbDisplayNext->SetImage(mw->Doc->ThumbnailsRenderNext());
+        }
+
         mw->ThumbDisplayGrp->redraw();
         //Update the menu item state if needed
         ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Thumbnails view"))->set();

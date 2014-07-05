@@ -49,6 +49,7 @@ class Page
         ~Page();
 
         void DetectCases();
+
         Mat * RenderCase();
         Mat * RenderPage();
 
@@ -65,6 +66,12 @@ class Page
         void SetReadingMode(READINGMODE val) {ReadingMode=val;}
         bool IsLoaded() {return Loaded;}
         void SetDisplayRatio(float val) {DisplayRatio=val;};
+
+    private:
+        void DetectionDetect(vector<Rect> *CasesTmp, Mat* src);
+        bool DetectionCheck(vector<Rect> *CasesTmp, Mat* src, int nbdetections);
+        void DetectionOrganize(vector<Rect> *CasesTmp, Mat* src);
+        void DetectionStripCutting();
 
 
     protected:

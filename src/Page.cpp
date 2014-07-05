@@ -192,6 +192,7 @@ Page::~Page()
 }
 
 
+
 //! Detect and order the cases on the page.
 //!A real detection is done if in CASE or PAGE mode, or a strip cutting is done if
 //!in STRIP mode. If the cases detection failed, a default strip cutting is done.
@@ -200,350 +201,347 @@ Page::~Page()
 void Page::DetectCases()
 {
     //If we are not on special pages (first or last one)
+    bool specialPage=true;
     if(PageNb>1 && (NbPages-PageNb)>0)
     {
-        //Only if we are in CASE mode
-        if(ReadingMode==CASE && !DetectionFailed)
-        {
-            //List of Case
-            vector<Rect> CasesTmp;
-            //Binary image
-            Mat src;
-            //Try the detection several times (if it's failed) with a different range of "white" detection
-            bool detectionFailed=true;
-            int nbdetections=0;
-            printf("------ %d:\n", PageNb);
-            while(detectionFailed && nbdetections<43)
-            {
-                detectionFailed=false;
-
-                //To binary
-                cvtColor(PageRenderCv, src, CV_BGR2GRAY);
-                inRange(src, 0, 210+nbdetections, src);
-                /*char truc[255];
-                Mat src2;
-                adaptiveThreshold(src, src, 250+nbdetections, ADAPTIVE_THRESH_GAUSSIAN_C, CV_THRESH_BINARY, 15, 0);
-                sprintf(truc, "truc%d_%dB.png", PageNb, 250+nbdetections);
-                imwrite(truc,src2);
-                inRange(src, 0, 210+nbdetections, src);*/
-                //ID: faire un canny (la ou il y'a de l'info) mais apres un filtre gaussien (?) et ensuite les augmenter par convolution (remplir les cases) mais
-                //sans degager les espaces entre case...
-                /*sprintf(truc, "truc%d_%d.png", PageNb, 210+nbdetections);
-                imwrite(truc,src);
-                cvtColor(PageRenderCv, src2, CV_BGR2GRAY);
-                Canny(src2, src2, nbdetections, 255, 5, false);
-                sprintf(truc, "truc%d_%dB.png", PageNb, 210+nbdetections);
-                imwrite(truc,src2);*/
-                printf("%d:\n", nbdetections);
-
-
-                /*--------------------------------------------DETECT---------------------------------------------------------*/
-                //Contours detection
-                vector<vector <Point> > contours;
-                vector<Vec4i> hierarchy;
-                findContours( src, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE );
-
-                //Rectangle bounding box for each contour found
-                for( int i = contours.size()-1; i >-1; i-- )
-                {
-                   CasesTmp.push_back(boundingRect( contours[i] ));
-                }
-
-                //Remove according to ratio perimeter/area (keep only rectangles) ???
-                /*approxPolyDP(Mat(contours[i]), approx, arcLength(Mat(contours[i]), true)*0.02, true);
-                   printf("%f\n", matchShapes( approx, contours[i], CV_CONTOURS_MATCH_I1, .0));*/
-
-                //Remove the too LARGE ones (covering almost the whole page: more than 65%)
-                for(unsigned int i = 0; i < CasesTmp.size(); i++ )
-                {
-                    if((CasesTmp[i].width*CasesTmp[i].height)>(0.65*src.rows*src.cols))
-                    {
-                        CasesTmp.erase(CasesTmp.begin()+i);
-                        i--;
-                    }
-                }
-
-                //Sort the cases by size and merge them if overlaping
-                SortAndMerge(&CasesTmp, 0);
-
-
-                //Remove the too small ones (noise)
-                for(unsigned int i = 0; i < CasesTmp.size(); i++ )
-                {
-                    if((CasesTmp[i].width*CasesTmp[i].height)<(0.01*src.rows*src.cols))
-                    {
-                        CasesTmp.erase(CasesTmp.begin()+i);
-                        i--;
-                    }
-                }
-
-                //Merge cases between 0.01 and 0.04 to their closest one
-                for(unsigned int i = 0; i < CasesTmp.size(); i++ )
-                {
-                    if((CasesTmp[i].width*CasesTmp[i].height)<(0.04*src.rows*src.cols))
-                    {
-                        //Find the closest one
-                        int mind=src.rows*src.cols; //init to some huge number
-                        int closest=-1;
-                        for(unsigned int k = 0; k < CasesTmp.size(); k++ )
-                        {
-                            if(i!=k)
-                            {
-                                int d=Distance(CasesTmp[i], CasesTmp[k]);
-                                if(d<mind)
-                                {
-                                    mind=d;
-                                    closest=k;
-                                }
-                            }
-                        }
-                        //Merge
-                        if(closest!=-1)
-                        {
-                            Merge(&CasesTmp[closest], CasesTmp[i]);
-                            CasesTmp.erase(CasesTmp.begin()+i);
-                            i--;
-                        }
-                    }
-                }
-
-                //Sort the cases by size and merge them if overlaping: done again because sizes and overlapping could have changed
-                SortAndMerge(&CasesTmp, 0);
-                /*-----------------------------------------------------------------------------------------------------------*/
-
-
-                /*-------------------------------------------CHECK-----------------------------------------------------------*/
-                //Check if parts of the page not covered
-                if(CasesTmp.size()>0)
-                {
-                    //Compute the "within area": the extreme total area covered by the detected cases and sum the actual cases areas
-                    Mat testCoveredArea; //Image representing the covered area in white
-                    cvtColor(PageRenderCv, testCoveredArea, CV_BGR2GRAY);
-                    rectangle(testCoveredArea, CasesTmp[0], cvScalar(255), -1);
-                    Rect withinRect(CasesTmp[0]); //Initilaize as the first case
-                    int coveredArea=CasesTmp[0].width*CasesTmp[0].height;
-                    for(unsigned int i = 1; i < CasesTmp.size(); i++ )
-                    {
-                        //do it by merging all the rectangles
-                        Merge(&withinRect, CasesTmp[i]);
-                        //sum the cases area
-                        coveredArea+=CasesTmp[i].width*CasesTmp[i].height;
-                        //paint each case space in white (255)
-                        rectangle(testCoveredArea, CasesTmp[i], cvScalar(255), -1);
-                    }
-
-                    //If covered area is small (<65% of page), check if the total non-covered area is almost white
-                    if(withinRect.width*withinRect.height<(0.65*src.rows*src.cols))
-                    {
-                        printf("Less than 65\% (%d) of page covered\n", (int)((float)withinRect.width*withinRect.height/(float)(src.rows*src.cols)*100.));
-                        //TODO: et verifier que pas de contour dedans (apres avoir passe un Canny): s'il y a des contours, c'est qu'on a bouffer une bulle ou un texte...
-                        //il faudrait aussi faire la meme chose pour les cases...
-                        //Check if not covered area (outside the within Rect) is almost white
-                        if(mean(testCoveredArea).val[0]<250)
-                        {
-                            printf("Failed: Not covered mean=%d (<250)\n", (int)mean(testCoveredArea).val[0]);
-                            //Detection failed
-                            detectionFailed=true;
-                            CasesTmp.clear();
-                        }
-                    }
-
-                    //Then paint the page "contour" (area outside the withinRect) in white (0)
-                    rectangle(testCoveredArea, Rect(0, 0, withinRect.x, src.rows), cvScalar(255), -1);//left band
-                    rectangle(testCoveredArea, Rect(withinRect.x+withinRect.width, 0, src.cols-(withinRect.x+withinRect.width), src.rows), cvScalar(255), -1);//right band
-                    rectangle(testCoveredArea, Rect(0, 0, src.cols, withinRect.y), cvScalar(255), -1);//top band
-                    rectangle(testCoveredArea, Rect(0, withinRect.y+withinRect.height, src.cols, src.rows-(withinRect.y+withinRect.height)), cvScalar(255), -1);//bottom band
-
-                    //compare the two values: if two large difference, it means that there are some internal part not covered by a case
-                    if(coveredArea<0.95*withinRect.width*withinRect.height) //ATTENTION 1.95 !!!!!!!!!!!!!!!!!!!!!
-                    {
-                        //Inspect the not covered area: if not 255 means that not fully blank or if Canny>1.5 means some information (edges) missing
-                        float colorTest=mean(testCoveredArea).val[0];
-                        Canny(testCoveredArea, testCoveredArea, 210+nbdetections, 255, 5, false);
-                        float cannyTest=mean(testCoveredArea).val[0];
-                        printf("Less than 95\% (%d) of within covered. Within not covered mean=%f (<250) MeanCanny=%f (>%f) SumCanny=%d", (int)((float)coveredArea/(float)(withinRect.width*withinRect.height)*100.), colorTest, cannyTest, 100.*(255.)/(withinRect.width*withinRect.height), (int)sum(testCoveredArea).val[0]);
-
-                        if(colorTest<250 || cannyTest>1.5)
-                        {
-                            //Detection failed
-                            detectionFailed=true;
-                            CasesTmp.clear();
-                            printf(" FAILED");
-                        }
-                        printf("\n");
-                    }
-                    //Everything looks covered...
-                    else
-                    {
-                        //but maybe covered by only one case (not likely to happen since too large cases have been removed)
-                        if(CasesTmp.size()<2)
-                        {
-                            printf("Failed: Less than two cases\n");
-                            //Detection failed
-                            detectionFailed=true;
-                            CasesTmp.clear();
-                        }
-                    }
-
-                    //Copy the within rectancgle area for further use
-                    WithinRect=withinRect;
-                }
-                else
-                {
-                    detectionFailed=true;
-                }
-                nbdetections+=3;
-            }
-
-            printf("OK: %d---------------\n\n", CasesTmp.size());
-            /*-----------------------------------------------------------------------------------------------------------*/
-
-
-            /*-------------------------------------ORGANIZE---------------------------------------*/
-            //Check if we have more than one case
-            if(CasesTmp.size()>1)
-            {
-                //Reorder them in a comics style (TopLeft to Bottom Right)
-
-
-                //Initialize some variables
-                    //The minimum width/height of cases is used for the gaps between two cases
-                    int gap_hori=src.cols, gap_verti=src.rows;
-                    for(unsigned int i = 0; i < CasesTmp.size(); i++ )
-                    {
-                        gap_hori=min(gap_hori, CasesTmp[i].width);
-                        gap_verti=min(gap_verti, CasesTmp[i].height);
-                    }
-                    gap_hori=0.8*gap_hori;
-                    gap_verti=0.8*gap_verti;
-
-
-                //Create a cases tree to reprensent the page organization
-                ntree<Rect> CasesTree;
-
-
-                //Create (and fill) the tree
-                    //First the root node: a band on the left of the covered part of the page
-                    CasesTree.insert(Rect(WithinRect.x-gap_hori, WithinRect.y, gap_hori, WithinRect.height));
-                    ntree<Rect>::prefix_iterator currentParentPre=CasesTree.prefix_begin();
-
-                    while (CasesTmp.size()>0)
-                    {
-                        //Use the prefix iterator (updated at the end of the loop) as a simple iterator
-                        ntree<Rect>::iterator currentParent=currentParentPre.simplify();
-
-                        //Get all the ones at the same vertical level (same value +10% of page width) and lower than parent
-                        //and order them
-                        for(unsigned int i = 0; i < CasesTmp.size(); i++ )
-                        {
-                            //If just on the right and lower or equal to the parent
-                            int currentParentRight=currentParent->x+currentParent->width+gap_hori;
-                            int currentParentBottom=currentParent->y+currentParent->height+gap_verti;
-                            if( CasesTmp[i].x<currentParentRight && (CasesTmp[i].y+CasesTmp[i].height)<currentParentBottom)
-                            {
-                                //Order them according to their height in the page (lower first)
-                                int k=0;
-                                int nb_children=CasesTree.children(currentParent);
-                                //look for the right position
-                                while(k<nb_children && (CasesTmp[i].y+CasesTmp[i].height>=CasesTree.child(currentParent, k)->y+CasesTree.child(currentParent, k)->height)) //tant qu'il y'a des feuilles a ce niveau de l'arbre et que la bottom val est + petite, on avance dans l'arbre a ce niveau
-                                {
-                                    k++;
-                                }
-                                //Insert the case at it's right "position" in the child list
-                                CasesTree.insert(currentParent, k, CasesTmp[i]);
-                                //Remove it from the tmp list
-                                CasesTmp.erase(CasesTmp.begin()+i);
-                                i--;
-                            }
-                        }
-
-                        //Go to the next node in prefix mode: deeper if possible, neighbour otherwise, up otherwise
-                        currentParentPre++;
-                        //Test if we have reached the end of the tree... (not supposed to happen if some cases left in CasesTmp)
-                        if(currentParentPre==CasesTree.prefix_end())
-                        {
-                            break;
-                        }
-                    }
-
-                    //Copy the cases from the tree to a list, in the right order (except the first one which is a fake case)
-                    Cases.clear();
-                    for (ntree<Rect>::prefix_iterator i = ++CasesTree.prefix_begin(); i != CasesTree.prefix_end(); i++)
-                    {
-                        Cases.push_back(*i);
-                    }
-
-
-                //Save the nb of cases
-                NbCases=Cases.size();
-
-                //Free some memory
-                CasesTree.empty();
-            }
-            /*-----------------------------------------------------------------------------------------------------------*/
-            //If less than 2 cases (or the detection has failed)
-            else
-            {
-                DetectionFailed=true;
-
-                float idealStripHeight=(src.cols/(float)DisplayRatio);
-                if(idealStripHeight>src.rows)
-                    idealStripHeight=src.rows;
-                //Creation of cases depending on display size
-                Cases.clear();
-                float decalage=19*src.rows/(src.rows-idealStripHeight);
-                for(int i=0; i<20; i++)
-                {
-                    //Cases.push_back(Rect(0, i*src.rows/20., src.cols, src.rows*.4-1));
-                    Cases.push_back(Rect(0, i*src.rows/decalage, src.cols, idealStripHeight-1));
-                }
-                NbCases=Cases.size();
-            }
-            //Release some memory
-            CasesTmp.clear();
-            src.release();
-        } //if CASE
-
-        //If in PAGE or STRIP mode
-        else
-        {
-            //If in STRIP mode
-            if(ReadingMode==STRIP || DetectionFailed)
-            {
-                float idealStripHeight=(PageRenderCv.cols/(float)DisplayRatio);
-                if(idealStripHeight>PageRenderCv.rows)
-                    idealStripHeight=PageRenderCv.rows;
-                //Creation of cases depending on display size
-                Cases.clear();
-                float decalage=19*PageRenderCv.rows/(PageRenderCv.rows-idealStripHeight);
-                for(int i=0; i<20; i++)
-                {
-                    //Cases.push_back(Rect(0, i*src.rows/20., src.cols, src.rows*.4-1));
-                    Cases.push_back(Rect(0, i*PageRenderCv.rows/decalage, PageRenderCv.cols, idealStripHeight-1));
-                }
-                NbCases=Cases.size();
-            }
-            //in PAGE mode
-            else
-            {
-                //Nothing else than initialization of nb of cases
-                NbCases=0;
-                ActiveCase=-1;
-            }
-        }
+        specialPage=false;
     }
-    //if special page
-    else
+
+    //Only if we are in CASE mode
+    if(ReadingMode==CASE && !DetectionFailed && !specialPage)
     {
-        //If we are on first or last page, no case detectdion, so only case -1 exists
+        //Temporary list of Cases
+        vector<Rect> CasesTmp;
+        //Binary image
+        Mat src;
+        //To gray level first
+        cvtColor(PageRenderCv, src, CV_BGR2GRAY);
+        //Try the detection several times (if it's failed) with a different range of "white" detection
+        bool detectionFailed=true;
+        int nbdetections=0;
+        printf("------ %d:\n", PageNb);
+        while(detectionFailed && nbdetections<43)
+        {
+            detectionFailed=false;
+
+            /*--------------------------------------------BINARIZE---------------------------------------------------------*/
+            //To binary
+            inRange(src, 0, 210+nbdetections, src);
+            printf("%d:\n", nbdetections);
+            /*-----------------------------------------------------------------------------------------------------------*/
+
+
+            /*--------------------------------------------DETECT---------------------------------------------------------*/
+            DetectionDetect(&CasesTmp, &src);
+            /*-----------------------------------------------------------------------------------------------------------*/
+
+
+            /*-------------------------------------------CHECK-----------------------------------------------------------*/
+            detectionFailed=DetectionCheck(&CasesTmp, &src, nbdetections);
+            /*-----------------------------------------------------------------------------------------------------------*/
+
+            nbdetections+=3;
+        }
+
+        //All the detections have failed ?
+        DetectionFailed=detectionFailed;
+
+        printf("OK: %d---------------\n\n", CasesTmp.size());
+
+        //If the detection succeed
+        if(!DetectionFailed)
+        {
+            /*----------------------------------------------ORGANIZE-----------------------------------------------------*/
+            DetectionOrganize(&CasesTmp, &src);
+            /*-----------------------------------------------------------------------------------------------------------*/
+        }
+
+        //Release some memory
+        CasesTmp.clear();
+        src.release();
+
+    } //if CASE
+
+
+    //If in STRIP mode or detection has failed in CASE mode
+    if( (ReadingMode==STRIP || (DetectionFailed && ReadingMode==CASE)) && !specialPage)
+    {
+        //Do the default strip cutting (optimized to display width
+        DetectionStripCutting();
+    }
+
+
+    //If in PAGE mode
+    if(ReadingMode==PAGE || specialPage)
+    {
+        //Nothing else than initialization of nb of cases
+        NbCases=0;
         ActiveCase=-1;
     }
+
 
     printf("%d\n", NbCases);
 
     //Say the page is ready
     Loaded=true;
 }
+
+
+void Page::DetectionDetect(vector<Rect> *CasesTmp, Mat* src)
+{
+    //Contours detection
+    vector<vector <Point> > contours;
+    vector<Vec4i> hierarchy;
+    findContours( *src, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE );
+
+    //Rectangle bounding box for each contour found
+    for( int i = contours.size()-1; i >-1; i-- )
+    {
+       CasesTmp->push_back(boundingRect( contours[i] ));
+    }
+
+    //Remove according to ratio perimeter/area (keep only rectangles) ???
+    /*approxPolyDP(Mat(contours[i]), approx, arcLength(Mat(contours[i]), true)*0.02, true);
+       printf("%f\n", matchShapes( approx, contours[i], CV_CONTOURS_MATCH_I1, .0));*/
+
+    //Remove the too LARGE ones (covering almost the whole page: more than 65%)
+    for(unsigned int i = 0; i < CasesTmp->size(); i++ )
+    {
+        if(((*CasesTmp)[i].width*(*CasesTmp)[i].height)>(0.65*src->rows*src->cols))
+        {
+            CasesTmp->erase(CasesTmp->begin()+i);
+            i--;
+        }
+    }
+
+    //Sort the cases by size and merge them if overlaping
+    SortAndMerge(CasesTmp, 0);
+
+
+    //Remove the too small ones (noise)
+    for(unsigned int i = 0; i < CasesTmp->size(); i++ )
+    {
+        if(((*CasesTmp)[i].width*(*CasesTmp)[i].height)<(0.01*src->rows*src->cols))
+        {
+            CasesTmp->erase(CasesTmp->begin()+i);
+            i--;
+        }
+    }
+
+    //Merge cases between 0.01 and 0.04 to their closest one
+    for(unsigned int i = 0; i < CasesTmp->size(); i++ )
+    {
+        if(((*CasesTmp)[i].width*(*CasesTmp)[i].height)<(0.04*src->rows*src->cols))
+        {
+            //Find the closest one
+            int mind=src->rows*src->cols; //init to some huge number
+            int closest=-1;
+            for(unsigned int k = 0; k < CasesTmp->size(); k++ )
+            {
+                if(i!=k)
+                {
+                    int d=Distance((*CasesTmp)[i], (*CasesTmp)[k]);
+                    if(d<mind)
+                    {
+                        mind=d;
+                        closest=k;
+                    }
+                }
+            }
+            //Merge
+            if(closest!=-1)
+            {
+                Merge(&(*CasesTmp)[closest], (*CasesTmp)[i]);
+                CasesTmp->erase(CasesTmp->begin()+i);
+                i--;
+            }
+        }
+    }
+
+    //Sort the cases by size and merge them if overlaping: done again because sizes and overlapping could have changed
+    SortAndMerge(CasesTmp, 0);
+}
+
+//! Check if parts of the page not covered by the detected cases
+//! \return true if the detection has failed (parts NOT covered)
+//! \return false if the detection succeed
+bool Page::DetectionCheck(vector<Rect> *CasesTmp, Mat* src, int nbdetections)
+{
+    //If covered by only one case (not likely to happen since too large cases have been removed)
+    if(CasesTmp->size()<2)
+    {
+        printf("Failed: Less than two cases\n");
+        //Detection failed
+        CasesTmp->clear();
+        return true;
+    }
+
+
+    //Compute the "within area": the extreme total area covered by the detected cases and sum the actual cases areas
+    Mat testCoveredArea; //Image representing the covered area in white
+    cvtColor(PageRenderCv, testCoveredArea, CV_BGR2GRAY);
+    rectangle(testCoveredArea, (*CasesTmp)[0], cvScalar(255), -1);
+    Rect withinRect((*CasesTmp)[0]); //Initilaize as the first case
+    int coveredArea=(*CasesTmp)[0].width*(*CasesTmp)[0].height;
+    for(unsigned int i = 1; i < CasesTmp->size(); i++ )
+    {
+        //do it by merging all the rectangles
+        Merge(&withinRect, (*CasesTmp)[i]);
+        //sum the cases area
+        coveredArea+=(*CasesTmp)[i].width*(*CasesTmp)[i].height;
+        //paint each case space in white (255)
+        rectangle(testCoveredArea, (*CasesTmp)[i], cvScalar(255), -1);
+    }
+
+    //If covered area is small (<65% of page), check if the total non-covered area is almost white
+    if(withinRect.width*withinRect.height<(0.65*src->rows*src->cols))
+    {
+        printf("Less than 65\% (%d) of page covered\n", (int)((float)withinRect.width*withinRect.height/(float)(src->rows*src->cols)*100.));
+        //TODO: et verifier que pas de contour dedans (apres avoir passe un Canny): s'il y a des contours, c'est qu'on a bouffer une bulle ou un texte...
+        //il faudrait aussi faire la meme chose pour les cases...
+        //Check if not covered area (outside the within Rect) is almost white
+        if(mean(testCoveredArea).val[0]<250)
+        {
+            printf("Failed: Not covered mean=%d (<250)\n", (int)mean(testCoveredArea).val[0]);
+            //Detection failed
+            CasesTmp->clear();
+            return true;
+        }
+    }
+
+    //Then paint the page "contour" (area outside the withinRect) in white (0)
+    rectangle(testCoveredArea, Rect(0, 0, withinRect.x, src->rows), cvScalar(255), -1);//left band
+    rectangle(testCoveredArea, Rect(withinRect.x+withinRect.width, 0, src->cols-(withinRect.x+withinRect.width), src->rows), cvScalar(255), -1);//right band
+    rectangle(testCoveredArea, Rect(0, 0, src->cols, withinRect.y), cvScalar(255), -1);//top band
+    rectangle(testCoveredArea, Rect(0, withinRect.y+withinRect.height, src->cols, src->rows-(withinRect.y+withinRect.height)), cvScalar(255), -1);//bottom band
+
+    //compare the two values: if two large difference, it means that there are some internal part not covered by a case
+    if(coveredArea<0.95*withinRect.width*withinRect.height) //ATTENTION 1.95 !!!!!!!!!!!!!!!!!!!!!
+    {
+        //Inspect the not covered area: if not 255 means that not fully blank or if Canny>1.5 means some information (edges) missing
+        float colorTest=mean(testCoveredArea).val[0];
+        Canny(testCoveredArea, testCoveredArea, 210+nbdetections, 255, 5, false);
+        float cannyTest=mean(testCoveredArea).val[0];
+        printf("Less than 95\% (%d) of within covered. Within not covered mean=%f (<250) MeanCanny=%f (>%f) SumCanny=%d", (int)((float)coveredArea/(float)(withinRect.width*withinRect.height)*100.), colorTest, cannyTest, 100.*(255.)/(withinRect.width*withinRect.height), (int)sum(testCoveredArea).val[0]);
+
+        if(colorTest<250 || cannyTest>1.5)
+        {
+            //Detection failed
+            CasesTmp->clear();
+            printf(" FAILED");
+            return true;
+        }
+        printf("\n");
+    }
+
+
+    //Everything looks covered...
+
+    //Copy the within rectancgle area for further use
+    WithinRect=withinRect;
+
+    //Detection succeed
+    return false;
+
+    printf("OK: %d---------------\n\n", CasesTmp->size());
+}
+
+//! Order the page cases in a comics style (TopLeft to Bottom Right)
+void Page::DetectionOrganize(vector<Rect> *CasesTmp, Mat *src)
+{
+    //Initialize some variables
+        //The minimum width/height of cases is used for the gaps between two cases
+        int gap_hori=src->cols, gap_verti=src->rows;
+        for(unsigned int i = 0; i < CasesTmp->size(); i++ )
+        {
+            gap_hori=min(gap_hori, (*CasesTmp)[i].width);
+            gap_verti=min(gap_verti, (*CasesTmp)[i].height);
+        }
+        gap_hori=0.8*gap_hori;
+        gap_verti=0.8*gap_verti;
+
+
+    //Create a cases tree to reprensent the page organization
+    ntree<Rect> CasesTree;
+
+
+    //Create (and fill) the tree
+        //First the root node: a band on the left of the covered part of the page
+        CasesTree.insert(Rect(WithinRect.x-gap_hori, WithinRect.y, gap_hori, WithinRect.height));
+        ntree<Rect>::prefix_iterator currentParentPre=CasesTree.prefix_begin();
+
+        while (CasesTmp->size()>0)
+        {
+            //Use the prefix iterator (updated at the end of the loop) as a simple iterator
+            ntree<Rect>::iterator currentParent=currentParentPre.simplify();
+
+            //Get all the ones at the same vertical level (same value +10% of page width) and lower than parent
+            //and order them
+            for(unsigned int i = 0; i < CasesTmp->size(); i++ )
+            {
+                //If just on the right and lower or equal to the parent
+                int currentParentRight=currentParent->x+currentParent->width+gap_hori;
+                int currentParentBottom=currentParent->y+currentParent->height+gap_verti;
+                if( (*CasesTmp)[i].x<currentParentRight && ((*CasesTmp)[i].y+(*CasesTmp)[i].height)<currentParentBottom)
+                {
+                    //Order them according to their height in the page (lower first)
+                    int k=0;
+                    int nb_children=CasesTree.children(currentParent);
+                    //look for the right position
+                    while(k<nb_children && ((*CasesTmp)[i].y+(*CasesTmp)[i].height>=CasesTree.child(currentParent, k)->y+CasesTree.child(currentParent, k)->height)) //tant qu'il y'a des feuilles a ce niveau de l'arbre et que la bottom val est + petite, on avance dans l'arbre a ce niveau
+                    {
+                        k++;
+                    }
+                    //Insert the case at it's right "position" in the child list
+                    CasesTree.insert(currentParent, k, (*CasesTmp)[i]);
+                    //Remove it from the tmp list
+                    CasesTmp->erase(CasesTmp->begin()+i);
+                    i--;
+                }
+            }
+
+            //Go to the next node in prefix mode: deeper if possible, neighbour otherwise, up otherwise
+            currentParentPre++;
+            //Test if we have reached the end of the tree... (not supposed to happen if some cases left in CasesTmp)
+            if(currentParentPre==CasesTree.prefix_end())
+            {
+                break;
+            }
+        }
+
+        //Copy the cases from the tree to a list, in the right order (except the first one which is a fake case)
+        Cases.clear();
+        for (ntree<Rect>::prefix_iterator i = ++CasesTree.prefix_begin(); i != CasesTree.prefix_end(); i++)
+        {
+            Cases.push_back(*i);
+        }
+
+
+    //Save the final nb of cases
+    NbCases=Cases.size();
+
+    //Free some memory
+    CasesTree.empty();
+}
+
+//! Do a default cutting of the page (when the case detection has failed or when in strip mode)
+void Page::DetectionStripCutting()
+{
+    float idealStripHeight=(PageRenderCv.cols/(float)DisplayRatio);
+    if(idealStripHeight>PageRenderCv.rows)
+        idealStripHeight=PageRenderCv.rows;
+    //Creation of cases depending on display size
+    Cases.clear();
+    float decalage=19*PageRenderCv.rows/(PageRenderCv.rows-idealStripHeight);
+    for(int i=0; i<20; i++)
+    {
+        //Cases.push_back(Rect(0, i*src.rows/20., src.cols, src.rows*.4-1));
+        Cases.push_back(Rect(0, i*PageRenderCv.rows/decalage, PageRenderCv.cols, idealStripHeight-1));
+    }
+    NbCases=Cases.size();
+}
+
+
 
 //! Call SetActiveCase with ActiveCase+1 in parameter
 //! \return the return value of SetActiveCase
@@ -558,7 +556,6 @@ int Page::PreviousCase()
 {
     return SetActiveCase(ActiveCase-1);
 }
-
 
 //! Set a case as active and render it
 //! \param val the case number (-1 for the whole page)
@@ -593,6 +590,8 @@ int Page::SetActiveCase(int val)
     }
     return -3;
 }
+
+
 
 //! Update the case/page rendering according to ActiveCase value.
 //!The ImgRender cv::Mat is filled with the case image or the whole page if ReadingMode==PAGE.
