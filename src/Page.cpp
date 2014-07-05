@@ -213,28 +213,24 @@ void Page::DetectCases()
         //Temporary list of Cases
         vector<Rect> CasesTmp;
         //Binary image
-        Mat src;
+        Mat srcG, src;
         //To gray level first
-        cvtColor(PageRenderCv, src, CV_BGR2GRAY);
+        cvtColor(PageRenderCv, srcG, CV_BGR2GRAY);
         //Try the detection several times (if it's failed) with a different range of "white" detection
         bool detectionFailed=true;
         int nbdetections=0;
         printf("------ %d:\n", PageNb);
         while(detectionFailed && nbdetections<43)
         {
-            detectionFailed=false;
-
             /*--------------------------------------------BINARIZE---------------------------------------------------------*/
             //To binary
-            inRange(src, 0, 210+nbdetections, src);
+            inRange(srcG, 0, 210+nbdetections, src);
             printf("%d:\n", nbdetections);
             /*-----------------------------------------------------------------------------------------------------------*/
-
 
             /*--------------------------------------------DETECT---------------------------------------------------------*/
             DetectionDetect(&CasesTmp, &src);
             /*-----------------------------------------------------------------------------------------------------------*/
-
 
             /*-------------------------------------------CHECK-----------------------------------------------------------*/
             detectionFailed=DetectionCheck(&CasesTmp, &src, nbdetections);
@@ -259,6 +255,7 @@ void Page::DetectCases()
         //Release some memory
         CasesTmp.clear();
         src.release();
+        srcG.release();
 
     } //if CASE
 
@@ -286,7 +283,9 @@ void Page::DetectCases()
     Loaded=true;
 }
 
-
+//! Attempt to detect the cases on the page given a binarized image
+//! \param CasesTmp: A vector of Rect to fill with the detected cases
+//! \param src: An OpenCv Mat containing the binarized image
 void Page::DetectionDetect(vector<Rect> *CasesTmp, Mat* src)
 {
     //Contours detection
@@ -321,17 +320,17 @@ void Page::DetectionDetect(vector<Rect> *CasesTmp, Mat* src)
     //Remove the too small ones (noise)
     for(unsigned int i = 0; i < CasesTmp->size(); i++ )
     {
-        if(((*CasesTmp)[i].width*(*CasesTmp)[i].height)<(0.01*src->rows*src->cols))
+        if(((*CasesTmp)[i].width*(*CasesTmp)[i].height)<(0.002*src->rows*src->cols))
         {
             CasesTmp->erase(CasesTmp->begin()+i);
             i--;
         }
     }
 
-    //Merge cases between 0.01 and 0.04 to their closest one
+    //Merge cases between 0.01 and 0.02 to their closest one
     for(unsigned int i = 0; i < CasesTmp->size(); i++ )
     {
-        if(((*CasesTmp)[i].width*(*CasesTmp)[i].height)<(0.04*src->rows*src->cols))
+        if(((*CasesTmp)[i].width*(*CasesTmp)[i].height)<(0.02*src->rows*src->cols))
         {
             //Find the closest one
             int mind=src->rows*src->cols; //init to some huge number
@@ -363,6 +362,8 @@ void Page::DetectionDetect(vector<Rect> *CasesTmp, Mat* src)
 }
 
 //! Check if parts of the page not covered by the detected cases
+//! \param CasesTmp: A vector of Rect (filled with the currently detected cases)
+//! \param src: An OpenCv Mat containing the binarized image
 //! \return true if the detection has failed (parts NOT covered)
 //! \return false if the detection succeed
 bool Page::DetectionCheck(vector<Rect> *CasesTmp, Mat* src, int nbdetections)
@@ -447,6 +448,8 @@ bool Page::DetectionCheck(vector<Rect> *CasesTmp, Mat* src, int nbdetections)
 }
 
 //! Order the page cases in a comics style (TopLeft to Bottom Right)
+//! \param CasesTmp: A vector of Rect (filled with the currently detected cases)
+//! \param src: An OpenCv Mat containing the binarized image
 void Page::DetectionOrganize(vector<Rect> *CasesTmp, Mat *src)
 {
     //Initialize some variables
