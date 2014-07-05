@@ -329,6 +329,7 @@ void Document::SetReadingMode(READINGMODE val)
     //Set it to each pages and call the DetectCases() since its behaviour depends on the reading mode
     currentPage->SetReadingMode(ReadingMode);
     currentPage->DetectCases();
+    currentPage->SetActiveCase(0);
 }
 
 
