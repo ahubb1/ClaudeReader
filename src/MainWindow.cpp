@@ -1171,7 +1171,7 @@ MainWindow::MainWindow(const char *f)
     window->end();
 
     //Initialize help window
-    HelpDlg= new Fl_Help_Window(500, 400, "Help");
+    HelpDlg= new Fl_Help_Window(600, 400, "Help");
     HelpDlg->value(HELP_STRING_HTML);
     HelpDlg->hide();
 
