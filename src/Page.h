@@ -15,7 +15,7 @@
 //    GNU General Public License for more details.
 //
 //    You should have received a copy of the GNU General Public License
-//    along with BDReader.  If not, see <http://www.gnu.org/licenses/>.
+//    along with BDReader. If not, see <http://www.gnu.org/licenses/>.
 //
 //---------------------------------------------------------------------------
 /**
@@ -64,6 +64,8 @@ class Page
         int SetActiveCase(int val);
         READINGMODE GetReadingMode() {return ReadingMode;}
         void SetReadingMode(READINGMODE val) {ReadingMode=val;}
+        bool HasLoadingFailed() {return Failed;}
+        bool HasDetectionFailed() {return DetectionFailed;}
         bool IsLoaded() {return Loaded;}
         void SetDisplayRatio(float val) {DisplayRatio=val;};
 
@@ -83,6 +85,7 @@ class Page
         READINGMODE ReadingMode;
         bool PreviewPage;
         int ActiveCase;
+        bool Failed;
         bool Loaded;
         bool DetectionFailed;
         float DisplayRatio;

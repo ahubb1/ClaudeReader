@@ -46,11 +46,22 @@ Document::Document(char *filename)
 Document::~Document()
 {
     if(currentPage)
+    {
         delete currentPage;
+        currentPage=NULL;
+    }
+
     if(nextPage)
+    {
         delete nextPage;
+        nextPage=NULL;
+    }
+
     if(previousPage)
+    {
         delete previousPage;
+        previousPage=NULL;
+    }
 }
 
 
@@ -346,9 +357,11 @@ void Document::SetDisplayRatio(float val)
     //Document value (strored for next pages)
     DisplayRatio=val;
 
-    //Set it to each pages and call the DetectCases() since its behaviour depends on the reading mode
+    //Set it to the page
     currentPage->SetDisplayRatio(DisplayRatio);
-    currentPage->DetectCases();
+    //Call the DetectCases() when needed (if in STRIP or in CASE but failed: de facto in STRIP) since the cutting depends on the display ratio
+    if(ReadingMode==STRIP || (ReadingMode==CASE && currentPage->HasDetectionFailed()))
+        currentPage->DetectCases();
 }
 
 //! Change the Document page preview mode.

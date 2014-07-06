@@ -26,12 +26,14 @@ Fl_Help_Window::Fl_Help_Window(int W, int H, const char *L):Fl_Window(W, H, L)
     begin();
         HelpView=new Fl_Help_View(0, 0, w(), h());
     end();
+    HelpView->textsize(14);
     resizable(HelpView);
     show();
 }
 
 void Fl_Help_Window::value(const char *html)
 {
+    //Assign the value and redraw
     HelpView->value(html);
     HelpView->redraw();
 }

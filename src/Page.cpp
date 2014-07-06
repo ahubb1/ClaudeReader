@@ -15,7 +15,7 @@
 //    GNU General Public License for more details.
 //
 //    You should have received a copy of the GNU General Public License
-//    along with BDReader.  If not, see <http://www.gnu.org/licenses/>.
+//    along with BDReader. If not, see <http://www.gnu.org/licenses/>.
 //
 //---------------------------------------------------------------------------
 #include "Page.h"
@@ -163,6 +163,7 @@ void SortAndMerge(vector<Rect> *CasesTmp, int counter)
 Page::Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, float display_ratio)
 {
     //Init values common to all type of pages
+    Failed=false; //Not failed yet...
     Loaded=false;
     DetectionFailed=false;
     ReadingMode=rd_mode;
@@ -536,10 +537,21 @@ void Page::DetectionStripCutting()
     //Creation of cases depending on display size
     Cases.clear();
     float decalage=PageRenderCv.rows/80.;
-    int nbcases=((decalage*(float)(PageRenderCv.rows-idealStripHeight))/(float)PageRenderCv.rows)+1;
+    int nbcases=round((decalage*(float)(PageRenderCv.rows-idealStripHeight))/(float)PageRenderCv.rows)+1;
     for(int i=0; i<nbcases; i++)
     {
-        Cases.push_back(Rect(0, i*PageRenderCv.rows/decalage, PageRenderCv.cols, idealStripHeight-1));
+        //If, on the last case, we are going outside the image
+        if( (i==nbcases-1) && ((i*PageRenderCv.rows/decalage+idealStripHeight)>=PageRenderCv.rows) )
+        {
+            //Adjust the position of the last strip according to what's left on the page to show
+            int whatsleft=PageRenderCv.rows-(i*PageRenderCv.rows/decalage);
+            int gap=idealStripHeight-whatsleft;
+            Cases.push_back(Rect(0, i*PageRenderCv.rows/decalage-gap, PageRenderCv.cols, idealStripHeight-1));
+        }
+        else
+        {
+            Cases.push_back(Rect(0, i*PageRenderCv.rows/decalage, PageRenderCv.cols, idealStripHeight));
+        }
     }
     //Compute the corresponding new active case
     if(NbCases!=0 && ActiveCase>0)

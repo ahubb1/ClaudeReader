@@ -132,8 +132,8 @@ int Export_Document::Export()
         Doc->LoadPage();
 
         //Locally render it
-            //If in panel mode and not 20 cases on the page (<=> failed case mode)
-            if(PanelMode && Doc->currentPage->GetNbCases()!=20)
+            //If in panel mode and detection has not failed
+            if(PanelMode && !Doc->currentPage->HasDetectionFailed())
             {
                  int casenb=0;
                  //For each panel, including the first one
@@ -174,10 +174,12 @@ int Export_Document::Export()
                 char filename[2048];
                 if(PanelMode)
                 {
+                    //Add zeroes since panels in between two pages
                     sprintf(filename, "%s%s_%s00%s", PathToExport, BaseFilename, longpagenb, FilesExtension);
                 }
                 else
                 {
+                    //Just use the long page number
                     sprintf(filename, "%s%s_%d%s", PathToExport, BaseFilename, Doc->GetCurrentPageNb(), FilesExtension);
                 }
 
@@ -187,6 +189,14 @@ int Export_Document::Export()
                 //Write it (extension already choosen)
                 imwrite(filename, rendering);
                 nbimages++;
+
+                //If we are in Panel but failed, double the page: easier for a user on another reader
+                if(PanelMode)
+                {
+                    sprintf(filename, "%s%s_%s01%s", PathToExport, BaseFilename, longpagenb, FilesExtension);
+                    imwrite(filename, rendering);
+                    nbimages++;
+                }
             }
 
         //Update the progression

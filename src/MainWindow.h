@@ -96,7 +96,6 @@ class MainWindow
         friend void Help_cb(Fl_Widget* widget, void * param);
         friend void About_cb(Fl_Widget* widget, void * param);
 
-
         //Info/status/update
         friend void UpdateWidgets(void * param);
         friend void ActivateNavigationWidgets(void *param, bool val);

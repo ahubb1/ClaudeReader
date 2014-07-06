@@ -181,8 +181,10 @@ void ResizingEvents(void* param)
             //And re-render
             mw->Doc->Render();
             mw->DisplayGrp->redraw();
+            StatusBarUpdate(mw);
 
             //Give some time to fltk
+            Fl::wait(10);
             Fl::check();
             //Update the preloaded pages
             mw->Doc->UpdatePreloadedPages();
@@ -248,6 +250,7 @@ void Open_cb(Fl_Widget* widget, void * param)
         Fl_Native_File_Chooser chooser=Fl_Native_File_Chooser();
         chooser.title("Open a file");
         chooser.filter("Supported formats\t*.{pdf,cbz,cbr,cbt,cb7,rar,zip,tar,7z}\nPdf\t*.pdf\nComics archive\t*.{cbz,cbr,cbt,cb7}\nArchive\t*.{rar,zip,tar,7z}");
+        chooser.options(Fl_Native_File_Chooser::PREVIEW);
 
         //Select the working directory
         char folder[FL_PATH_MAX];
@@ -417,7 +420,8 @@ void ExportDoc_cb(Fl_Widget* widget, void * param)
             }
 
             //Re-set the document current page
-            fl_message_title("");
+            mw->Doc->PreloadPages();
+            UpdatePage(mw);
 
             //Re-enable the window
             mw->window->show();
@@ -767,8 +771,8 @@ void ActivateNavigationWidgets(void *param, bool val)
            strcmp(items[i].label(), "Strip mode")==0 ||
            strcmp(items[i].label(), "Page mode")==0 ||
            strcmp(items[i].label(), "Page preview")==0 ||
-           strcmp(items[i].label(), "Thumbnails view")==0 /*||
-           strcmp(items[i].label(), "Export (as images)")==0*/
+           strcmp(items[i].label(), "Thumbnails view")==0 ||
+           strcmp(items[i].label(), "Export (as images)")==0
           ))
         {
             //Then activate or deactivate it
@@ -945,7 +949,8 @@ void UpdateWidgets(void * param)
     AddRecentDocsItems(mw);
 }
 
-//! On closing the window (and thus exiting the program), save the parameters in preferences file and close everything (delete is called in main())
+//! On closing the window (and thus exiting the program), save the parameters in preferences
+//!file and close everything (delete is called in main())
 void Window_cb(Fl_Widget* widget, void * param)
 {
      MainWindow *mw=(MainWindow*)param;
@@ -1009,7 +1014,7 @@ MainWindow::MainWindow(const char *f)
         window=new Fl_Double_Window(Pref->GetWinX(), Pref->GetWinY(), Pref->GetWinW(), Pref->GetWinH(), "BDReader");
 
     //Set an icon
-    //Problem with windows compile (not declared): version prolem of fltk
+    //Problem with windows compile (Pixmap not declared)
     #ifndef __WINDOWS__
         fl_open_display();
         Pixmap p = XCreateBitmapFromData(fl_display, DefaultRootWindow(fl_display), (char *)icon32_bits, icon32_width, icon32_height);
@@ -1026,7 +1031,7 @@ MainWindow::MainWindow(const char *f)
                     { "Open", FL_COMMAND + 'o', (Fl_Callback *)Open_cb, this },
                     { "Recent files", 0, 0, 0, FL_SUBMENU },
                         { 0 },
-                    //{ "Export (as images)", FL_COMMAND + 'e', (Fl_Callback *)ExportDoc_cb, this, FL_MENU_INACTIVE },
+                    { "Export (as images)", FL_COMMAND + 'e', (Fl_Callback *)ExportDoc_cb, this, FL_MENU_INACTIVE },
                     { "Quit", FL_COMMAND + 'q', (Fl_Callback *)Quit_cb, this },
                     { 0 },
                 { "&View",              0, 0, 0, FL_SUBMENU },

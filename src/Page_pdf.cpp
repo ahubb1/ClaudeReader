@@ -29,7 +29,8 @@ Page_pdf::Page_pdf(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, 
     Load(fzctx, fzdoc);
 
     //Case detection on the page (test is done later for first or last page)
-    DetectCases();
+    if(!Failed)
+        DetectCases();
 }
 
 
@@ -42,24 +43,62 @@ void Page_pdf::Load(fz_context *fzctx, fz_document *fzdoc)
     //Transform of the display
     int rotation=0, zoom=300;
     fz_matrix transform;
-    fz_rotate(&transform, rotation);
-    fz_pre_scale(&transform, zoom / 100.0f, zoom / 100.0f);
+    fz_try(fzctx)
+    {
+        fz_rotate(&transform, rotation);
+        fz_pre_scale(&transform, zoom / 100.0f, zoom / 100.0f);
+    }
+    fz_catch(fzctx)
+    {
+        printf("Page_pdf:: Error transform\n");
+        Failed=true;
+        return;
+    }
 
     //Page bound
     fz_rect bounds;
-    fz_bound_page(fzdoc, fzpage, &bounds);
-    fz_transform_rect(&bounds, &transform);
+    fz_try(fzctx)
+    {
+        fz_bound_page(fzdoc, fzpage, &bounds);
+        fz_transform_rect(&bounds, &transform);
+    }
+    fz_catch(fzctx)
+    {
+        printf("Page_pdf:: Error bound\n");
+        Failed=true;
+        return;
+    }
 
     //Prepare a pixmap
     fz_irect bbox;
-    fz_round_rect(&bbox, &bounds);
-    fz_pixmap *pix = fz_new_pixmap_with_bbox(fzctx, fz_device_bgr(fzctx), &bbox);
-    fz_clear_pixmap_with_value(fzctx, pix, 0xff);
+    fz_pixmap *pix;
+    fz_try(fzctx)
+    {
+        fz_round_rect(&bbox, &bounds);
+        pix = fz_new_pixmap_with_bbox(fzctx, fz_device_bgr(fzctx), &bbox);
+        fz_clear_pixmap_with_value(fzctx, pix, 0xff);
+    }
+    fz_catch(fzctx)
+    {
+        printf("Page_pdf:: Error prepare pixmap\n");
+        Failed=true;
+        return;
+    }
 
-    fz_device *dev = fz_new_draw_device(fzctx, pix);
-    fz_run_page_contents(fzdoc, fzpage, dev, &transform, NULL);
-    fz_free_device(dev);
-    fz_free_page(fzdoc, fzpage);
+    //Render the page
+    fz_try(fzctx)
+    {
+        fz_device *dev = fz_new_draw_device(fzctx, pix);
+        fz_run_page_contents(fzdoc, fzpage, dev, &transform, NULL);
+        fz_free_device(dev);
+        fz_free_page(fzdoc, fzpage);
+    }
+    fz_catch(fzctx)
+    {
+        printf("Page_pdf:: Error rendering\n");
+        Failed=true;
+        return;
+    }
 
     //Convert to opencv
     PageRenderCv=Mat::zeros(fz_pixmap_height(fzctx, pix), fz_pixmap_width(fzctx, pix), CV_8UC4);
@@ -67,5 +106,12 @@ void Page_pdf::Load(fz_context *fzctx, fz_document *fzdoc)
 
 
     //Free the pixmap
-    fz_drop_pixmap(fzctx, pix);
+    fz_try(fzctx)
+    {
+        fz_drop_pixmap(fzctx, pix);
+    }
+    fz_catch(fzctx)
+    {
+        printf("Page_pdf:: Error free pixmap\n");
+    }
 }
