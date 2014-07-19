@@ -523,6 +523,8 @@ void StripMode_cb(Fl_Widget* widget, void * param)
     MainWindow *mw=(MainWindow*)param;
 
     mw->Doc->SetReadingMode(STRIP);
+    //Adjust the strip size according to the new display ratio
+    mw->Doc->SetDisplayRatio(mw->Display->w()/(float)mw->Display->h());
     mw->Display->SetImage(mw->Doc->Render());
     StatusBarUpdate(mw);
     Fl::check();
