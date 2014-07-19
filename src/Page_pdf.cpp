@@ -29,8 +29,7 @@ Page_pdf::Page_pdf(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, 
     Load(fzctx, fzdoc);
 
     //Case detection on the page (test is done later for first or last page)
-    if(!Failed)
-        DetectCases();
+    DetectCases();
 }
 
 
@@ -50,7 +49,10 @@ void Page_pdf::Load(fz_context *fzctx, fz_document *fzdoc)
     }
     fz_catch(fzctx)
     {
+        #ifdef DEBUG
         printf("Page_pdf:: Error transform\n");
+        #endif
+        LoadErrorPage();
         Failed=true;
         return;
     }
@@ -64,7 +66,10 @@ void Page_pdf::Load(fz_context *fzctx, fz_document *fzdoc)
     }
     fz_catch(fzctx)
     {
+        #ifdef DEBUG
         printf("Page_pdf:: Error bound\n");
+        #endif
+        LoadErrorPage();
         Failed=true;
         return;
     }
@@ -80,7 +85,10 @@ void Page_pdf::Load(fz_context *fzctx, fz_document *fzdoc)
     }
     fz_catch(fzctx)
     {
+        #ifdef DEBUG
         printf("Page_pdf:: Error prepare pixmap\n");
+        #endif
+        LoadErrorPage();
         Failed=true;
         return;
     }
@@ -95,7 +103,10 @@ void Page_pdf::Load(fz_context *fzctx, fz_document *fzdoc)
     }
     fz_catch(fzctx)
     {
+        #ifdef DEBUG
         printf("Page_pdf:: Error rendering\n");
+        #endif
+        LoadErrorPage();
         Failed=true;
         return;
     }
@@ -112,6 +123,8 @@ void Page_pdf::Load(fz_context *fzctx, fz_document *fzdoc)
     }
     fz_catch(fzctx)
     {
+        #ifdef DEBUG
         printf("Page_pdf:: Error free pixmap\n");
+        #endif
     }
 }

@@ -20,7 +20,7 @@
 //---------------------------------------------------------------------------
 #include "MainWindow.h"
 
-#include <FL/names.h>
+
 
 //Help and about window strings
 #include "help.h"
@@ -220,7 +220,6 @@ void StatusBarUpdate(void * param)
                 }
 
                 sprintf(text, "%sPage %d/%d", text , mw->Doc->GetCurrentPageNb(), mw->Doc->GetNbOfPages());
-
           }
       }
       else
@@ -400,6 +399,11 @@ void ExportDoc_cb(Fl_Widget* widget, void * param)
                 fileLabel.label(label);
                 fileLabel.box(FL_FLAT_BOX);
                 fileLabel.align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+                Fl_Progress *ProgressBar;
+                ProgressBar=new Fl_Progress(10, 110, ProgressWindow.w()-20, 20, "");
+                ProgressBar->minimum(0);
+                ProgressBar->maximum(mw->Doc->GetNbOfPages());
+                ProgressBar->value(0);
                 Fl_Button cancelButton((500-70)/2., 150, 70, 30, "Cancel");
                 cancelButton.take_focus();
                 cancelButton.callback(ExportCancel_cb, (void*)&exportdoc);
@@ -407,7 +411,7 @@ void ExportDoc_cb(Fl_Widget* widget, void * param)
             ProgressWindow.show();
 
             //Export
-            int retexp=exportdoc.Export();
+            int retexp=exportdoc.Export(ProgressBar);
             if(retexp>=0)
             {
                 fl_message_title("Export");
@@ -422,6 +426,11 @@ void ExportDoc_cb(Fl_Widget* widget, void * param)
             //Re-set the document current page
             mw->Doc->PreloadPages();
             UpdatePage(mw);
+
+            //Re-set window title
+            char title[1060];
+            sprintf(title, "BDReader - %s", mw->Filename);
+            mw->window->label(title);
 
             //Re-enable the window
             mw->window->show();

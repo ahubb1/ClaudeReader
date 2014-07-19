@@ -37,6 +37,7 @@
 #include <FL/fl_message.H>
 #include <FL/Fl_Native_File_Chooser.H>
 #include <FL/Fl_Pack.H>
+#include <FL/Fl_Progress.H>
 
 
 #include "Fl_Help_Window.h"

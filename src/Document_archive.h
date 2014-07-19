@@ -22,8 +22,8 @@
  * \file Document_archive.h
  * \brief Declaration file of the Document_archive class
  * \author Vincent Crocher
- * \version 0.1
- * \date June 2014
+ * \version 0.2
+ * \date July 2014
  *
  *
  */

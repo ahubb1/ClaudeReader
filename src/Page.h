@@ -48,6 +48,8 @@ class Page
         Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, float display_ratio);
         ~Page();
 
+        void LoadErrorPage();
+
         void DetectCases();
 
         Mat * RenderCase();

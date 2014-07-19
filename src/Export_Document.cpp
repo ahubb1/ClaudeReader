@@ -50,7 +50,7 @@ Export_Document::~Export_Document()
 //! \return -1 if the path to export is invalid (not a directory or doesn't exist)
 //! \return -2 if the image format (extensions) is not supported
 //! \return -3 if the export has failed (not reached the last page of the document) or has been canceled
-int Export_Document::Export()
+int Export_Document::Export(Fl_Progress *progressbar)
 {
     //Check if exporting path exists (and is a directory)
         if(fl_filename_isdir(PathToExport)==0)
@@ -202,7 +202,12 @@ int Export_Document::Export()
         //Update the progression
         CurrentPage=Doc->GetCurrentPageNb();
 
-        //Give some time to fltk for refreshing
+        //Update progress bar if one
+        if(progressbar)
+        {
+            progressbar->value(CurrentPage);
+        }
+        //Give some time to fltk for refreshing (and check for cancel button...)
         Fl::check();
     }while(Doc->NextPage()>0 && !Canceled);
 

@@ -31,6 +31,7 @@
 #define EXPORT_DOCUMENT_H
 
 #include <FL/Fl.H>
+#include <FL/Fl_Progress.H>
 #include <FL/Fl_File_Chooser.H>//For directory creation
 
 #include "Document.h"
@@ -41,7 +42,7 @@ class Export_Document
     public:
         Export_Document(Document *doc, const char *path, const char *fileext, bool panelmode, bool pagepreview=false);
         ~Export_Document();
-        int Export();
+        int Export(Fl_Progress* progressbar=NULL);
         void Cancel() { Canceled=true; }
 
         Document *GetDocToExport() { return Doc; }

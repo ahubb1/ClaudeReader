@@ -182,14 +182,22 @@ Page::Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, float di
     NbPages=nb_pages;
 }
 
-
 //! Destructor.
 Page::~Page()
 {
     if(Cases.size()>0)
         Cases.clear();
-    ImgRender.release();
-    PageRenderCv.release();
+}
+
+
+
+//! Load a default error image for the page: called if page loading has failed
+void Page::LoadErrorPage()
+{
+    //Display a red-cross image
+    PageRenderCv = Mat(200, 200, CV_8UC3, cvScalar(255,255,255));
+    line(PageRenderCv, cvPoint(0, 0), cvPoint(199, 199), cvScalar(0,0,255), 2);
+    line(PageRenderCv, cvPoint(199, 0), cvPoint(0, 199), cvScalar(0,0,255), 2);
 }
 
 
@@ -201,9 +209,13 @@ Page::~Page()
 //! of cases on the page (NbCases).
 void Page::DetectCases()
 {
+    #ifdef DEBUG
+        printf("------ %d:\n", PageNb);
+    #endif
+
     //If we are not on special pages (first or last one)
     bool specialPage=true;
-    if(PageNb>1 && (NbPages-PageNb)>0)
+    if(PageNb>1 && (NbPages-PageNb)>0 && !Failed)
     {
         specialPage=false;
     }
@@ -220,13 +232,14 @@ void Page::DetectCases()
         //Try the detection several times (if it's failed) with a different range of "white" detection
         bool detectionFailed=true;
         int nbdetections=0;
-        printf("------ %d:\n", PageNb);
         while(detectionFailed && nbdetections<43)
         {
             /*--------------------------------------------BINARIZE---------------------------------------------------------*/
             //To binary
             inRange(srcG, 0, 210+nbdetections, src);
+            #ifdef DEBUG
             printf("%d:\n", nbdetections);
+            #endif
             /*-----------------------------------------------------------------------------------------------------------*/
 
             /*--------------------------------------------DETECT---------------------------------------------------------*/
@@ -243,7 +256,9 @@ void Page::DetectCases()
         //All the detections have failed ?
         DetectionFailed=detectionFailed;
 
+        #ifdef DEBUG
         printf("OK: %d---------------\n\n", CasesTmp.size());
+        #endif
 
         //If the detection succeed
         if(!DetectionFailed)
@@ -269,7 +284,7 @@ void Page::DetectCases()
     }
 
 
-    //If in PAGE mode
+    //If in PAGE mode or special page or the page loading has failed
     if(ReadingMode==PAGE || specialPage)
     {
         //Nothing else than initialization of nb of cases
@@ -277,8 +292,9 @@ void Page::DetectCases()
         ActiveCase=-1;
     }
 
-
+    #ifdef DEBUG
     printf("%d\n", NbCases);
+    #endif
 
     //Say the page is ready
     Loaded=true;
@@ -372,7 +388,9 @@ bool Page::DetectionCheck(vector<Rect> *CasesTmp, Mat* src, int nbdetections)
     //If covered by only one case (not likely to happen since too large cases have been removed)
     if(CasesTmp->size()<2)
     {
+        #ifdef DEBUG
         printf("Failed: Less than two cases\n");
+        #endif
         //Detection failed
         CasesTmp->clear();
         return true;
@@ -398,13 +416,17 @@ bool Page::DetectionCheck(vector<Rect> *CasesTmp, Mat* src, int nbdetections)
     //If covered area is small (<65% of page), check if the total non-covered area is almost white
     if(withinRect.width*withinRect.height<(0.65*src->rows*src->cols))
     {
+        #ifdef DEBUG
         printf("Less than 65\% (%d) of page covered\n", (int)((float)withinRect.width*withinRect.height/(float)(src->rows*src->cols)*100.));
+        #endif
         //TODO: et verifier que pas de contour dedans (apres avoir passe un Canny): s'il y a des contours, c'est qu'on a bouffer une bulle ou un texte...
         //il faudrait aussi faire la meme chose pour les cases...
         //Check if not covered area (outside the within Rect) is almost white
         if(mean(testCoveredArea).val[0]<250)
         {
+            #ifdef DEBUG
             printf("Failed: Not covered mean=%d (<250)\n", (int)mean(testCoveredArea).val[0]);
+            #endif
             //Detection failed
             CasesTmp->clear();
             return true;
@@ -424,16 +446,22 @@ bool Page::DetectionCheck(vector<Rect> *CasesTmp, Mat* src, int nbdetections)
         float colorTest=mean(testCoveredArea).val[0];
         Canny(testCoveredArea, testCoveredArea, 210+nbdetections, 255, 5, false);
         float cannyTest=mean(testCoveredArea).val[0];
+        #ifdef DEBUG
         printf("Less than 95\% (%d) of within covered. Within not covered mean=%f (<250) MeanCanny=%f (>%f) SumCanny=%d", (int)((float)coveredArea/(float)(withinRect.width*withinRect.height)*100.), colorTest, cannyTest, 100.*(255.)/(withinRect.width*withinRect.height), (int)sum(testCoveredArea).val[0]);
+        #endif
 
         if(colorTest<250 || cannyTest>1.5)
         {
             //Detection failed
             CasesTmp->clear();
+            #ifdef DEBUG
             printf(" FAILED");
+            #endif
             return true;
         }
+        #ifdef DEBUG
         printf("\n");
+        #endif
     }
 
 
@@ -444,8 +472,6 @@ bool Page::DetectionCheck(vector<Rect> *CasesTmp, Mat* src, int nbdetections)
 
     //Detection succeed
     return false;
-
-    printf("OK: %d---------------\n\n", CasesTmp->size());
 }
 
 //! Order the page cases in a comics style (TopLeft to Bottom Right)
@@ -538,21 +564,38 @@ void Page::DetectionStripCutting()
     Cases.clear();
     float decalage=PageRenderCv.rows/80.;
     int nbcases=round((decalage*(float)(PageRenderCv.rows-idealStripHeight))/(float)PageRenderCv.rows)+1;
-    for(int i=0; i<nbcases; i++)
+
+    for(int i=0; i<nbcases-1; i++)
     {
+        Cases.push_back(Rect(0, i*PageRenderCv.rows/decalage, PageRenderCv.cols, idealStripHeight));
+    }
+    //Manage last case (last strip)
         //If, on the last case, we are going outside the image
-        if( (i==nbcases-1) && ((i*PageRenderCv.rows/decalage+idealStripHeight)>=PageRenderCv.rows) )
+        if( ((nbcases-1)*PageRenderCv.rows/decalage+idealStripHeight)>=PageRenderCv.rows )
         {
             //Adjust the position of the last strip according to what's left on the page to show
-            int whatsleft=PageRenderCv.rows-(i*PageRenderCv.rows/decalage);
+            int whatsleft=PageRenderCv.rows-((nbcases-1)*PageRenderCv.rows/decalage);
             int gap=idealStripHeight-whatsleft;
-            Cases.push_back(Rect(0, i*PageRenderCv.rows/decalage-gap, PageRenderCv.cols, idealStripHeight-1));
+            Cases.push_back(Rect(0, (nbcases-1)*PageRenderCv.rows/decalage-gap, PageRenderCv.cols, idealStripHeight-1));
+            #ifdef DEBUG
+                printf("Last (too much): %d %5.2f %d %5.2f %d\n", whatsleft, idealStripHeight, gap, (nbcases-1)*PageRenderCv.rows/decalage-gap+idealStripHeight, PageRenderCv.rows);
+            #endif
         }
+        //If we haven't reached the bottom of the image (page)
         else
         {
-            Cases.push_back(Rect(0, i*PageRenderCv.rows/decalage, PageRenderCv.cols, idealStripHeight));
+            //Adjust the position of the last strip according to what's left on the page to show
+            int whatsleft=PageRenderCv.rows-((nbcases-1)*PageRenderCv.rows/decalage);
+            int gap=idealStripHeight-whatsleft;
+            Cases.push_back(Rect(0, (nbcases-1)*PageRenderCv.rows/decalage-gap, PageRenderCv.cols, idealStripHeight-1));
+            #ifdef DEBUG
+                printf("Last (not reached): %d %5.2f %d %5.2f %d\n", whatsleft, idealStripHeight, gap, (nbcases-1)*PageRenderCv.rows/decalage-gap+idealStripHeight, PageRenderCv.rows);
+            #endif
         }
-    }
+
+    #ifdef DEBUG
+        printf("%d \n", nbcases);
+    #endif
     //Compute the corresponding new active case
     if(NbCases!=0 && ActiveCase>0)
         ActiveCase=(int)(ActiveCase*(float)nbcases/(float)NbCases);

@@ -113,7 +113,7 @@ int Document::LoadPage(int p)
             previousPage=tmp;
 
             //If the new current page is not ready to be displayed, just wait
-            while(!currentPage->IsLoaded())
+            while(!currentPage->IsLoaded() && !currentPage->HasLoadingFailed())
             {
                 Fl::wait(1);
             }
@@ -141,7 +141,7 @@ int Document::LoadPage(int p)
                 nextPage=tmp;
 
                 //If the new current page is not ready to be displayed, just wait
-                while(!currentPage->IsLoaded())
+                while(!currentPage->IsLoaded() && !currentPage->HasLoadingFailed())
                 {
                     Fl::wait(1);
                 }

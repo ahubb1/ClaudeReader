@@ -29,8 +29,7 @@ Page_archive::Page_archive(int page_nb, int nb_pages, READINGMODE rd_mode, bool 
     Load(arch, entry, img_idx);
 
     //Case detection on the page (test is done later for first or last page)
-    if(!Failed)
-        DetectCases();
+    DetectCases();
 }
 
 
@@ -46,16 +45,17 @@ void Page_archive::Load(archive *arch, archive_entry *entry, int img_idx)
 	}
 
 	//The page to load
-	char *buff=new char[8388608]; //8MB max per image
+	char *buff=new char[15728640]; //15MB max per image
 	//The file should be valid and size>0 but parsing error possible
-	int size = archive_read_data(arch, buff, sizeof(char)*8388607);
+	int size = archive_read_data(arch, buff, sizeof(char)*15728639);
+    //The file should be valid and size>0 but parsing error possible
 	if (size <= 0)
 	{
-	    //std::cout << archive_error_string(arch) << std::endl;
-	    //Display a red-cross image
-	    PageRenderCv = Mat(200, 200, CV_8UC3, cvScalar(255,255,255));
-	    line(PageRenderCv, cvPoint(0, 0), cvPoint(199, 199), cvScalar(0,0,255), 2);
-	    line(PageRenderCv, cvPoint(199, 0), cvPoint(0, 199), cvScalar(0,0,255), 2);
+	    #ifdef DEBUG
+            printf("%d %s\n", size, archive_error_string(arch));
+        #endif
+	    LoadErrorPage();
+	    Failed=true;
 	}
 	else
 	{

@@ -66,6 +66,7 @@ int Document_archive::Open()
 //! Close the archive.
 void Document_archive::Close()
 {
+    archive_read_close(Arch);
     archive_read_free(Arch);
 }
 
@@ -75,6 +76,7 @@ void Document_archive::Close()
 void Document_archive::Order()
 {
     int i=0, nbpages=0;
+    ImgNames.clear();
 	while (archive_read_next_header(Arch, &Entry) == ARCHIVE_OK)
 	{
 		//Files names
@@ -91,7 +93,7 @@ void Document_archive::Order()
                 //Try to find each possible extension in the filename
                 if(buff_s.find(SupportedImgExtensions[k], buff_s.length()-5)!=string::npos)
                 {
-                    //This the file extension, so break and say it's a valid image
+                    //This is a supported file extension, so break and say it's a valid image
                     SupportedFormat=true;
                     break;
                 }
@@ -119,5 +121,18 @@ void Document_archive::Order()
 //! Create a new Page_archive.
 Page_archive *Document_archive::CreatePage(int pagenb)
 {
-    return new Page_archive(pagenb, NbPages, ReadingMode, PagePreview, DisplayRatio, Arch, Entry, ImgNames[pagenb-1].nb);
+    Page_archive *page;
+    page=new Page_archive(pagenb, NbPages, ReadingMode, PagePreview, DisplayRatio, Arch, Entry, ImgNames[pagenb-1].nb);
+    //If page creation have failed try re-open the document and re-try the page creation
+    if(page->HasLoadingFailed())
+    {
+        #ifdef DEBUG
+            printf("%d Retry\n", pagenb);
+        #endif
+        delete page;
+        archive_read_close(Arch);
+        Open();
+        page=new Page_archive(pagenb, NbPages, ReadingMode, PagePreview, DisplayRatio, Arch, Entry, ImgNames[pagenb-1].nb);
+    }
+    return page;
 }
