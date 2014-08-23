@@ -30,7 +30,11 @@ Export_Document::Export_Document(Document *doc, const char *path, const char *fi
     //Cpy the given values
     Doc=doc;
     strcpy(PathToExport, path);
-    sprintf(PathToExport, "%s//", PathToExport);
+    #ifdef __WINDOWS__
+        sprintf(PathToExport, "%s\\", PathToExport);
+    #else
+        sprintf(PathToExport, "%s//", PathToExport);
+    #endif
     strcpy(FilesExtension, fileext);
     PanelMode=panelmode;
     PagePreview=pagepreview;

@@ -37,7 +37,7 @@
 				<Option projectLinkerOptionsRelation="1" />
 				<Option projectLibDirsRelation="1" />
 				<Compiler>
-					<Add option="-O1" />
+					<Add option="-O2" />
 					<Add directory="include" />
 					<Add directory="include/libarchive" />
 				</Compiler>
