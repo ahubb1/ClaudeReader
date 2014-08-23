@@ -197,16 +197,17 @@ void ResizingEvents(Fl_Widget* widget, void* param)
         mw->Doc->SetDisplayRatio(mw->Display->w()/(float)mw->Display->h());
 
         //If needed
-        if(mw->Doc->GetReadingMode()==STRIP || mw->Doc->GetReadingMode()==CASE)
+        if( mw->Doc->GetReadingMode()==STRIP || (mw->Doc->GetReadingMode()==CASE && mw->Doc->currentPage->HasDetectionFailed()) )
         {
             //And re-render
             mw->Doc->Render();
-            mw->DisplayGrp->redraw();
             StatusBarUpdate(mw);
 
             //Give some time to fltk
-            Fl::wait(10);
             Fl::check();
+        }
+        if(mw->Doc->GetReadingMode()==STRIP || mw->Doc->GetReadingMode()==CASE)
+        {
             //Update the preloaded pages
             mw->Doc->UpdatePreloadedPages();
         }
@@ -452,8 +453,21 @@ void ExportDoc_cb(Fl_Widget* widget, void * param)
             }
             else
             {
-                fl_message_title("Export");
-                fl_alert("Error while exporting !");
+                switch(retexp)
+                {
+                    case -1:
+                        fl_message_title("Export");
+                        fl_alert("Error: Invalid export path (%s) !", chooser.filename());
+                        break;
+                    case -2:
+                        fl_message_title("Export");
+                        fl_alert("Error: Image format not supported (%s) !", fileext);
+                        break;
+                    default:
+                        fl_message_title("Export");
+                        fl_alert("Error while exporting !");
+                        break;
+                }
             }
             ProgressWindow.hide();
 
@@ -510,6 +524,7 @@ void Fullscreen_cb(Fl_Widget* widget, void * param)
         Fl::wait(100);
         mw->DisplayGrp->redraw();
         Fl::wait(100);
+        Fl::check();
 
         //Add the ESC control as a fullscreen shortcut
         ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Fullscreen2"))->activate();
@@ -534,6 +549,7 @@ void Fullscreen_cb(Fl_Widget* widget, void * param)
         //and let some time to update that
         mw->window->redraw();
         Fl::wait(100);
+        Fl::check();
 
         //Remove the ESC control as a fullscreen shortcut
         ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Fullscreen2"))->deactivate();

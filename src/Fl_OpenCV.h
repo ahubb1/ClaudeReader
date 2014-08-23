@@ -33,7 +33,6 @@ int fl_event2cv_event(int fl_event);
 
 class FL_EXPORT Fl_OpenCV : public Fl_Widget
 {
-  int       _x,_y,_w,_h;
 
 protected:
   //Draw the image
@@ -41,11 +40,6 @@ protected:
   void draw(){
       draw(Fl_Widget::x(),Fl_Widget::y(),w(),h());
   }
-
-  void x(int X){ _x=X;};
-  void y(int Y){ _y=Y;};
-  void w(int W){ _w=W;};
-  void h(int H){ _h=H;};
 
   //Mat fimage;
   int iscolor;
@@ -69,19 +63,15 @@ public:
   Fl_OpenCV(int X,int Y,int W,int H, float mzoom=0.5);
   ~Fl_OpenCV();
 
-  void SetCVMouseCallback(CvMouseCallback on_mouse, void * param=0);
   int handle(int event);
-
-  //When the widget is resized, re-compute the image to draw according to new dimensions
-  void resize(int x, int y, int ww, int hh){
-      w(ww);
-      h(hh);
-      Fl_Widget::resize(x, y, ww, hh);
-      if(Resizing_cb!=NULL)
-        Resizing_cb(this, Resizing_cb_param);
-      SetImage(image);
+  void resize(int x, int y, int ww, int hh);
+  void SetCVMouseCallback(CvMouseCallback on_mouse, void * param=0)
+  {
+      mouse_cb=on_mouse;
+      CVcb_param=param;
   }
 
+  friend void ResizingTimer_cb(void *flopencv);
   void SetResizing_cb(void (*cb)(Fl_Widget*, void *), void * param=NULL)
   {
       Resizing_cb=cb;
@@ -99,12 +89,6 @@ public:
       OnRelease_cb=cb;
       OnRelease_cb_param=param;
   }
-
-
-  int x(){return _x;};
-  int y(){return _y;};
-  int w(){return _w;};
-  int h(){return _h;};
 
   Mat *image, fimage;
   Fl_RGB_Image *FlImg;

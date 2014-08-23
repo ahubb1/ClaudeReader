@@ -118,13 +118,28 @@ void Fl_OpenCV::SetImage(Mat *nimage)
    fit=true;
 }*/
 
-void Fl_OpenCV::SetCVMouseCallback(CvMouseCallback on_mouse, void * param)
+void ResizingTimer_cb(void *flopencv)
 {
-  mouse_cb=on_mouse;
-
-  CVcb_param=param;
+    Fl_OpenCV *widget=(Fl_OpenCV *)flopencv;
+    if(widget->Resizing_cb!=NULL)
+            widget->Resizing_cb(widget, widget->Resizing_cb_param);
+        widget->SetImage(widget->image);
 }
 
+//When the widget is resized, re-compute the image to draw according to new dimensions
+void Fl_OpenCV::resize(int x, int y, int ww, int hh)
+{
+    Fl_Widget::resize(x, y, ww, hh);
+
+    //On windows the following is done later on: the system seems to wait for this function to return
+    #ifndef __WINDOWS__
+        if(Resizing_cb!=NULL)
+            Resizing_cb(this, Resizing_cb_param);
+        SetImage(image);
+    #else
+        Fl::add_timeout(0.02, ResizingTimer_cb, (void*)this);
+    #endif
+}
 
 //Convert the fltk mouse event into opencv ones (to be able to use open cv callback functions and events)
 int fl_event2cv_event(int fl_event)
@@ -171,7 +186,6 @@ int fl_event2cv_event(int fl_event)
             return -1;
     }
 }
-
 
 int Fl_OpenCV::handle(int event)
 {

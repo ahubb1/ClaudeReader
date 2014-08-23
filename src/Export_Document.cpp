@@ -78,6 +78,7 @@ int Export_Document::Export(Fl_Progress *progressbar)
 
     //Say we are working on it
     SavingInProgress=true;
+    Canceled=false;
 
 
     //Create proper base filename
