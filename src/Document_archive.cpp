@@ -21,8 +21,8 @@
 #include "Document_archive.h"
 
 //Initialize the list of supported formats
-const int NbSupportedImgExtensions=11;
-string SupportedImgExtensions[NbSupportedImgExtensions] = {".jpg", ".jpeg", ".jpe", ".jp2", ".tiff", ".tif", ".png", ".bmp", ".pbm", ".ppm", ".pgm"};
+const int NbSupportedImgExtensions=22;
+string SupportedImgExtensions[NbSupportedImgExtensions] = {".jpg", ".JPG", ".jpeg", ".JPEG", ".jpe", ".JPE", ".jp2", ".JP2", ".tiff", ".TIFF", ".tif", ".TIF", ".png", ".PNG", ".bmp", ".BMP", ".pbm", ".PBM", ".ppm", ".PPM", ".pgm", ".PGM"};
 
 
 //-----------------------Archive specific function---------------------
