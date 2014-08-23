@@ -18,18 +18,6 @@ void Fl_OpenCV::draw(int xx, int yy, int ww, int hh)
 }
 
 
-Fl_OpenCV::Fl_OpenCV(int X, int Y, float mzoom):Fl_Widget(X,Y,1,1,0)
-{
-  image=NULL;
-  FlImg=NULL;
-  fit=true;
-  mouse_cb=NULL;
-  x(X);y(Y);
-  maxzoom=mzoom;
-  Resizing_cb=NULL;
-  Resizing_cb_param=NULL;
-}
-
 Fl_OpenCV::Fl_OpenCV(int X,int Y,int W,int H, float mzoom):Fl_Widget(X,Y,W,H,0)
 {
   x(X);y(Y);w(W);h(H);
@@ -40,6 +28,10 @@ Fl_OpenCV::Fl_OpenCV(int X,int Y,int W,int H, float mzoom):Fl_Widget(X,Y,W,H,0)
   maxzoom=mzoom;
   Resizing_cb=NULL;
   Resizing_cb_param=NULL;
+  OnClick_cb=NULL;
+  OnClick_cb_param=NULL;
+  OnRelease_cb=NULL;
+  OnRelease_cb_param=NULL;
 }
 
 
@@ -65,6 +57,7 @@ void Fl_OpenCV::SetImage(Mat *nimage)
           resize(x(),y(),w(),h());
         }
 
+
         //Compute the scaling factor such the image will best fit in the widget area, keeping the original aspect ratio
         float fx, fy, scale;
         fx=(float)image->cols/w();
@@ -75,11 +68,10 @@ void Fl_OpenCV::SetImage(Mat *nimage)
 
 
         //Prepare the image to draw
-        fimage.release();
+        //fimage.release();
         fimage = cv::Mat::zeros(h(), w(), image->type()); //The final image (the image to draw) size is the widget size
         cv::Mat fimageROI=fimage(Rect((int)((w()-cvFloor(image->cols/scale))/2.), (int)((h()-cvFloor(image->rows/scale))/2.), cvFloor(image->cols/scale), cvFloor(image->rows/scale)));
         cv::resize((*image), fimageROI, Size(cvFloor(image->cols/scale), cvFloor(image->rows/scale)), 0, 0, INTER_CUBIC);
-        //cv::resize((*image), fimage(Rect((int)((w()-cvFloor(image->cols/scale))/2.), (int)((h()-cvFloor(image->rows/scale))/2.), cvFloor(image->cols/scale), cvFloor(image->rows/scale))), Size(cvFloor(image->cols/scale), cvFloor(image->rows/scale)), 0, 0, INTER_CUBIC);
 
 
         //Check the image type for: converting from Opencv BGR (or BGRA if 4 channels) to RGB AND to make sure the image is encoded in unsigned chars
@@ -126,11 +118,11 @@ void Fl_OpenCV::SetImage(Mat *nimage)
    fit=true;
 }*/
 
-void Fl_OpenCV::SetMouseCallback(CvMouseCallback on_mouse, void * param)
+void Fl_OpenCV::SetCVMouseCallback(CvMouseCallback on_mouse, void * param)
 {
   mouse_cb=on_mouse;
 
-  cb_param=param;
+  CVcb_param=param;
 }
 
 
@@ -183,12 +175,40 @@ int fl_event2cv_event(int fl_event)
 
 int Fl_OpenCV::handle(int event)
 {
-//  Mouse Events
-   if (event == FL_PUSH || event ==FL_DRAG || event == FL_MOVE || event == FL_RELEASE) {
-     if(mouse_cb && image && (Fl::event_x()-x()) < image->cols && (Fl::event_y()-y()) <image->rows )
-//     if(mouse_cb)
-        mouse_cb(fl_event2cv_event(event), Fl::event_x()-x(), Fl::event_y()-y(), 0, cb_param);
+   //Mouse events are passed to opencv if an OpenCV callback function has been passed
+   if(mouse_cb!=NULL)
+   {
+       if (event == FL_PUSH || event ==FL_DRAG || event == FL_MOVE || event == FL_RELEASE) {
+         if(mouse_cb && image && (Fl::event_x()-x()) < image->cols && (Fl::event_y()-y()) <image->rows )
+            mouse_cb(fl_event2cv_event(event), Fl::event_x()-x(), Fl::event_y()-y(), 0, CVcb_param);
+       }
    }
+
+   switch(event)
+   {
+        case FL_PUSH:
+            if(OnClick_cb!=NULL)
+            {
+                OnClick_cb(this, OnClick_cb_param);
+                //Event has been handled
+                return 1;
+            }
+            break;
+
+        case FL_RELEASE:
+            if(OnRelease_cb!=NULL)
+            {
+                OnRelease_cb(this, OnRelease_cb_param);
+                //Event has been handled
+                return 1;
+            }
+            break;
+
+        default:
+
+            break;
+   }
+
    return(Fl_Widget::handle(event));
 }
 

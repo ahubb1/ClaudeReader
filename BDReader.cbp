@@ -12,6 +12,7 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
+					<Add option="-O2" />
 					<Add option="-g" />
 					<Add option="-DDEBUG" />
 				</Compiler>
@@ -31,7 +32,7 @@
 			<Target title="Win32">
 				<Option output="bin/Win32/BDReader.exe" prefix_auto="0" extension_auto="0" />
 				<Option object_output="obj/Win32/" />
-				<Option type="0" />
+				<Option type="1" />
 				<Option compiler="mingwi68632" />
 				<Option projectLinkerOptionsRelation="1" />
 				<Option projectLibDirsRelation="1" />
@@ -91,6 +92,8 @@
 		<Unit filename="src/Document.h" />
 		<Unit filename="src/Document_archive.cpp" />
 		<Unit filename="src/Document_archive.h" />
+		<Unit filename="src/Document_folder.cpp" />
+		<Unit filename="src/Document_folder.h" />
 		<Unit filename="src/Document_pdf.cpp" />
 		<Unit filename="src/Document_pdf.h" />
 		<Unit filename="src/Export_Document.cpp" />
@@ -107,6 +110,8 @@
 		<Unit filename="src/Page.h" />
 		<Unit filename="src/Page_archive.cpp" />
 		<Unit filename="src/Page_archive.h" />
+		<Unit filename="src/Page_folder.cpp" />
+		<Unit filename="src/Page_folder.h" />
 		<Unit filename="src/Page_pdf.cpp" />
 		<Unit filename="src/Page_pdf.h" />
 		<Unit filename="src/Preferences.cpp" />

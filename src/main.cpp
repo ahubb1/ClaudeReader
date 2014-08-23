@@ -34,14 +34,16 @@
 int main(int argc, char **argv)
 {
     MainWindow *MW;
-    //If a parameter is passed, use the first one as a potential filename to open
+
+    //Pass the executable filename/path and if a parameter is passed, use the first one as a potential filename to open
     if(argc>1)
-        MW=new MainWindow(argv[1]);
+        MW=new MainWindow(argv[0], argv[1]);
     else
-        MW=new MainWindow();
+        MW=new MainWindow(argv[0]);
 
     //Run the Fltk main loop
     Fl::run();
+
 
     //Delete the MainWindow object when Fltk loops return (on closing)
     delete MW;

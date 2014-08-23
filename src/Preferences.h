@@ -41,7 +41,7 @@ class Preferences
         Preferences();
         ~Preferences();
 
-        int Load(const char prefFile[255]);
+        int Load(const char prefFile[255], const char windir[2048]);
         int Apply(Document *doc);
         void Save(Document *doc);
 

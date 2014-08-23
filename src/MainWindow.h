@@ -47,6 +47,7 @@
 #include "Document.h"
 #include "Document_pdf.h"
 #include "Document_archive.h"
+#include "Document_folder.h"
 #include "Export_Document.h"
 
 //Icon
@@ -58,7 +59,7 @@
 class MainWindow
 {
     public:
-        MainWindow(const char *f=NULL);
+        MainWindow(const char *exepath, const char *f=NULL);
         ~MainWindow();
 
         void Init(char *filename);
@@ -70,7 +71,7 @@ class MainWindow
         friend void TimerDND_cb(void*);                                               //!< The timer callback function used to check the DND events
         friend int MouseWheelEvents(int e);                                           //!< Handler of the mouse wheel events
         friend void TimerMouseWheel_cb(void*);                                        //!< The timer callback function used to check the mouse wheel movements
-        friend void ResizingEvents(void*);
+        friend void ResizingEvents(Fl_Widget* widget, void*);
 
         //File menu
         friend void Open_cb(Fl_Widget* widget, void * param);
@@ -116,6 +117,7 @@ class MainWindow
             Fl_Overlay_Arrow_Button *NextButton, *PreviousButton, *NextPageButton, *PreviousPageButton;
 
         //Other param
+            char ExePath[FL_PATH_MAX];     //!< Executable path, used to store preferences file on Windows
             char Filename[FL_PATH_MAX];    //!< Local copy of the filename of the currently open document
             Preferences *Pref;              //!< User global preferences (last one used and saved)
             Preferences *PrefDoc;           //!< User preferences for this document

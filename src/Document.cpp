@@ -108,7 +108,10 @@ int Document::LoadPage(int p)
 
             //Delete the old previous page if one
             if(previousPage)
+            {
+                printf("previous: \t");
                 delete previousPage;
+            }
             //Update the previous page: it's now the old current page...
             previousPage=tmp;
 
@@ -120,6 +123,8 @@ int Document::LoadPage(int p)
         }
         else
         {
+            if(previousPage)
+                printf("%d %d\n", ActivePage, previousPage->GetPageNb());
             //If the page asked is already loaded as the PreviousPage
             if(previousPage && ActivePage==previousPage->GetPageNb())
             {
@@ -136,7 +141,10 @@ int Document::LoadPage(int p)
 
                 //Delete the old next page if one
                 if(nextPage)
+                {
+                    printf("next: \t");
                     delete nextPage;
+                }
                 //Update the next page: it's now the old current page...
                 nextPage=tmp;
 
@@ -145,14 +153,16 @@ int Document::LoadPage(int p)
                 {
                     Fl::wait(1);
                 }
-
             }
             //If it's a completely new page
             else
             {
                 //Change the current page
                 if(currentPage)
+                {
+                    printf("current: \t");
                     delete currentPage;
+                }
 
                 //Create the new page
                 currentPage=CreatePage(ActivePage);
@@ -191,7 +201,7 @@ void Document::PreloadPages()
     //If next page is not already the one loaded (or there is currently no next page)
     if( (!nextPage) || (nextPage && nextPage->GetPageNb()!=(ActivePage+1)) )
     {
-        //and if this page exists in the pdf
+        //and if this page exists in the document
         if( (ActivePage+1)<=NbPages )
         {
             //Load the new next page
@@ -199,7 +209,10 @@ void Document::PreloadPages()
         }
         else
         {
-            //otherwise the page doesn't exist
+            /*If they were one, not the good one and the new one doesn't exist in the document
+            if(nextPage)
+                delete nextPage;*/
+            //the page doesn't exist
             nextPage=NULL;
         }
     }
@@ -207,7 +220,7 @@ void Document::PreloadPages()
     //If previous page is not already the one loaded (or there is currently no previous page)
     if( (!previousPage) || (previousPage && previousPage->GetPageNb()!=(ActivePage-1)) )
     {
-        //and if this page exists in the pdf
+        //and if this page exists in the document
         if( (ActivePage-1)>0 )
         {
             //Load the new previous page
@@ -215,7 +228,10 @@ void Document::PreloadPages()
         }
         else
         {
-            //otherwise the page doesn't exist
+            /*If they were one, not the good one and the new one doesn't exist in the document
+            if(previousPage)
+                delete previousPage;*/
+            //the page doesn't exist
             previousPage=NULL;
         }
     }

@@ -33,7 +33,6 @@
 #include "Document.h"
 #include "Page_archive.h"
 
-
 class Document_archive : public Document
 {
     public:

@@ -143,17 +143,35 @@ void TimerMouseWheel_cb(void* param)
     //If some movement has been detected
     if(mw->Doc && mouseWheel!=0)
     {
+        //If the mouse wheel has been done on the thumbnail view
+        bool page=false;
+        if(mw->ThumbDisplayGrp->visible() && Fl::event_inside(mw->ThumbDisplayGrp)!=0)
+        {
+            //then switch page-to-page
+            page=true;
+        }
+
         //if positive, go to next case
         if(mouseWheel>0)
         {
-            Fl_Menu_Item* nextcb=(Fl_Menu_Item*)mw->MenuBar->find_item("&View/Next panel");
+            Fl_Menu_Item* nextcb;
+            if(page)
+                nextcb=(Fl_Menu_Item*)mw->MenuBar->find_item("&View/Next page");
+            else
+               nextcb=(Fl_Menu_Item*)mw->MenuBar->find_item("&View/Next panel");
+
             if(nextcb && nextcb->active())
                 nextcb->do_callback((Fl_Widget*)mw->MenuBar);
         }
         //if negative, go to previous case
         else
         {
-            Fl_Menu_Item* previouscb=(Fl_Menu_Item*)mw->MenuBar->find_item("&View/Previous panel");
+            Fl_Menu_Item* previouscb;
+            if(page)
+                previouscb=(Fl_Menu_Item*)mw->MenuBar->find_item("&View/Previous page");
+            else
+                previouscb=(Fl_Menu_Item*)mw->MenuBar->find_item("&View/Previous panel");
+
             if(previouscb && previouscb->active())
                 previouscb->do_callback((Fl_Widget*)mw->MenuBar);
         }
@@ -167,17 +185,20 @@ void TimerMouseWheel_cb(void* param)
 }
 
 //! Catch the resizing events and update the Display aspect ratio accordingly to new size
-void ResizingEvents(void* param)
+void ResizingEvents(Fl_Widget* widget, void* param)
 {
     MainWindow *mw=(MainWindow*)param;
+
 
     //If in STRIP MODE: recall the Detection (through the SetDisplayRatio) to adjust the size of the strip sto the window width
     if(mw->Doc)
     {
+        //Adjust the strip size according to the new display ratio
+        mw->Doc->SetDisplayRatio(mw->Display->w()/(float)mw->Display->h());
+
+        //If needed
         if(mw->Doc->GetReadingMode()==STRIP || mw->Doc->GetReadingMode()==CASE)
         {
-            //Adjust the strip size according to the new display ratio
-            mw->Doc->SetDisplayRatio(mw->Display->w()/(float)mw->Display->h());
             //And re-render
             mw->Doc->Render();
             mw->DisplayGrp->redraw();
@@ -243,13 +264,19 @@ void Open_cb(Fl_Widget* widget, void * param)
 
     //Retrieve the menu item value to know if it's an open or a recent document item
     //if it's an open, do the stuff
-    if(strcmp(((Fl_Menu_*)widget)->mvalue()->label(), "Open")==0)
+    if(strstr(((Fl_Menu_*)widget)->mvalue()->label(), "Open")!=NULL)
     {
         //Window to define a directory and filename
         Fl_Native_File_Chooser chooser=Fl_Native_File_Chooser();
         chooser.title("Open a file");
         chooser.filter("Supported formats\t*.{pdf,cbz,cbr,cbt,cb7,rar,zip,tar,7z}\nPdf\t*.pdf\nComics archive\t*.{cbz,cbr,cbt,cb7}\nArchive\t*.{rar,zip,tar,7z}");
         chooser.options(Fl_Native_File_Chooser::PREVIEW);
+
+        //Select either open a file or a folder depending on the calling widget label
+        if(strstr(((Fl_Menu_*)widget)->mvalue()->label(), "folder")!=NULL)
+            chooser.type(Fl_Native_File_Chooser::BROWSE_DIRECTORY);
+        else
+            chooser.type(Fl_Native_File_Chooser::BROWSE_FILE);
 
         //Select the working directory
         char folder[FL_PATH_MAX];
@@ -292,7 +319,9 @@ void Open_cb(Fl_Widget* widget, void * param)
         if( tmpFilename[0]=='\0' ||
            ( strstr(tmpFilename, ".pdf")==NULL &&
              strstr(tmpFilename, ".cbz")==NULL && strstr(tmpFilename, ".cbr")==NULL && strstr(tmpFilename, ".cbt")==NULL && strstr(tmpFilename, ".cb7")==NULL &&
-             strstr(tmpFilename, ".rar")==NULL && strstr(tmpFilename, ".zip")==NULL && strstr(tmpFilename, ".tar")==NULL && strstr(tmpFilename, ".7z")==NULL ) )
+             strstr(tmpFilename, ".rar")==NULL && strstr(tmpFilename, ".zip")==NULL && strstr(tmpFilename, ".tar")==NULL && strstr(tmpFilename, ".7z")==NULL  &&
+             fl_filename_isdir(tmpFilename)==0
+           ))
         {
             fl_alert("Invalid filename !");
             return;
@@ -383,6 +412,9 @@ void ExportDoc_cb(Fl_Widget* widget, void * param)
             if(fl_ask("Export %s to %s as images (%s) ?", fl_filename_name(mw->Doc->GetFilename()), chooser.filename(), fileext)==0)
                 return;
 
+            //Go to document first page
+            FirstPage_cb(NULL, mw);
+
             //Create an export object
             Export_Document exportdoc(mw->Doc, chooser.filename(), fileext, panel, preview);
 
@@ -390,21 +422,22 @@ void ExportDoc_cb(Fl_Widget* widget, void * param)
             mw->window->hide();
 
             //Create a progress window
-            Fl_Window ProgressWindow(mw->window->x()+mw->window->w()/2.-250, mw->window->y()+mw->window->h()/2.-100, 500, 200, "Export in progress...");
+            int ww=fmax(500., mw->window->w()/1.5);
+            Fl_Window ProgressWindow(mw->window->x()+mw->window->w()/2.-ww/2., mw->window->y()+mw->window->h()/2.-100, ww, 200, "Export in progress...");
             ProgressWindow.set_modal();
             ProgressWindow.begin();
-                Fl_Button fileLabel((500-460)/2., 10, 460, 100, "Exporting ");
+                Fl_Button fileLabel(20, 10, (ww-40), 80, "Exporting ");
                 char label[255];
-                sprintf(label, "Exporting:\t%s\nTo:\t%s\nFormat:\t%s\n\nPlease wait (%d pages to process)...\n", fl_filename_name(mw->Doc->GetFilename()), chooser.filename(), fileext, mw->Doc->GetNbOfPages());
+                sprintf(label, "Exporting: %s\nTo: %s\nFormat:\t%s\n\n", fl_filename_name(mw->Doc->GetFilename()), chooser.filename(), fileext);
                 fileLabel.label(label);
                 fileLabel.box(FL_FLAT_BOX);
                 fileLabel.align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
                 Fl_Progress *ProgressBar;
-                ProgressBar=new Fl_Progress(10, 110, ProgressWindow.w()-20, 20, "");
+                ProgressBar=new Fl_Progress(10, fileLabel.y()+fileLabel.h()+10, ProgressWindow.w()-20, 20, "Page ");
                 ProgressBar->minimum(0);
                 ProgressBar->maximum(mw->Doc->GetNbOfPages());
                 ProgressBar->value(0);
-                Fl_Button cancelButton((500-70)/2., 150, 70, 30, "Cancel");
+                Fl_Button cancelButton((ww-70)/2., 150, 70, 30, "Cancel");
                 cancelButton.take_focus();
                 cancelButton.callback(ExportCancel_cb, (void*)&exportdoc);
             ProgressWindow.end();
@@ -422,10 +455,11 @@ void ExportDoc_cb(Fl_Widget* widget, void * param)
                 fl_message_title("Export");
                 fl_alert("Error while exporting !");
             }
+            ProgressWindow.hide();
 
-            //Re-set the document current page
-            mw->Doc->PreloadPages();
-            UpdatePage(mw);
+            //Go to document first page
+            FirstPage_cb(NULL, mw);
+            Fl::check();
 
             //Re-set window title
             char title[1060];
@@ -771,7 +805,7 @@ void ActivateNavigationWidgets(void *param, bool val)
     {
         //Check if they are navigation ones
         if(items[i].label()!=NULL &&
-          (strcmp(items[i].label(), "Next page")==0 ||
+          (/*strcmp(items[i].label(), "Next page")==0 ||
            strcmp(items[i].label(), "Previous page")==0 ||
            strcmp(items[i].label(), "First page")==0 ||
            strcmp(items[i].label(), "Last page")==0 ||
@@ -782,7 +816,8 @@ void ActivateNavigationWidgets(void *param, bool val)
            strcmp(items[i].label(), "Strip mode")==0 ||
            strcmp(items[i].label(), "Page mode")==0 ||
            strcmp(items[i].label(), "Page preview")==0 ||
-           strcmp(items[i].label(), "Thumbnails view")==0 ||
+           strcmp(items[i].label(), "Thumbnails view")==0 ||*/
+           strcmp(items[i].label(), "&View")==0 ||
            strcmp(items[i].label(), "Export (as images)")==0
           ))
         {
@@ -797,6 +832,7 @@ void ActivateNavigationWidgets(void *param, bool val)
             }
         }
     }
+    mw->MenuBar->redraw();
 
     //The navigation buttons
     if(val)
@@ -1009,15 +1045,19 @@ void Window_cb(Fl_Widget* widget, void * param)
 //! Constructor.
 //!Create the widgets, build the window and call the Init() with NULL parameters (no document).
 //!\param f the filename of a file top open on startup, can be '\0' if nothing
-MainWindow::MainWindow(const char *f)
+MainWindow::MainWindow(const char *exepath, const char *f)
 {
     //No doc or doc pref yet
     Doc=NULL;
     PrefDoc=NULL;
 
     //Load user preferences
-    Pref = new Preferences();
-    Pref->Load("preferences");
+        Pref = new Preferences();
+        //Use the program name (first argument) to get its full path (path used to store preferences on Windows)
+            char tmp[FL_PATH_MAX];
+            fl_filename_absolute(tmp, sizeof(tmp), exepath);
+            strncpy(ExePath, tmp, strlen(tmp)-strlen(fl_filename_name(tmp)));
+        Pref->Load("preferences", ExePath);
 
 
     //Main window creation
@@ -1039,27 +1079,28 @@ MainWindow::MainWindow(const char *f)
             Fl_Menu_Item menuitems[] =
             {
                 { "&File",              0, 0, 0, FL_SUBMENU },
-                    { "Open", FL_COMMAND + 'o', (Fl_Callback *)Open_cb, this },
+                    { "Open file", FL_COMMAND + 'o', (Fl_Callback *)Open_cb, this },
+                    { "Open folder", FL_SHIFT + FL_COMMAND + 'o', (Fl_Callback *)Open_cb, this },
                     { "Recent files", 0, 0, 0, FL_SUBMENU },
                         { 0 },
                     { "Export (as images)", FL_COMMAND + 'e', (Fl_Callback *)ExportDoc_cb, this, FL_MENU_INACTIVE },
                     { "Quit", FL_COMMAND + 'q', (Fl_Callback *)Quit_cb, this },
                     { 0 },
-                { "&View",              0, 0, 0, FL_SUBMENU },
+                { "&View",              0, 0, 0, FL_SUBMENU | FL_MENU_INACTIVE},
                     {"Fullscreen2", FL_Escape, (Fl_Callback *)Fullscreen_cb, this, FL_MENU_INVISIBLE | FL_MENU_INACTIVE},
                     {"Fullscreen", FL_COMMAND + 'f', (Fl_Callback *)Fullscreen_cb, this, FL_MENU_DIVIDER },
-                    { "Panel mode", 'c', (Fl_Callback *)CaseMode_cb, this, FL_MENU_RADIO| FL_MENU_INACTIVE },
-                    { "Strip mode", 's', (Fl_Callback *)StripMode_cb, this, FL_MENU_RADIO|FL_MENU_INACTIVE },
-                    { "Page mode", 'p', (Fl_Callback *)PageMode_cb, this, FL_MENU_RADIO| FL_MENU_DIVIDER |FL_MENU_INACTIVE },
-                    { "Page preview", FL_COMMAND+'p', (Fl_Callback *)PagePreview_cb, this, FL_MENU_TOGGLE|FL_MENU_DIVIDER | FL_MENU_INACTIVE },
-                    { "Thumbnails view", FL_COMMAND + 't', (Fl_Callback *)Thumbnails_cb, this, FL_MENU_TOGGLE|FL_MENU_DIVIDER | FL_MENU_INACTIVE },
-                    { "Next panel", FL_Right, (Fl_Callback *)NextCase_cb, this, FL_MENU_INACTIVE },
-                    { "Previous panel", FL_Left, (Fl_Callback *)PreviousCase_cb, this, FL_MENU_INACTIVE },
-                    { "Next page", FL_Down , (Fl_Callback *)NextPage_cb, this, FL_MENU_INACTIVE },
-                    { "Previous page", FL_Up, (Fl_Callback *)PreviousPage_cb, this, FL_MENU_INACTIVE },
-                    { "First page", FL_Home , (Fl_Callback *)FirstPage_cb, this, FL_MENU_INACTIVE },
-                    { "Last page", FL_End , (Fl_Callback *)LastPage_cb, this, FL_MENU_INACTIVE },
-                    { "Go to page", FL_COMMAND + 'g' , (Fl_Callback *)GoToPage_cb, this, FL_MENU_INACTIVE },
+                    { "Panel mode", 'c', (Fl_Callback *)CaseMode_cb, this, FL_MENU_RADIO },
+                    { "Strip mode", 's', (Fl_Callback *)StripMode_cb, this, FL_MENU_RADIO },
+                    { "Page mode", 'p', (Fl_Callback *)PageMode_cb, this, FL_MENU_RADIO | FL_MENU_DIVIDER },
+                    { "Page preview", FL_COMMAND+'p', (Fl_Callback *)PagePreview_cb, this, FL_MENU_TOGGLE | FL_MENU_DIVIDER },
+                    { "Thumbnails view", FL_COMMAND + 't', (Fl_Callback *)Thumbnails_cb, this, FL_MENU_TOGGLE | FL_MENU_DIVIDER },
+                    { "Next panel", FL_Right, (Fl_Callback *)NextCase_cb, this },
+                    { "Previous panel", FL_Left, (Fl_Callback *)PreviousCase_cb, this },
+                    { "Next page", FL_Down , (Fl_Callback *)NextPage_cb, this },
+                    { "Previous page", FL_Up, (Fl_Callback *)PreviousPage_cb, this },
+                    { "First page", FL_Home , (Fl_Callback *)FirstPage_cb, this },
+                    { "Last page", FL_End , (Fl_Callback *)LastPage_cb, this },
+                    { "Go to page", FL_COMMAND + 'g' , (Fl_Callback *)GoToPage_cb, this },
                     { 0 },
                 { "&Preferences",              0, 0, 0, FL_SUBMENU },
                     { "Save preferences", 0, (Fl_Callback *)0, this, FL_MENU_TOGGLE |  FL_MENU_DIVIDER | FL_MENU_INVISIBLE },
@@ -1089,9 +1130,11 @@ MainWindow::MainWindow(const char *f)
                 ThumbDisplayGrp->begin();
                  //Thumbnails display
                      ThumbDisplayPrev = new Fl_OpenCV(ThumbDisplayGrp->x(), ThumbDisplayGrp->y(), ThumbDisplayGrp->w()-5, ThumbDisplayGrp->h()/3.-20-4);
+                     ThumbDisplayPrev->SetOnRelease_cb(PreviousPage_cb, (void*)this);
                      ThumbDisplayCurrent = new Fl_OpenCV(ThumbDisplayGrp->x(), ThumbDisplayPrev->y()+ThumbDisplayPrev->h()+6, ThumbDisplayGrp->w()-5, ThumbDisplayGrp->h()/3.+40-4);
                      ThumbDisplayNext = new Fl_OpenCV(ThumbDisplayGrp->x(), ThumbDisplayCurrent->y()+ThumbDisplayCurrent->h()+6, ThumbDisplayGrp->w()-5, ThumbDisplayGrp->h()/3.-20-4);
-                     ThumbDisplayPrev->color(FL_BLACK);ThumbDisplayCurrent->color(FL_BLACK);ThumbDisplayNext->color(FL_BLACK);
+                     ThumbDisplayNext->SetOnRelease_cb(NextPage_cb, (void*)this);
+                     ThumbDisplayGrp->selection_color(FL_BLACK);ThumbDisplayPrev->color(FL_BLACK);ThumbDisplayCurrent->color(FL_BLACK);ThumbDisplayNext->color(FL_BLACK);
                  //Horizontal separators
                      Fl_Box *separator1 = new Fl_Box(FL_FLAT_BOX, ThumbDisplayGrp->x(), ThumbDisplayPrev->y()+ThumbDisplayPrev->h(), ThumbDisplayGrp->w()-5, 6, "");
                      separator1->color(FL_BLACK);
@@ -1276,6 +1319,14 @@ void MainWindow::Init(char *filename)
                 new_doc=new Document_archive(Filename);
                 extOk=true;
             }
+            else
+            {
+                if(fl_filename_isdir(Filename)!=0)
+                {
+                    new_doc=new Document_folder(Filename);
+                    extOk=true;
+                }
+            }
         }
 
         //Check if the document has been opened
@@ -1297,7 +1348,7 @@ void MainWindow::Init(char *filename)
 
             //Apply the preferences to the document and the window widgets
                 //Apply global preferences first
-                Pref->Load("preferences");
+                Pref->Load("preferences", ExePath);
                 Pref->Apply(Doc);
 
                 //Then deal with possible document preferences
@@ -1310,7 +1361,7 @@ void MainWindow::Init(char *filename)
                 char buff[2048];
                 sprintf(buff, "%s", fl_filename_name(Doc->GetFilename()));
                 const char *filenameshort=fl_filename_setext(buff, sizeof(buff), ".pref"); //(preferences file as same name as the document file)
-                if(PrefDoc->Load(filenameshort)>=0 && Pref->GetLocalPref())
+                if(PrefDoc->Load(filenameshort, ExePath)>=0 && Pref->GetLocalPref())
                 {
                     PrefDoc->Apply(Doc);
                 }
@@ -1320,7 +1371,7 @@ void MainWindow::Init(char *filename)
                     PrefDoc->SetThumbnails(Pref->GetThumbnails());
                     PrefDoc->Save(Doc);
                     //and reload
-                    PrefDoc->Load(filenameshort);
+                    PrefDoc->Load(filenameshort, ExePath);
                 }
 
             //Set the display ratio
@@ -1344,7 +1395,7 @@ void MainWindow::Init(char *filename)
         else
         {
             //Say it to the user
-            fl_alert("Unable to open the document. Is it a valid pdf or archive file ?");
+            fl_alert("Unable to open the document.\nIs it a valid comics file (pdf or archive) or folder (two images or more) ?");
 
             //Check if we have an active document
             if(!Doc)

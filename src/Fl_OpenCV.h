@@ -49,12 +49,17 @@ protected:
 
   //Mat fimage;
   int iscolor;
-  CvMouseCallback mouse_cb;
-  void *cb_param; //Vincent: a parameter for the callback function
   bool fit;
   float maxzoom;
-  void (*Resizing_cb)(void *);
+  //Callbacks
+  void (*Resizing_cb)(Fl_Widget *, void *);
   void *Resizing_cb_param;
+  void (*OnClick_cb)(Fl_Widget *, void *);
+  void *OnClick_cb_param;
+  void (*OnRelease_cb)(Fl_Widget *, void *);
+  void *OnRelease_cb_param;
+  CvMouseCallback mouse_cb;
+  void *CVcb_param;
 
 public:
   //Assign a new image to draw (in Mat Opencv format)
@@ -64,7 +69,7 @@ public:
   Fl_OpenCV(int X,int Y,int W,int H, float mzoom=0.5);
   ~Fl_OpenCV();
 
-  void SetMouseCallback(CvMouseCallback on_mouse, void * param=0);
+  void SetCVMouseCallback(CvMouseCallback on_mouse, void * param=0);
   int handle(int event);
 
   //When the widget is resized, re-compute the image to draw according to new dimensions
@@ -73,15 +78,28 @@ public:
       h(hh);
       Fl_Widget::resize(x, y, ww, hh);
       if(Resizing_cb!=NULL)
-        Resizing_cb(Resizing_cb_param);
+        Resizing_cb(this, Resizing_cb_param);
       SetImage(image);
   }
 
-  void SetResizing_cb(void (*resizing_cb)(void *), void * param=NULL)
+  void SetResizing_cb(void (*cb)(Fl_Widget*, void *), void * param=NULL)
   {
-      Resizing_cb=resizing_cb;
+      Resizing_cb=cb;
       Resizing_cb_param=param;
   }
+
+  void SetOnClick_cb(void (*cb)(Fl_Widget*, void *), void * param=NULL)
+  {
+      OnClick_cb=cb;
+      OnClick_cb_param=param;
+  }
+
+  void SetOnRelease_cb(void (*cb)(Fl_Widget*, void *), void * param=NULL)
+  {
+      OnRelease_cb=cb;
+      OnRelease_cb_param=param;
+  }
+
 
   int x(){return _x;};
   int y(){return _y;};

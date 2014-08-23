@@ -45,11 +45,11 @@ Preferences::~Preferences()
 //! \return 0 if the preferences file has been successfully loaded
 //! \return -1 if the preferences file was not found
 //! \return -2 if the preferences file had a wrong format
-int Preferences::Load(const char prefFilename[255])
+int Preferences::Load(const char prefFilename[255], const char windir[2048])
 {
     //First remember the preferences file filename
     #ifdef __WINDOWS__
-        sprintf(Filename, "%s", prefFilename);
+        sprintf(Filename, "%s/%s", windir, prefFilename);
     #else
         sprintf(Filename, "%s/.bdreader/%s", getenv("HOME"), prefFilename);
         //if the file (and the folder .bdreader) doesn't exist yet, create it

@@ -21,8 +21,8 @@
 #include "Export_Document.h"
 
 //Initialize the list of supported formats
-const int NbSupportedWritingImgExtensions=4;    //! Number of image extensions (format) supported.
-const char *SupportedWritingImgExtensions[NbSupportedWritingImgExtensions] = {".jpg", ".tif", ".png", ".bmp"};  //! List of supported image extensions (formats).
+const int NbSupportedWritingImgExtensions=3;    //! Number of image extensions (format) supported.
+const char *SupportedWritingImgExtensions[NbSupportedWritingImgExtensions] = {".jpg", ".png", ".bmp"};  //! List of supported image extensions (formats).
 
 //! Main constructor: initialization of export object
 Export_Document::Export_Document(Document *doc, const char *path, const char *fileext, bool panelmode, bool pagepreview)
@@ -107,7 +107,8 @@ int Export_Document::Export(Fl_Progress *progressbar)
 
     //For each page, includng the first one
     int nbimages=0;
-    do
+    int lastpage=0; //Stop when is 2
+    while(lastpage<2 && !Canceled)
     {
         //Build the page number (long version: w/ 00 in front of)
             char longpagenb[5];
@@ -130,6 +131,12 @@ int Export_Document::Export(Fl_Progress *progressbar)
 
         //Load the document page
         Doc->LoadPage();
+
+        //Wait for the page to be loaded
+        while(!Doc->currentPage->IsLoaded())
+        {
+            Fl::wait(1);
+        }
 
         //Locally render it
             //If in panel mode and detection has not failed
@@ -206,10 +213,20 @@ int Export_Document::Export(Fl_Progress *progressbar)
         if(progressbar)
         {
             progressbar->value(CurrentPage);
+            char txt[20];
+            sprintf(txt, "Page %d/%d", CurrentPage, Doc->GetNbOfPages());
+            progressbar->label(txt);
         }
         //Give some time to fltk for refreshing (and check for cancel button...)
         Fl::check();
-    }while(Doc->NextPage()>0 && !Canceled);
+
+
+        //Go to next page if one and check for last page: lastpage will be 2 on the last one
+        if(Doc->NextPage()<0)
+        {
+            lastpage++;
+        }
+    }
 
     //Done
     SavingInProgress=false;

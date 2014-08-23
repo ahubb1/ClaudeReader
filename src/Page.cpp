@@ -178,13 +178,18 @@ Page::Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, float di
         ActiveCase=-1;
     }
     NbCases=0;
+    Cases.clear();
     PageNb=page_nb;
     NbPages=nb_pages;
+
+    printf("create %d\n", PageNb);
 }
 
 //! Destructor.
 Page::~Page()
 {
+    printf("delete %d\n", PageNb);
+
     if(Cases.size()>0)
         Cases.clear();
 }
@@ -270,8 +275,8 @@ void Page::DetectCases()
 
         //Release some memory
         CasesTmp.clear();
-        src.release();
-        srcG.release();
+        /*src.release();
+        srcG.release();*/
 
     } //if CASE
 
@@ -667,13 +672,13 @@ Mat * Page::RenderCase()
         //Render the whole page
         if(ActiveCase==-1 || ReadingMode==PAGE)
         {
-            ImgRender.release();
+            //ImgRender.release();
             PageRenderCv.copyTo(ImgRender);
         }
         //or the active case
         else
         {
-            ImgRender.release();
+            //ImgRender.release();
             (PageRenderCv(Cases[ActiveCase])).copyTo(ImgRender);
         }
         return &ImgRender;
