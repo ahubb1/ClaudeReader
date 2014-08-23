@@ -182,13 +182,17 @@ Page::Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, float di
     PageNb=page_nb;
     NbPages=nb_pages;
 
-    printf("create %d\n", PageNb);
+    #ifdef DEBUG
+        printf("create %d\n", PageNb);
+    #endif
 }
 
 //! Destructor.
 Page::~Page()
 {
-    printf("delete %d\n", PageNb);
+    #ifdef DEBUG
+        printf("delete %d\n", PageNb);
+    #endif
 
     if(Cases.size()>0)
         Cases.clear();

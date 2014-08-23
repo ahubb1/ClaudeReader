@@ -47,19 +47,22 @@ Document::~Document()
 {
     if(currentPage)
     {
-        delete currentPage;
+        if( (previousPage && currentPage!=previousPage) || (nextPage && currentPage!=nextPage) )
+            delete currentPage;
         currentPage=NULL;
     }
 
     if(nextPage)
     {
-        delete nextPage;
+        if( (previousPage && nextPage!=previousPage) || (currentPage && nextPage!=currentPage) )
+            delete nextPage;
         nextPage=NULL;
     }
 
     if(previousPage)
     {
-        delete previousPage;
+        if( (currentPage && previousPage!=currentPage) || (nextPage && previousPage!=nextPage) )
+            delete previousPage;
         previousPage=NULL;
     }
 }
@@ -102,15 +105,22 @@ int Document::LoadPage(int p)
 
             //If there is a next page already created
             if(nextPage)
+            {
                 currentPage=nextPage; //Use it as the new current page
+                nextPage=NULL;
+            }
             else
                 currentPage=CreatePage(ActivePage); //Otherwise create it
 
             //Delete the old previous page if one
             if(previousPage)
             {
-                printf("previous: \t");
-                delete previousPage;
+                #ifdef DEBUG
+                    printf("previous: \t");
+                #endif
+                if( (currentPage && previousPage!=currentPage) || (nextPage && previousPage!=nextPage) )
+                    delete previousPage;
+                previousPage=NULL;
             }
             //Update the previous page: it's now the old current page...
             previousPage=tmp;
@@ -123,8 +133,6 @@ int Document::LoadPage(int p)
         }
         else
         {
-            if(previousPage)
-                printf("%d %d\n", ActivePage, previousPage->GetPageNb());
             //If the page asked is already loaded as the PreviousPage
             if(previousPage && ActivePage==previousPage->GetPageNb())
             {
@@ -135,15 +143,21 @@ int Document::LoadPage(int p)
 
                 //If there is a previous page already created
                 if(previousPage)
+                {
                     currentPage=previousPage; //Use it as the new current page
+                    previousPage=NULL;
+                }
                 else
                     currentPage=CreatePage(ActivePage); //Otherwise create it
 
                 //Delete the old next page if one
                 if(nextPage)
                 {
-                    printf("next: \t");
-                    delete nextPage;
+                    #ifdef DEBUG
+                        printf("next: \t");
+                    #endif
+                    if( (previousPage && nextPage!=previousPage) || (currentPage && nextPage!=currentPage) )
+                        delete nextPage;
                 }
                 //Update the next page: it's now the old current page...
                 nextPage=tmp;
@@ -160,8 +174,11 @@ int Document::LoadPage(int p)
                 //Change the current page
                 if(currentPage)
                 {
-                    printf("current: \t");
-                    delete currentPage;
+                    #ifdef DEBUG
+                        printf("current: \t");
+                    #endif
+                    if( (previousPage && currentPage!=previousPage) || (nextPage && currentPage!=nextPage) )
+                        delete currentPage;
                 }
 
                 //Create the new page
@@ -174,6 +191,25 @@ int Document::LoadPage(int p)
 
         //Close the document, free the context..
         Close();
+
+        #ifdef DEBUG2
+            printf("previous: ");
+            if(previousPage)
+                printf("%d\n", previousPage->GetPageNb());
+            else
+                printf("NULL\n");
+            printf("current: ");
+            if(currentPage)
+                printf("%d\n", currentPage->GetPageNb());
+            else
+                printf("NULL\n");
+            printf("next: ");
+            if(nextPage)
+                printf("%d\n", nextPage->GetPageNb());
+            else
+                printf("NULL\n");
+            printf("\n");
+        #endif
 
         return 0;
     }
@@ -209,9 +245,10 @@ void Document::PreloadPages()
         }
         else
         {
-            /*If they were one, not the good one and the new one doesn't exist in the document
+            //If they were one, not the good one and the new one doesn't exist in the document
             if(nextPage)
-                delete nextPage;*/
+                if( (previousPage && nextPage!=previousPage) || (currentPage && nextPage!=currentPage) )
+                    delete nextPage;
             //the page doesn't exist
             nextPage=NULL;
         }
@@ -228,9 +265,10 @@ void Document::PreloadPages()
         }
         else
         {
-            /*If they were one, not the good one and the new one doesn't exist in the document
+            //If they were one, not the good one and the new one doesn't exist in the document
             if(previousPage)
-                delete previousPage;*/
+                if( (currentPage && previousPage!=currentPage) || (nextPage && previousPage!=nextPage) )
+                    delete previousPage;
             //the page doesn't exist
             previousPage=NULL;
         }
@@ -238,6 +276,25 @@ void Document::PreloadPages()
 
     //Close the document, free the context..
     Close();
+
+    #ifdef DEBUG2
+        printf("previous: ");
+        if(previousPage)
+            printf("%d\n", previousPage->GetPageNb());
+        else
+            printf("NULL\n");
+        printf("current: ");
+        if(currentPage)
+            printf("%d\n", currentPage->GetPageNb());
+        else
+            printf("NULL\n");
+        printf("next: ");
+        if(nextPage)
+            printf("%d\n", nextPage->GetPageNb());
+        else
+            printf("NULL\n");
+        printf("\n");
+    #endif
 }
 
 //! Reload the surrounding pages (previous and next): apply them the Document parameters

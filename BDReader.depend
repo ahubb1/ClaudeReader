@@ -29,7 +29,7 @@
 1408599588 source:/home/vincent/Perso/BDReader/BDReader/src/Fl_OpenCV.cxx
 	"Fl_OpenCV.h"
 
-1407665334 source:/home/vincent/Perso/BDReader/BDReader/src/Document.cpp
+1408753989 source:/home/vincent/Perso/BDReader/BDReader/src/Document.cpp
 	"Document.h"
 
 1399614367 /home/vincent/Perso/BDReader/BDReader/include/Document.h
@@ -329,7 +329,7 @@
 	<stlplus3/ntree.hpp>
 	<opencv2/opencv.hpp>
 
-1408535632 source:/home/vincent/Perso/BDReader/BDReader/src/Page.cpp
+1408753865 source:/home/vincent/Perso/BDReader/BDReader/src/Page.cpp
 	"Page.h"
 
 1389021098 /home/vincent/Perso/BDReader/BDReader/include/ntree.tpp
@@ -482,7 +482,7 @@
 	<mupdf/fitz.h>
 	"Page.h"
 
-1405133489 source:/home/vincent/Perso/BDReader/BDReader/src/Page_pdf.cpp
+1408753832 source:/home/vincent/Perso/BDReader/BDReader/src/Page_pdf.cpp
 	"Page_pdf.h"
 
 1408748085 source:/home/vincent/Perso/BDReader/BDReader/src/Document_archive.cpp

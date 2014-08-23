@@ -67,7 +67,7 @@ void Page_pdf::Load(fz_context *fzctx, fz_document *fzdoc)
     fz_catch(fzctx)
     {
         #ifdef DEBUG
-        printf("Page_pdf:: Error bound\n");
+            printf("Page_pdf:: Error bound\n");
         #endif
         LoadErrorPage();
         Failed=true;
@@ -86,7 +86,7 @@ void Page_pdf::Load(fz_context *fzctx, fz_document *fzdoc)
     fz_catch(fzctx)
     {
         #ifdef DEBUG
-        printf("Page_pdf:: Error prepare pixmap\n");
+            printf("Page_pdf:: Error prepare pixmap\n");
         #endif
         LoadErrorPage();
         Failed=true;
@@ -104,7 +104,7 @@ void Page_pdf::Load(fz_context *fzctx, fz_document *fzdoc)
     fz_catch(fzctx)
     {
         #ifdef DEBUG
-        printf("Page_pdf:: Error rendering\n");
+            printf("Page_pdf:: Error rendering\n");
         #endif
         LoadErrorPage();
         Failed=true;
@@ -124,7 +124,7 @@ void Page_pdf::Load(fz_context *fzctx, fz_document *fzdoc)
     fz_catch(fzctx)
     {
         #ifdef DEBUG
-        printf("Page_pdf:: Error free pixmap\n");
+            printf("Page_pdf:: Error free pixmap\n");
         #endif
     }
 }
