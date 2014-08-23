@@ -15,7 +15,14 @@ fullname=$base_name$version_nb
 if [ -a $fullname ]
 then
 	echo $fullname folder already exists... exit.
-	exit
+	echo -e Overwrite ? '('y/n')'
+	read valid
+	if [[ $valid == y* ]]
+	then
+		sudo rm -rf $fullname
+	else
+		exit
+	fi
 fi
 
 #Copy the files into the new directory
@@ -64,7 +71,7 @@ echo Configure done.
 echo -e '\t' Make test...
 make
 echo 
-if [ -a src/BDReader ]
+if [ -a src/bdreader ]
 then
 	echo make successfull.
 else
@@ -74,7 +81,7 @@ fi
 echo
 echo -e '\t' Make install test...
 sudo make install
-BDReader
+bdreader
 echo
 echo -e '\t' Make uninstall test ...
 sudo make uninstall
@@ -105,8 +112,10 @@ then
 	tar -zcvf $base_file'_'$version_nb.orig.tar.gz $base_file-$version_nb
 	echo "done."
 	echo -n -e '\t' Creation of the package...
-	cd $base_file-$version_nb/ && dh_make -e kennyyy@users.sf.net
+	cd $base_file-$version_nb/ && dh_make --single -e kennyyy@users.sf.net
 	cp ../DebFilesTemplates/* debian/
+	rm debian/*.ex
+	rm debian/*.EX
 	dpkg-buildpackage -rsudo
 	echo "done."
 	echo -n -e '\t' Package testing...

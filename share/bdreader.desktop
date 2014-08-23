@@ -1,8 +1,8 @@
 [Desktop Entry]
 Name=BDReader
 Comment=Comics reader
-TryExec=BDReader
-Exec=BDReader %u
+TryExec=bdreader
+Exec=bdreader %u
 Terminal=false
 Type=Application
 MimeType=application/pdf;application/x-rar;application/zip;

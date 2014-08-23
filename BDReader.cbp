@@ -7,18 +7,18 @@
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="Debug">
-				<Option output="bin/Debug/BDReader" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Debug/bdreader" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-g" />
-					<Add option="-DDEBUG" />
+					<Add option="-DDEBUG2" />
 				</Compiler>
 			</Target>
 			<Target title="Release">
-				<Option output="bin/Release/BDReader" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Release/bdreader" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Release/" />
 				<Option type="0" />
 				<Option compiler="gcc" />
@@ -32,7 +32,7 @@
 			<Target title="Win32">
 				<Option output="bin/Win32/BDReader.exe" prefix_auto="0" extension_auto="0" />
 				<Option object_output="obj/Win32/" />
-				<Option type="1" />
+				<Option type="0" />
 				<Option compiler="mingwi68632" />
 				<Option projectLinkerOptionsRelation="1" />
 				<Option projectLibDirsRelation="1" />
