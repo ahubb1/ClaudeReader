@@ -38,6 +38,8 @@
 #include <FL/Fl_Native_File_Chooser.H>
 #include <FL/Fl_Pack.H>
 #include <FL/Fl_Progress.H>
+#include <FL/Fl_Dial.H>
+#include <FL/Fl_Counter.H>
 
 
 #include "Fl_Help_Window.h"
@@ -102,7 +104,9 @@ class MainWindow
         friend void UpdateWidgets(void * param);
         friend void ActivateNavigationWidgets(void *param, bool val);
         friend void AddRecentDocsItems(void *param);
+        friend void StatusUpdate(void * param);
         friend void StatusBarUpdate(void * param);
+        friend void StatusFullScreenUpdate(void * param);
 
 
     private:
@@ -115,6 +119,8 @@ class MainWindow
             Fl_OpenCV *Display, *ThumbDisplayCurrent, *ThumbDisplayPrev, *ThumbDisplayNext;
             Fl_Button *PrevCloseButton;
             Fl_Overlay_Arrow_Button *NextButton, *PreviousButton, *NextPageButton, *PreviousPageButton;
+            Fl_Group *PageNbDialGrp;
+            Fl_Dial * PageNbDial;               //!< The fullscreen page number indicator
 
         //Other param
             char ExePath[FL_PATH_MAX];     //!< Executable path, used to store preferences file on Windows

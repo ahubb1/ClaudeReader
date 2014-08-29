@@ -201,7 +201,7 @@ void ResizingEvents(Fl_Widget* widget, void* param)
         {
             //And re-render
             mw->Doc->Render();
-            StatusBarUpdate(mw);
+            StatusUpdate(mw);
 
             //Give some time to fltk
             Fl::check();
@@ -250,7 +250,30 @@ void StatusBarUpdate(void * param)
       }
       mw->StatusBar->copy_label(text);
       mw->StatusBar->redraw();
-      Fl::wait(100);
+}
+//! Update the fullscreen status
+void StatusFullScreenUpdate(void * param)
+{
+     MainWindow *mw=(MainWindow*)param;
+
+     if(mw->Doc)
+     {
+        //Update the dial
+        mw->PageNbDial->range(1, mw->Doc->GetNbOfPages());
+        mw->PageNbDial->value(mw->Doc->GetCurrentPageNb());
+        //and the tooltip text
+        char txt[16];
+        sprintf(txt, "Page %d/%d", mw->Doc->GetCurrentPageNb(), mw->Doc->GetNbOfPages());
+        mw->PageNbDial->copy_tooltip(txt);
+        mw->PageNbDial->redraw();
+     }
+}
+//! Call both the status bar update and the fullscreen status update
+void StatusUpdate(void * param)
+{
+    StatusBarUpdate(param);
+    StatusFullScreenUpdate(param);
+    Fl::wait(50);
 }
 //-----------------------------------------------------------------------------
 
@@ -511,9 +534,9 @@ void Fullscreen_cb(Fl_Widget* widget, void * param)
     {
         //Go in fullscreen mode
         mw->window->resizable(NULL);
-        Fl::wait(100);
+        Fl::wait(10);
         mw->window->fullscreen();
-        Fl::wait(100);
+        Fl::wait(10);
         //Hide the bars (but not really, just make them 0px width=> trick to keep the shortcuts and remember their size/position (only w() is forgotten but it's the window one))
         mw->MenuBar->resize(mw->MenuBar->x(), mw->MenuBar->y(), 0, mw->MenuBar->h());
         mw->StatusBar->resize(mw->StatusBar->x(), mw->StatusBar->y(), 0, mw->StatusBar->h());
@@ -521,9 +544,11 @@ void Fullscreen_cb(Fl_Widget* widget, void * param)
         while(mw->window->w()<Fl::w() && mw->window->h()<Fl::h())
             Fl::wait(10);
         mw->DisplayGrp->resize(0, 0, mw->window->w(), mw->window->h());
-        Fl::wait(100);
+        mw->PageNbDialGrp->resize((int)(mw->window->w()-(mw->window->w()/20.)), (int)(mw->window->h()-(mw->window->w()/20.)), mw->window->w()/20., mw->window->w()/20.);
+        mw->PageNbDialGrp->show();
+        Fl::wait(10);
         mw->DisplayGrp->redraw();
-        Fl::wait(100);
+        Fl::wait(10);
         Fl::check();
 
         //Add the ESC control as a fullscreen shortcut
@@ -540,6 +565,8 @@ void Fullscreen_cb(Fl_Widget* widget, void * param)
         mw->MenuBar->resize(mw->MenuBar->x(), mw->MenuBar->y(), mw->window->w(), 25);
         mw->StatusBar->resize(mw->StatusBar->x(), mw->window->h()-20, mw->window->w(), 20);
         Fl::wait(100);
+        //HIde the page number indicator
+        mw->PageNbDialGrp->hide();
         //Resize the display group
         mw->DisplayGrp->resize(0, 25, mw->window->w(), mw->window->h()-45);
         Fl::wait(100);
@@ -563,7 +590,7 @@ void PageMode_cb(Fl_Widget* widget, void * param)
 
     mw->Doc->SetReadingMode(PAGE);
     mw->Display->SetImage(mw->Doc->Render());
-    StatusBarUpdate(mw);
+    StatusUpdate(mw);
     Fl::check();
     mw->Doc->UpdatePreloadedPages();
 }
@@ -576,7 +603,7 @@ void StripMode_cb(Fl_Widget* widget, void * param)
     //Adjust the strip size according to the new display ratio
     mw->Doc->SetDisplayRatio(mw->Display->w()/(float)mw->Display->h());
     mw->Display->SetImage(mw->Doc->Render());
-    StatusBarUpdate(mw);
+    StatusUpdate(mw);
     Fl::check();
     mw->Doc->UpdatePreloadedPages();
 }
@@ -587,7 +614,7 @@ void CaseMode_cb(Fl_Widget* widget, void * param)
 
     mw->Doc->SetReadingMode(CASE);
     mw->Display->SetImage(mw->Doc->Render());
-    StatusBarUpdate(mw);
+    StatusUpdate(mw);
     Fl::check();
     mw->Doc->UpdatePreloadedPages();
 }
@@ -607,7 +634,7 @@ void PagePreview_cb(Fl_Widget* widget, void * param)
     {
         mw->Doc->SetPagePreview(true);
     }
-    StatusBarUpdate(mw);
+    StatusUpdate(mw);
 }
 
 //! Hide or show the thumbnails pages preview
@@ -658,7 +685,7 @@ void UpdatePage(MainWindow *mw)
     mw->Display->SetImage(mw->Doc->Render());
 
     //Update the status bar
-    StatusBarUpdate(mw);
+    StatusUpdate(mw);
     Fl::check();
 
     //Preload the surrounding pages
@@ -681,7 +708,7 @@ void PreviousPage_cb(Fl_Widget* widget, void * param)
 
     //Update the current page number
     int p=mw->Doc->PreviousPage();
-    StatusBarUpdate(mw);
+    StatusUpdate(mw);
     //wait some time
     Fl::check();
     Fl::wait(10);
@@ -704,7 +731,7 @@ void NextPage_cb(Fl_Widget* widget, void * param)
 
     //Update the current page number
     int p=mw->Doc->NextPage();
-    StatusBarUpdate(mw);
+    StatusUpdate(mw);
     //wait some time
     Fl::check();
     Fl::wait(10);
@@ -726,8 +753,9 @@ void PreviousCase_cb(Fl_Widget* widget, void * param)
     MainWindow *mw=(MainWindow*)param;
 
     int ret = mw->Doc->PreviousCase();
-    StatusBarUpdate(mw);
+    StatusUpdate(mw);
     mw->Display->SetImage(mw->Doc->Render());
+    StatusUpdate(mw);
 
     //If a new page has been loaded, preload
     if(ret<0)
@@ -742,8 +770,9 @@ void NextCase_cb(Fl_Widget* widget, void * param)
     MainWindow *mw=(MainWindow*)param;
 
     int ret = mw->Doc->NextCase();
-    StatusBarUpdate(mw);
+    StatusUpdate(mw);
     mw->Display->SetImage(mw->Doc->Render());
+    StatusUpdate(mw);
 
     //If a new page has been loaded, preload
     if(ret<0)
@@ -1078,6 +1107,7 @@ MainWindow::MainWindow(const char *exepath, const char *f)
 
     //Main window creation
         //Use saved window size and position (will be 0, 0, 600, 600 if nothing saved)
+        //TODO: Check that not more than screen resolution
         window=new Fl_Double_Window(Pref->GetWinX(), Pref->GetWinY(), Pref->GetWinW(), Pref->GetWinH(), "BDReader");
 
     //Set an icon
@@ -1200,6 +1230,20 @@ MainWindow::MainWindow(const char *exepath, const char *f)
                      PreviousPageButton->clear_visible_focus();
                      PreviousPageButton->hide();
                      PreviousPageButton->tooltip("Previous page");
+
+                     //The fullscreen page number indicator
+                     PageNbDialGrp=new Fl_Group(MainDisplayGrp->x()+MainDisplayGrp->w()-70, MainDisplayGrp->y()+MainDisplayGrp->h()-70, 50, 50);
+                     PageNbDialGrp->begin();
+                     PageNbDial = new Fl_Dial(PageNbDialGrp->x(), PageNbDialGrp->y(), PageNbDialGrp->w(), PageNbDialGrp->h(), "");
+                         PageNbDial->angles(180, 180+360);
+                         PageNbDial->type(FL_FILL_DIAL);
+                         PageNbDial->precision(1);
+                         PageNbDial->box(FL_ROUND_DOWN_BOX);
+                         PageNbDial->selection_color(FL_BLACK);
+                         PageNbDial->tooltip("Page ");
+                     PageNbDialGrp->end();
+                     PageNbDialGrp->resizable(NULL);
+                     PageNbDialGrp->hide();
                 MainDisplayGrp->end();
 
             DisplayGrp->end();
@@ -1213,6 +1257,16 @@ MainWindow::MainWindow(const char *exepath, const char *f)
              StatusBar->align(FL_ALIGN_RIGHT|FL_ALIGN_INSIDE);
              StatusBar->box(FL_PLASTIC_UP_BOX);
 
+
+             //TODO: A terminer et ameliorer
+             /*Fl_Counter* StatusCounter = new Fl_Counter(StatusBar->x()+StatusBar->w()/2.0-100, StatusBar->y(), 200, 20);
+             StatusCounter->box(FL_PLASTIC_ROUND_UP_BOX);
+             StatusCounter->labeltype(FL_NO_LABEL);
+             StatusCounter->labelcolor(FL_DARK_RED);
+             StatusCounter->minimum(1);
+             StatusCounter->maximum(10);
+             StatusCounter->step(1);*/
+             //StatusBar->
 
          //Events callbacks
              //Closing callback
@@ -1426,7 +1480,7 @@ void MainWindow::Init(char *filename)
                 sprintf(title, "BDReader");
                 window->label(title);
                 //and status bar
-                StatusBarUpdate(this);
+                StatusUpdate(this);
             }
         }
     }
