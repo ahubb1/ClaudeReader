@@ -27,13 +27,65 @@
  *
  *
  */
+#include <getopt.h>
 
 #include "MainWindow.h"
+#include "helpcmd.h"
+#include "version.h"
 
 
 int main(int argc, char **argv)
 {
     MainWindow *MW;
+
+
+    //POSIX comand-line otions management (-v and -h)
+    int OptionChar;             /* option character */
+    while (1)
+    {
+        static struct option long_options[] =
+        {
+            //Supported options
+            {"version", no_argument,       0, 'v'},
+            {"help",  no_argument,       0, 'h'},
+            //{"output",    required_argument, 0, 'o'},
+            {0, 0, 0, 0}
+        };
+        // getopt_long stores the option index here.
+        int option_index = 0;
+
+        OptionChar = getopt_long (argc, argv, ":vh", long_options, &option_index);
+
+        /* Detect the end of the options. */
+        if (OptionChar == -1)
+         break;
+
+         switch (OptionChar)
+         {
+         case 0:
+            break;
+
+         case 'v':
+            printf("%s\n", VERSION_STRING);
+            return 0;
+            break;
+         //Display help and quit
+         case 'h':
+            printf("%s\n", HELPCMD_STRING);
+            return 0;
+            break;
+
+         /*case 'f':
+           printf ("option -f with value `%s'\n", optarg);
+           break;*/
+
+         case '?':
+           break;
+
+         default:
+           abort ();
+         }
+    }
 
     //Pass the executable filename/path and if a parameter is passed, use the first one as a potential filename to open
     if(argc>1)

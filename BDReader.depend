@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1409321737 source:/home/vincent/Perso/BDReader/BDReader/src/MainWindow.cpp
+1409364175 source:/home/vincent/Perso/BDReader/BDReader/src/MainWindow.cpp
 	"MainWindow.h"
 	"help.h"
 	"about.h"
@@ -18,15 +18,18 @@
 	"Document.h"
 	"icon32.xbm"
 
-1405768834 source:/home/vincent/Perso/BDReader/BDReader/src/main.cpp
+1409365830 source:/home/vincent/Perso/BDReader/BDReader/src/main.cpp
+	<getopt.h>
 	"MainWindow.h"
+	"helpcmd.h"
+	"version.h"
 
 1400922515 /home/vincent/Perso/BDReader/BDReader/include/Fl_OpenCV.h
 	<FL/Fl_Widget.H>
 	<FL/fl_ask.H>
 	<opencv2/opencv.hpp>
 
-1408781201 source:/home/vincent/Perso/BDReader/BDReader/src/Fl_OpenCV.cxx
+1409324047 source:/home/vincent/Perso/BDReader/BDReader/src/Fl_OpenCV.cxx
 	"Fl_OpenCV.h"
 
 1408779701 source:/home/vincent/Perso/BDReader/BDReader/src/Document.cpp
@@ -471,7 +474,7 @@
 
 1408752511 /home/vincent/Perso/BDReader/BDReader/src/help.h
 
-1404356365 /home/vincent/Perso/BDReader/BDReader/src/about.h
+1409365216 /home/vincent/Perso/BDReader/BDReader/src/about.h
 
 1407655720 source:/home/vincent/Perso/BDReader/BDReader/src/Document_pdf.cpp
 	"Document_pdf.h"
@@ -566,4 +569,8 @@
 
 1408577053 /home/vincent/Perso/BDReader/BDReader/src/SupportedImageFormats.h
 	<string>
+
+1409365994 /home/vincent/Perso/BDReader/BDReader/src/helpcmd.h
+
+1409365404 /home/vincent/Perso/BDReader/BDReader/src/version.h
 

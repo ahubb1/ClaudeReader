@@ -1106,9 +1106,8 @@ MainWindow::MainWindow(const char *exepath, const char *f)
 
 
     //Main window creation
-        //Use saved window size and position (will be 0, 0, 600, 600 if nothing saved)
-        //TODO: Check that not more than screen resolution
-        window=new Fl_Double_Window(Pref->GetWinX(), Pref->GetWinY(), Pref->GetWinW(), Pref->GetWinH(), "BDReader");
+        //Use saved window size and position (will be 0, 0, 600, 600 if nothing saved, and always lower than the available space on the screen)
+        window=new Fl_Double_Window(Pref->GetWinX(), Pref->GetWinY(), min(Fl::w()-2,Pref->GetWinW()) , min(Fl::h()-2,Pref->GetWinH()), "BDReader");
 
     //Set an icon
     //Problem with windows compile (Pixmap not declared)
@@ -1465,7 +1464,7 @@ void MainWindow::Init(char *filename)
         else
         {
             //Say it to the user
-            fl_alert("Unable to open the document.\nIs it a valid comics file (pdf or archive) or folder (two images or more) ?");
+            fl_alert("Unable to open the %s.\nIs it a valid comics file (pdf or archive) or folder (two images or more) ?", Filename);
 
             //Check if we have an active document
             if(!Doc)
