@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1409374445 source:/home/vincent/Perso/BDReader/BDReader/src/MainWindow.cpp
+1409396411 source:/home/vincent/Perso/BDReader/BDReader/src/MainWindow.cpp
 	"MainWindow.h"
 	"help.h"
 	"about.h"
@@ -409,7 +409,7 @@
 	<FL/fl_draw.H>
 	<FL/Fl_Button.H>
 
-1409374316 /home/vincent/Perso/BDReader/BDReader/src/MainWindow.h
+1409395041 /home/vincent/Perso/BDReader/BDReader/src/MainWindow.h
 	<FL/Fl.H>
 	<FL/Fl_Window.H>
 	<FL/Fl_Menu_Bar.H>
@@ -417,7 +417,6 @@
 	<FL/Fl_Native_File_Chooser.H>
 	<FL/Fl_Pack.H>
 	<FL/Fl_Progress.H>
-	<FL/Fl_Dial.H>
 	<FL/Fl_Counter.H>
 	"Fl_Help_Window.h"
 	"Fl_OpenCV.h"

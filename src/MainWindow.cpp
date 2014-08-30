@@ -658,11 +658,11 @@ void Thumbnails_cb(Fl_Widget* widget, void * param)
     else
     {
         //show it (resize before: window size can have changed)
-        mw->ThumbDisplayGrp->resize(mw->DisplayGrp->x(), mw->DisplayGrp->y(), mw->DisplayGrp->w()/5., mw->DisplayGrp->h());
+        mw->ThumbDisplayGrp->resize(mw->DisplayGrp->x(), mw->DisplayGrp->y(), mw->DisplayGrp->w()/7., mw->DisplayGrp->h());
         mw->ThumbDisplayGrp->show();
         mw->DisplayGrp->add(mw->ThumbDisplayGrp);
         //and reduce the size of the main display
-        mw->MainDisplayGrp->resize(mw->DisplayGrp->x()+mw->ThumbDisplayGrp->w(), mw->DisplayGrp->y(), mw->DisplayGrp->w()*4/5., mw->DisplayGrp->h());
+        mw->MainDisplayGrp->resize(mw->DisplayGrp->x()+mw->ThumbDisplayGrp->w(), mw->DisplayGrp->y(), mw->DisplayGrp->w()*6/7., mw->DisplayGrp->h());
         //Update the image
         if(mw->Doc)
         {
@@ -1168,11 +1168,12 @@ MainWindow::MainWindow(const char *exepath, const char *f)
 
 
          //Main group containing the main display, navigation buttons and page preview display
-            DisplayGrp = new Fl_Group(0, 25, window->w(), window->h()-45);
+            //DisplayGrp = new Fl_Group(0, 25, window->w(), window->h()-45);
+            DisplayGrp = new Fl_Tile(0, 25, window->w(), window->h()-45);
             DisplayGrp->begin();
 
                 //Sub group containing the preview thumbnails and the separator
-                ThumbDisplayGrp = new Fl_Group(DisplayGrp->x(), DisplayGrp->y(), DisplayGrp->w()/6., DisplayGrp->h());
+                ThumbDisplayGrp = new Fl_Group(DisplayGrp->x(), DisplayGrp->y(), DisplayGrp->w()/7., DisplayGrp->h());
                 ThumbDisplayGrp->begin();
                  //Thumbnails display
                      ThumbDisplayPrev = new Fl_OpenCV(ThumbDisplayGrp->x(), ThumbDisplayGrp->y(), ThumbDisplayGrp->w()-5, ThumbDisplayGrp->h()/3.-20-4);
@@ -1195,6 +1196,7 @@ MainWindow::MainWindow(const char *exepath, const char *f)
                      Fl_Box *separator = new Fl_Box(FL_PLASTIC_UP_BOX, ThumbDisplayGrp->x()+ThumbDisplayGrp->w()-5, ThumbDisplayGrp->y(), 5, ThumbDisplayGrp->h(), "");
                  ThumbDisplayGrp->end();
                  ThumbDisplayGrp->color(FL_BLACK);
+                 ThumbDisplayGrp->resizable(ThumbDisplayCurrent);
 
                  //Sub group containing the main display and the navigation buttons
                  MainDisplayGrp = new Fl_Group(DisplayGrp->x(), DisplayGrp->y(), DisplayGrp->w(), DisplayGrp->h());
@@ -1241,6 +1243,7 @@ MainWindow::MainWindow(const char *exepath, const char *f)
                      PageNbFullGrp->resizable(PageNbFullProgress);
                      PageNbFullGrp->hide();
                 MainDisplayGrp->end();
+                MainDisplayGrp->resizable(Display);
 
             DisplayGrp->end();
             //Hide the thumbnails (will be displayed at document opening if preferences say so)

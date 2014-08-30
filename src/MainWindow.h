@@ -38,7 +38,6 @@
 #include <FL/Fl_Native_File_Chooser.H>
 #include <FL/Fl_Pack.H>
 #include <FL/Fl_Progress.H>
-#include <FL/Fl_Dial.H>
 #include <FL/Fl_Counter.H>
 
 
@@ -115,7 +114,8 @@ class MainWindow
             Fl_Help_Window *HelpDlg;
             Fl_Menu_Bar *MenuBar;
             Fl_Box *StatusBar;
-            Fl_Group *DisplayGrp, *MainDisplayGrp, *ThumbDisplayGrp;
+            Fl_Group *MainDisplayGrp, *ThumbDisplayGrp;//, *DisplayGrp;
+            Fl_Tile *DisplayGrp;
             Fl_OpenCV *Display, *ThumbDisplayCurrent, *ThumbDisplayPrev, *ThumbDisplayNext;
             Fl_Button *PrevCloseButton;
             Fl_Overlay_Arrow_Button *NextButton, *PreviousButton, *NextPageButton, *PreviousPageButton;
