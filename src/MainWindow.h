@@ -119,8 +119,8 @@ class MainWindow
             Fl_OpenCV *Display, *ThumbDisplayCurrent, *ThumbDisplayPrev, *ThumbDisplayNext;
             Fl_Button *PrevCloseButton;
             Fl_Overlay_Arrow_Button *NextButton, *PreviousButton, *NextPageButton, *PreviousPageButton;
-            Fl_Group *PageNbDialGrp;
-            Fl_Dial * PageNbDial;               //!< The fullscreen page number indicator
+            Fl_Group *PageNbFullGrp;
+            Fl_Progress * PageNbFullProgress;               //!< The fullscreen page number indicator
 
         //Other param
             char ExePath[FL_PATH_MAX];     //!< Executable path, used to store preferences file on Windows

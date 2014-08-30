@@ -259,13 +259,14 @@ void StatusFullScreenUpdate(void * param)
      if(mw->Doc)
      {
         //Update the dial
-        mw->PageNbDial->range(1, mw->Doc->GetNbOfPages());
-        mw->PageNbDial->value(mw->Doc->GetCurrentPageNb());
+        mw->PageNbFullProgress->minimum(1);
+        mw->PageNbFullProgress->maximum(mw->Doc->GetNbOfPages());
+        mw->PageNbFullProgress->value(mw->Doc->GetCurrentPageNb());
         //and the tooltip text
         char txt[16];
-        sprintf(txt, "Page %d/%d", mw->Doc->GetCurrentPageNb(), mw->Doc->GetNbOfPages());
-        mw->PageNbDial->copy_tooltip(txt);
-        mw->PageNbDial->redraw();
+        sprintf(txt, "%d/%d", mw->Doc->GetCurrentPageNb(), mw->Doc->GetNbOfPages());
+        mw->PageNbFullProgress->copy_label(txt);
+        mw->PageNbFullProgress->redraw();
      }
 }
 //! Call both the status bar update and the fullscreen status update
@@ -544,8 +545,8 @@ void Fullscreen_cb(Fl_Widget* widget, void * param)
         while(mw->window->w()<Fl::w() && mw->window->h()<Fl::h())
             Fl::wait(10);
         mw->DisplayGrp->resize(0, 0, mw->window->w(), mw->window->h());
-        mw->PageNbDialGrp->resize((int)(mw->window->w()-(mw->window->w()/20.)), (int)(mw->window->h()-(mw->window->w()/20.)), mw->window->w()/20., mw->window->w()/20.);
-        mw->PageNbDialGrp->show();
+        mw->PageNbFullGrp->resize((int)(mw->window->w()-(mw->window->w()/15.)), (int)(mw->window->h()-(mw->window->w()/40.)), mw->window->w()/20., mw->window->w()/80.);
+        mw->PageNbFullGrp->show();
         Fl::wait(10);
         mw->DisplayGrp->redraw();
         Fl::wait(10);
@@ -566,7 +567,7 @@ void Fullscreen_cb(Fl_Widget* widget, void * param)
         mw->StatusBar->resize(mw->StatusBar->x(), mw->window->h()-20, mw->window->w(), 20);
         Fl::wait(100);
         //HIde the page number indicator
-        mw->PageNbDialGrp->hide();
+        mw->PageNbFullGrp->hide();
         //Resize the display group
         mw->DisplayGrp->resize(0, 25, mw->window->w(), mw->window->h()-45);
         Fl::wait(100);
@@ -1231,18 +1232,14 @@ MainWindow::MainWindow(const char *exepath, const char *f)
                      PreviousPageButton->tooltip("Previous page");
 
                      //The fullscreen page number indicator
-                     PageNbDialGrp=new Fl_Group(MainDisplayGrp->x()+MainDisplayGrp->w()-70, MainDisplayGrp->y()+MainDisplayGrp->h()-70, 50, 50);
-                     PageNbDialGrp->begin();
-                     PageNbDial = new Fl_Dial(PageNbDialGrp->x(), PageNbDialGrp->y(), PageNbDialGrp->w(), PageNbDialGrp->h(), "");
-                         PageNbDial->angles(180, 180+360);
-                         PageNbDial->type(FL_FILL_DIAL);
-                         PageNbDial->precision(1);
-                         PageNbDial->box(FL_ROUND_DOWN_BOX);
-                         PageNbDial->selection_color(FL_BLACK);
-                         PageNbDial->tooltip("Page ");
-                     PageNbDialGrp->end();
-                     PageNbDialGrp->resizable(NULL);
-                     PageNbDialGrp->hide();
+                     PageNbFullGrp=new Fl_Group(MainDisplayGrp->x()+MainDisplayGrp->w()-110, MainDisplayGrp->y()+MainDisplayGrp->h()-30, 100, 20);
+                     PageNbFullGrp->begin();
+                     PageNbFullProgress = new Fl_Progress(PageNbFullGrp->x(), PageNbFullGrp->y(), PageNbFullGrp->w(), PageNbFullGrp->h(), "1/1");
+                         PageNbFullProgress->color(FL_WHITE, FL_WHITE);
+                         PageNbFullProgress->tooltip("Page");
+                     PageNbFullGrp->end();
+                     PageNbFullGrp->resizable(PageNbFullProgress);
+                     PageNbFullGrp->hide();
                 MainDisplayGrp->end();
 
             DisplayGrp->end();

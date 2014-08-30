@@ -75,8 +75,8 @@ int main(int argc, char **argv)
             return 0;
             break;
 
-         /*case 'f':
-           printf ("option -f with value `%s'\n", optarg);
+         /*case 'o':
+           printf ("option -o with value `%s'\n", optarg);
            break;*/
 
          case '?':
