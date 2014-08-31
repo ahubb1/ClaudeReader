@@ -52,6 +52,11 @@ echo -n -e '\t' Copy shared files...
 mkdir $fullname/share
 cp share/* $fullname/share/
 echo "done."
+echo -n -e '\t' Copy other files...
+cp CHANGES $fullname/
+cp COPYING $fullname/
+cp README $fullname/
+echo "done."
 #echo -n -e '\t' Copy Code::Blocks project...
 #mkdir $fullname/codeblocks
 #cp -r BDReader.cbp $fullname/codeblocks/

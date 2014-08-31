@@ -1,0 +1,39 @@
+BDReader changes
+Vincent Crocher 31/08/2014
+
+v1.02
+   -Panel detection improved
+   -Faster detection and navigation
+   -Management of image folders: a folder of images (at least two) can now be open as a comic
+   -Export function: any open comics can be exported as a series of images (one image per page or one image per panel): allow to use another reader while taking advantage of the panel detection, conversion from pdf to cbr...
+   -Thumbnails view now displays previous and next pages (as well as current)
+   -Navigation through the thumbnail view (mouse wheel: previous/next page and click on previous/next pages)
+   -Strip/continuous navigation and view improved
+   -Status bar clearly display reading mode
+   -New (fancy !) Help window
+   -Linux version: rename binary to bdreader (previously BDReader) to comply with GNU policy and creation of a man page
+   -Some bug corrections
+v1.01
+   -Now open images archives (RAR, ZIP, TAR CB7 and 7Z files)
+   -Strip mode view optimized to the window/screen size
+   -Improvement of panels detection (can be slower on some comics)
+   -Thumbnails bug correction
+   -A few more navigation options (Go to page, first page, last page)
+   -Better preferences management (window size and position, comic current page and individual view preferences for each document)
+v0.99
+   -Support for comics archives: CBR and CBZ files
+v0.98
+   -Package reorganization
+   -Deb packaging
+v0.97
+   -Move to autotools instead of static Makefile to allow the classic: ./configure make make install
+v0.95
+   -Improvement of panels detection
+   -Thumbnails of the current page
+v0.9:
+   -Improvement of Recent documents and folders management
+   -Drag n' drop of files and "Open with" features added
+   -Maximal zoom for panel view (avoid too important zooming on small panels)
+   -Navigation buttons added
+v0.8:
+   First release
