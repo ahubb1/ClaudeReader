@@ -1246,8 +1246,16 @@ MainWindow::MainWindow(const char *exepath, const char *f)
                 MainDisplayGrp->resizable(Display);
 
             DisplayGrp->end();
+            //DisplayGrp->resizable(MainDisplayGrp);
             //Hide the thumbnails (will be displayed at document opening if preferences say so)
             ThumbDisplayGrp->hide();
+            /*Invisible widgets to set resizing minimum sizes of the Fl_Tile
+                 Fl_Box *MaxSizeMain = new Fl_Box(FL_FLAT_BOX, DisplayGrp->x()+1./8.*DisplayGrp->w(), DisplayGrp->y(), 7./8.*DisplayGrp->w(), DisplayGrp->h(), "");
+                 MaxSizeMain->hide();
+                 DisplayGrp->resizable(MaxSizeMain);
+                 Fl_Box *MaxSizeThumb = new Fl_Box(FL_FLAT_BOX, DisplayGrp->x(), DisplayGrp->y(), 1./3.*DisplayGrp->w(), DisplayGrp->h(), "");
+                 MaxSizeThumb->hide();
+                 //DisplayGrp->resizable(MaxSizeThumb);*/
             DisplayGrp->remove(ThumbDisplayGrp);
 
 

@@ -14,6 +14,8 @@ void Fl_OpenCV::draw(int xx, int yy, int ww, int hh)
 
     //Or draw the image
     FlImg->draw(xx, yy);
+    //TODO
+    //FlImg->draw(xx, yy, w(), h(), w(), h());
     return;
 }
 

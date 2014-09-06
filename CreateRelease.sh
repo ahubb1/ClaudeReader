@@ -113,11 +113,15 @@ echo -e Prepare a deb package ? '('y/n')'
 read valid
 if [[ $valid == y* ]]
 then
+	echo -n -e '\t' Move files to doc...
+	mv $base_file-$version_nb/README $base_file-$version_nb/doc/
+	mv $base_file-$version_nb/CHANGES $base_file-$version_nb/doc/
+	mv $base_file-$version_nb/COPYING $base_file-$version_nb/doc/
 	echo -n -e '\t' Creation of the archive...
 	tar -zcvf $base_file'_'$version_nb.orig.tar.gz $base_file-$version_nb
 	echo "done."
 	echo -n -e '\t' Creation of the package...
-	cd $base_file-$version_nb/ && dh_make --single -e kennyyy@users.sf.net
+	cd $base_file-$version_nb/ && dh_make --single -e kennyyy@users.sf.net -c gpl3
 	cp ../DebFilesTemplates/* debian/
 	rm debian/*.ex
 	rm debian/*.EX
@@ -128,6 +132,14 @@ then
 	sudo chown $USER $base_file'_'$version_nb-1_amd64.deb
 	lintian -Ivi $base_file'_'$version_nb-1_amd64.deb
 	echo "done."
+	
+	echo -e '\t\t' ----Upload on PPA----
+	echo -e Upload package on PPA ? '('y/n')'
+	read valid
+	if [[ $valid == y* ]]
+	then
+		dput ppa:kennyyy/bdreader $base_file'_'$version_nb-1_amd64.changes
+	fi
 fi
 exit
 
