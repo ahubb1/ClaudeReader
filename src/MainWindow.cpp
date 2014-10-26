@@ -35,6 +35,43 @@ bool isDNDavailable=false;
 char DNDFilename[FL_PATH_MAX];
 
 
+//--------------------------- Update functions ---------------------------
+//! Update the current view (Display, status bar, thumbnails...) and preload
+//!Called when a new page should be displayed.
+void UpdatePage(MainWindow *mw)
+{
+    //Update the main display
+    //mw->Display->SetImage(mw->Doc->Render());
+    mw->Display->SetImage(mw->Doc->RenderPage(), *mw->Doc->Render());
+
+    //Update the status bar
+    StatusUpdate(mw);
+    Fl::check();
+
+    //Preload the surrounding pages
+    mw->Doc->PreloadPages();
+
+    //Update the thumbnails (if needed)
+    if(mw->ThumbDisplayGrp->visible())
+    {
+        mw->ThumbDisplayCurrent->SetImage(mw->Doc->ThumbnailsRenderCurrent());
+        mw->ThumbDisplayPrev->SetImage(mw->Doc->ThumbnailsRenderPrevious());
+        mw->ThumbDisplayNext->SetImage(mw->Doc->ThumbnailsRenderNext());
+        mw->PrevCloseButton->redraw();
+    }
+    Fl::check();
+}
+
+//! Update the surrounding pages
+void UpdatePreloadPages(void * param)
+{
+    MainWindow *mw=(MainWindow*)param;
+
+    mw->Doc->UpdatePreloadedPages();
+}
+//-----------------------------------------------------------------------------
+
+
 //-------------------------------- Events ---------------------------------
 //! Catch the Drag N Drop events (if the user drops a file on the window)
 //!This function only raise a flag that will be catched later on by the TimerDND_cb() function.
@@ -208,8 +245,8 @@ void ResizingEvents(Fl_Widget* widget, void* param)
         }
         if(mw->Doc->GetReadingMode()==STRIP || mw->Doc->GetReadingMode()==CASE)
         {
-            //Update the preloaded pages
-            mw->Doc->UpdatePreloadedPages();
+            //Update the preloaded pages (let time to fltk to redraw first)
+            Fl::add_timeout(0.2, UpdatePreloadPages, (void*)mw);
         }
     }
 }
@@ -553,7 +590,7 @@ void Fullscreen_cb(Fl_Widget* widget, void * param)
         Fl::check();
 
         //Add the ESC control as a fullscreen shortcut
-        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Fullscreen2"))->activate();
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Fullscreen2\t"))->activate();
     }
     else
     {
@@ -580,7 +617,7 @@ void Fullscreen_cb(Fl_Widget* widget, void * param)
         Fl::check();
 
         //Remove the ESC control as a fullscreen shortcut
-        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Fullscreen2"))->deactivate();
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Fullscreen2\t"))->deactivate();
     }
 }
 
@@ -590,7 +627,8 @@ void PageMode_cb(Fl_Widget* widget, void * param)
     MainWindow *mw=(MainWindow*)param;
 
     mw->Doc->SetReadingMode(PAGE);
-    mw->Display->SetImage(mw->Doc->Render());
+    //mw->Display->SetImage(mw->Doc->Render());
+    mw->Display->SetImage(mw->Doc->RenderPage(), *mw->Doc->Render());
     StatusUpdate(mw);
     Fl::check();
     mw->Doc->UpdatePreloadedPages();
@@ -603,7 +641,8 @@ void StripMode_cb(Fl_Widget* widget, void * param)
     mw->Doc->SetReadingMode(STRIP);
     //Adjust the strip size according to the new display ratio
     mw->Doc->SetDisplayRatio(mw->Display->w()/(float)mw->Display->h());
-    mw->Display->SetImage(mw->Doc->Render());
+    //mw->Display->SetImage(mw->Doc->Render());
+    mw->Display->SetImage(mw->Doc->RenderPage(), *mw->Doc->Render());
     StatusUpdate(mw);
     Fl::check();
     mw->Doc->UpdatePreloadedPages();
@@ -614,7 +653,8 @@ void CaseMode_cb(Fl_Widget* widget, void * param)
     MainWindow *mw=(MainWindow*)param;
 
     mw->Doc->SetReadingMode(CASE);
-    mw->Display->SetImage(mw->Doc->Render());
+    //mw->Display->SetImage(mw->Doc->Render());
+    mw->Display->SetImage(mw->Doc->RenderPage(), *mw->Doc->Render());
     StatusUpdate(mw);
     Fl::check();
     mw->Doc->UpdatePreloadedPages();
@@ -653,7 +693,7 @@ void Thumbnails_cb(Fl_Widget* widget, void * param)
         mw->MainDisplayGrp->resize(mw->DisplayGrp->x(), mw->DisplayGrp->y(), mw->DisplayGrp->w(), mw->DisplayGrp->h());
         Fl::wait(10);
         //Update the menu item state if needed
-        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Thumbnails view"))->clear();
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Thumbnails view\t"))->clear();
     }
     else
     {
@@ -673,33 +713,9 @@ void Thumbnails_cb(Fl_Widget* widget, void * param)
 
         mw->ThumbDisplayGrp->redraw();
         //Update the menu item state if needed
-        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Thumbnails view"))->set();
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Thumbnails view\t"))->set();
         Fl::wait(100);
     }
-}
-
-//! Update the current view (Display, status bar, thumbnails...) and preload
-//!Called when a new page should be displayed.
-void UpdatePage(MainWindow *mw)
-{
-    //Update the main display
-    mw->Display->SetImage(mw->Doc->Render());
-
-    //Update the status bar
-    StatusUpdate(mw);
-    Fl::check();
-
-    //Preload the surrounding pages
-    mw->Doc->PreloadPages();
-
-    //Update the thumbnails (if needed)
-    if(mw->ThumbDisplayGrp->visible())
-    {
-        mw->ThumbDisplayCurrent->SetImage(mw->Doc->ThumbnailsRenderCurrent());
-        mw->ThumbDisplayPrev->SetImage(mw->Doc->ThumbnailsRenderPrevious());
-        mw->ThumbDisplayNext->SetImage(mw->Doc->ThumbnailsRenderNext());
-    }
-    Fl::check();
 }
 
 //! Go to previous page (through Doc)
@@ -755,7 +771,8 @@ void PreviousCase_cb(Fl_Widget* widget, void * param)
 
     int ret = mw->Doc->PreviousCase();
     StatusUpdate(mw);
-    mw->Display->SetImage(mw->Doc->Render());
+    //mw->Display->SetImage(mw->Doc->Render());
+    mw->Display->SetDisplayRect(*mw->Doc->Render());
     StatusUpdate(mw);
 
     //If a new page has been loaded, preload
@@ -772,7 +789,8 @@ void NextCase_cb(Fl_Widget* widget, void * param)
 
     int ret = mw->Doc->NextCase();
     StatusUpdate(mw);
-    mw->Display->SetImage(mw->Doc->Render());
+    //mw->Display->SetImage(mw->Doc->Render());
+    mw->Display->SetDisplayRect(*mw->Doc->Render());
     StatusUpdate(mw);
 
     //If a new page has been loaded, preload
@@ -952,8 +970,13 @@ void Help_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
 
-    /*fl_message_title("Help");
-    fl_message(HELP_STRING);*/
+    //Initialize help window if not already
+    if(!mw->HelpDlg)
+    {
+        mw->HelpDlg=new Fl_Help_Window(600, 400, "Help");
+        mw->HelpDlg->value(HELP_STRING_HTML);
+    }
+    //Show it
     mw->HelpDlg->show();
 }
 //! Show the about information window
@@ -982,25 +1005,25 @@ void UpdateWidgets(void * param)
     //The reading mode
     if(localPref->GetReadingMode()==PAGE)
     {
-        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Page mode"))->setonly();
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Page mode\t"))->setonly();
     }
     if(localPref->GetReadingMode()==CASE)
     {
-        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Panel mode"))->setonly();
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Panel mode\t"))->setonly();
     }
     if(localPref->GetReadingMode()==STRIP)
     {
-        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Strip mode"))->setonly();
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Strip mode\t"))->setonly();
     }
 
     //Preview page
     if(localPref->GetPagePreview())
     {
-        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Page preview"))->set();
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Page preview\t"))->set();
     }
     else
     {
-        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Page preview"))->clear();
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Page preview\t"))->clear();
     }
 
     //Thumbnails view
@@ -1008,11 +1031,11 @@ void UpdateWidgets(void * param)
     {
         if(localPref->GetThumbnails())
         {
-            ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Thumbnails view"))->set();
+            ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Thumbnails view\t"))->set();
         }
         else
         {
-            ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Thumbnails view"))->clear();
+            ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Thumbnails view\t"))->clear();
         }
         if(localPref->GetThumbnails()!=mw->ThumbDisplayGrp->visible())
         {
@@ -1023,19 +1046,19 @@ void UpdateWidgets(void * param)
     //The preferences preferences (!): use the global ones for these
     if(mw->Pref->GetSavePref())
     {
-        ((Fl_Menu_Item*)mw->MenuBar->find_item("&Preferences/Save preferences"))->set();
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&Preferences/Save preferences\t"))->set();
     }
     else
     {
-        ((Fl_Menu_Item*)mw->MenuBar->find_item("&Preferences/Save preferences"))->clear();
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&Preferences/Save preferences\t"))->clear();
     }
     if(mw->Pref->GetLocalPref())
     {
-        ((Fl_Menu_Item*)mw->MenuBar->find_item("&Preferences/Use documents preferences"))->setonly();
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&Preferences/Use documents preferences\t"))->setonly();
     }
     else
     {
-        ((Fl_Menu_Item*)mw->MenuBar->find_item("&Preferences/Use global preferences"))->setonly();
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&Preferences/Use global preferences\t"))->setonly();
     }
 
     //Recent docs: will only add real new ones (no duplicates) if some
@@ -1061,8 +1084,8 @@ void Window_cb(Fl_Widget* widget, void * param)
          //The thumbnails view
          mw->Pref->SetThumbnails(mw->ThumbDisplayGrp->visible());
          //The preferences preferences
-         mw->Pref->SetSavePref(((Fl_Menu_Item*)mw->MenuBar->find_item("&Preferences/Save preferences"))->value());
-         mw->Pref->SetLocalPref(((Fl_Menu_Item*)mw->MenuBar->find_item("&Preferences/Use documents preferences"))->value());
+         mw->Pref->SetSavePref(((Fl_Menu_Item*)mw->MenuBar->find_item("&Preferences/Save preferences\t"))->value());
+         mw->Pref->SetLocalPref(((Fl_Menu_Item*)mw->MenuBar->find_item("&Preferences/Use documents preferences\t"))->value());
          //Write to pref file
          mw->Pref->Save(mw->Doc);
        //Current doc preferences
@@ -1125,88 +1148,103 @@ MainWindow::MainWindow(const char *exepath, const char *f)
             Fl_Menu_Item menuitems[] =
             {
                 { "&File",              0, 0, 0, FL_SUBMENU },
-                    { "Open file", FL_COMMAND + 'o', (Fl_Callback *)Open_cb, this },
-                    { "Open folder", FL_SHIFT + FL_COMMAND + 'o', (Fl_Callback *)Open_cb, this },
+                    { "Open file\t", FL_COMMAND + 'o', (Fl_Callback *)Open_cb, this },
+                    { "Open folder\t", FL_SHIFT + FL_COMMAND + 'o', (Fl_Callback *)Open_cb, this },
                     { "Recent files", 0, 0, 0, FL_SUBMENU },
                         { 0 },
-                    { "Export (as images)", FL_COMMAND + 'e', (Fl_Callback *)ExportDoc_cb, this, FL_MENU_INACTIVE },
-                    { "Quit", FL_COMMAND + 'q', (Fl_Callback *)Quit_cb, this },
+                    { "Export (as images)\t", FL_COMMAND + 'e', (Fl_Callback *)ExportDoc_cb, this, FL_MENU_INACTIVE },
+                    { "Quit\t", FL_COMMAND + 'q', (Fl_Callback *)Quit_cb, this },
                     { 0 },
                 { "&View",              0, 0, 0, FL_SUBMENU | FL_MENU_INACTIVE},
-                    {"Fullscreen2", FL_Escape, (Fl_Callback *)Fullscreen_cb, this, FL_MENU_INVISIBLE | FL_MENU_INACTIVE},
-                    {"Fullscreen", FL_COMMAND + 'f', (Fl_Callback *)Fullscreen_cb, this, FL_MENU_DIVIDER },
-                    { "Panel mode", 'c', (Fl_Callback *)CaseMode_cb, this, FL_MENU_RADIO },
-                    { "Strip mode", 's', (Fl_Callback *)StripMode_cb, this, FL_MENU_RADIO },
-                    { "Page mode", 'p', (Fl_Callback *)PageMode_cb, this, FL_MENU_RADIO | FL_MENU_DIVIDER },
-                    { "Page preview", FL_COMMAND+'p', (Fl_Callback *)PagePreview_cb, this, FL_MENU_TOGGLE | FL_MENU_DIVIDER },
-                    { "Thumbnails view", FL_COMMAND + 't', (Fl_Callback *)Thumbnails_cb, this, FL_MENU_TOGGLE | FL_MENU_DIVIDER },
-                    { "Next panel", FL_Right, (Fl_Callback *)NextCase_cb, this },
-                    { "Previous panel", FL_Left, (Fl_Callback *)PreviousCase_cb, this },
-                    { "Next page", FL_Down , (Fl_Callback *)NextPage_cb, this },
-                    { "Previous page", FL_Up, (Fl_Callback *)PreviousPage_cb, this },
-                    { "First page", FL_Home , (Fl_Callback *)FirstPage_cb, this },
-                    { "Last page", FL_End , (Fl_Callback *)LastPage_cb, this },
-                    { "Go to page", FL_COMMAND + 'g' , (Fl_Callback *)GoToPage_cb, this },
+                    {"Fullscreen2\t", FL_Escape, (Fl_Callback *)Fullscreen_cb, this, FL_MENU_INVISIBLE | FL_MENU_INACTIVE},
+                    {"Fullscreen\t", FL_COMMAND + 'f', (Fl_Callback *)Fullscreen_cb, this, FL_MENU_DIVIDER },
+                    { "Panel mode\t", 'c', (Fl_Callback *)CaseMode_cb, this, FL_MENU_RADIO },
+                    { "Strip mode\t", 's', (Fl_Callback *)StripMode_cb, this, FL_MENU_RADIO },
+                    { "Page mode\t", 'p', (Fl_Callback *)PageMode_cb, this, FL_MENU_RADIO | FL_MENU_DIVIDER },
+                    { "Page preview\t", FL_COMMAND+'p', (Fl_Callback *)PagePreview_cb, this, FL_MENU_TOGGLE | FL_MENU_DIVIDER },
+                    { "Thumbnails view\t", FL_COMMAND + 't', (Fl_Callback *)Thumbnails_cb, this, FL_MENU_TOGGLE | FL_MENU_DIVIDER },
+                    { "Next panel\t", FL_Right, (Fl_Callback *)NextCase_cb, this },
+                    { "Previous panel\t", FL_Left, (Fl_Callback *)PreviousCase_cb, this },
+                    { "Next page\t", FL_Down , (Fl_Callback *)NextPage_cb, this },
+                    { "Previous page\t", FL_Up, (Fl_Callback *)PreviousPage_cb, this },
+                    { "First page\t", FL_Home , (Fl_Callback *)FirstPage_cb, this },
+                    { "Last page\t", FL_End , (Fl_Callback *)LastPage_cb, this },
+                    { "Go to page\t", FL_COMMAND + 'g' , (Fl_Callback *)GoToPage_cb, this },
                     { 0 },
                 { "&Preferences",              0, 0, 0, FL_SUBMENU },
-                    { "Save preferences", 0, (Fl_Callback *)0, this, FL_MENU_TOGGLE |  FL_MENU_DIVIDER | FL_MENU_INVISIBLE },
-                    { "Use global preferences", 0, (Fl_Callback *)0, this, FL_MENU_RADIO },
-                    { "Use documents preferences", 0, (Fl_Callback *)0, this, FL_MENU_RADIO },
+                    { "Save preferences\t", 0, (Fl_Callback *)0, this, FL_MENU_TOGGLE |  FL_MENU_DIVIDER | FL_MENU_INVISIBLE },
+                    { "Use global preferences\t", 0, (Fl_Callback *)0, this, FL_MENU_RADIO },
+                    { "Use documents preferences\t", 0, (Fl_Callback *)0, this, FL_MENU_RADIO },
                     { 0 },
                 { "&Help",              0, 0, 0, FL_SUBMENU },
-                    { "Help", FL_COMMAND + 'h', (Fl_Callback *)Help_cb, this },
-                    { "About", 0, (Fl_Callback *)About_cb, this },
+                    { "Help\t", FL_COMMAND + 'h', (Fl_Callback *)Help_cb, this },
+                    { "About\t", 0, (Fl_Callback *)About_cb, this },
                     { 0 },
                 { 0 }
              };
 
              MenuBar = new Fl_Menu_Bar(0, 0, window->w(), 25);
              MenuBar->copy(menuitems);
+             MenuBar->selection_color(FL_DARK_RED);
+
 
              //Create the list of recent docs
              AddRecentDocsItems(this);
 
 
          //Main group containing the main display, navigation buttons and page preview display
-            //DisplayGrp = new Fl_Group(0, 25, window->w(), window->h()-45);
-            DisplayGrp = new Fl_Tile(0, 25, window->w(), window->h()-45);
+            DisplayGrp = new Fl_Group(0, 25, window->w(), window->h()-45);
+            //DisplayGrp = new Fl_Tile(0, 25, window->w(), window->h()-45);
             DisplayGrp->begin();
 
                 //Sub group containing the preview thumbnails and the separator
                 ThumbDisplayGrp = new Fl_Group(DisplayGrp->x(), DisplayGrp->y(), DisplayGrp->w()/7., DisplayGrp->h());
                 ThumbDisplayGrp->begin();
                  //Thumbnails display
-                     ThumbDisplayPrev = new Fl_OpenCV(ThumbDisplayGrp->x(), ThumbDisplayGrp->y(), ThumbDisplayGrp->w()-5, ThumbDisplayGrp->h()/3.-20-4);
+                     int rounding = (int)(ThumbDisplayGrp->h()-3.*round(ThumbDisplayGrp->h()/3.));
+                     ThumbDisplayPrev = new /*Fl_OpenCV*/Fl_ViewerCV(ThumbDisplayGrp->x(), ThumbDisplayGrp->y(), ThumbDisplayGrp->w(), round(ThumbDisplayGrp->h()/3.)-20-4);
                      ThumbDisplayPrev->SetOnRelease_cb(PreviousPage_cb, (void*)this);
-                     ThumbDisplayCurrent = new Fl_OpenCV(ThumbDisplayGrp->x(), ThumbDisplayPrev->y()+ThumbDisplayPrev->h()+6, ThumbDisplayGrp->w()-5, ThumbDisplayGrp->h()/3.+40-4);
-                     ThumbDisplayNext = new Fl_OpenCV(ThumbDisplayGrp->x(), ThumbDisplayCurrent->y()+ThumbDisplayCurrent->h()+6, ThumbDisplayGrp->w()-5, ThumbDisplayGrp->h()/3.-20-4);
+                     ThumbDisplayCurrent = new /*Fl_OpenCV*/Fl_ViewerCV(ThumbDisplayGrp->x(), ThumbDisplayPrev->y()+ThumbDisplayPrev->h()+6+rounding, ThumbDisplayGrp->w(), round(ThumbDisplayGrp->h()/3.)+40-4);
+                     ThumbDisplayNext = new /*Fl_OpenCV*/Fl_ViewerCV(ThumbDisplayGrp->x(), ThumbDisplayCurrent->y()+ThumbDisplayCurrent->h()+6, ThumbDisplayGrp->w(), round(ThumbDisplayGrp->h()/3.)-20-4);
                      ThumbDisplayNext->SetOnRelease_cb(NextPage_cb, (void*)this);
                      ThumbDisplayGrp->selection_color(FL_BLACK);ThumbDisplayPrev->color(FL_BLACK);ThumbDisplayCurrent->color(FL_BLACK);ThumbDisplayNext->color(FL_BLACK);
                  //Horizontal separators
-                     Fl_Box *separator1 = new Fl_Box(FL_FLAT_BOX, ThumbDisplayGrp->x(), ThumbDisplayPrev->y()+ThumbDisplayPrev->h(), ThumbDisplayGrp->w()-5, 6, "");
+                     Fl_Box *separator1 = new Fl_Box(FL_FLAT_BOX, ThumbDisplayGrp->x(), ThumbDisplayPrev->y()+ThumbDisplayPrev->h(), ThumbDisplayGrp->w(), 6+rounding, "");
                      separator1->color(FL_BLACK);
-                     Fl_Box *separator2 = new Fl_Box(FL_FLAT_BOX, ThumbDisplayGrp->x(), ThumbDisplayCurrent->y()+ThumbDisplayCurrent->h(), ThumbDisplayGrp->w()-5, 6, "");
+                     Fl_Box *separator2 = new Fl_Box(FL_FLAT_BOX, ThumbDisplayGrp->x(), ThumbDisplayCurrent->y()+ThumbDisplayCurrent->h(), ThumbDisplayGrp->w(), 6, "");
                      separator2->color(FL_BLACK);
                  //Close button
-                     PrevCloseButton = new Fl_Button(ThumbDisplayGrp->x()+ThumbDisplayGrp->w()-25, ThumbDisplayGrp->y(), 20, 20, "X");
-                     PrevCloseButton->clear_visible_focus();
-                     PrevCloseButton->color(FL_BLACK);PrevCloseButton->labelcolor(FL_WHITE);PrevCloseButton->selection_color(FL_WHITE);PrevCloseButton->box(FL_FLAT_BOX);
-                     PrevCloseButton->callback(Thumbnails_cb, (void*)this);
+                     Fl_Group *Grp=new Fl_Group(ThumbDisplayGrp->x(), ThumbDisplayGrp->y(), ThumbDisplayGrp->w(), ThumbDisplayGrp->h());
+                        PrevCloseButton = new Fl_Button(ThumbDisplayGrp->x()+ThumbDisplayGrp->w()-20, ThumbDisplayGrp->y(), 20, 20, "X");
+                        PrevCloseButton->clear_visible_focus();
+                        PrevCloseButton->color(FL_DARK_RED);PrevCloseButton->labelcolor(FL_WHITE);PrevCloseButton->selection_color(FL_WHITE);PrevCloseButton->box(FL_UP_BOX);
+                        PrevCloseButton->tooltip("Close thumbnail");
+                        PrevCloseButton->callback(Thumbnails_cb, (void*)this);
+                        Fl_Box* central = new Fl_Box(FL_DOWN_BOX, ThumbDisplayGrp->x(), ThumbDisplayGrp->y()+20, ThumbDisplayGrp->w()-20, ThumbDisplayGrp->h()-20, "");
+                        Fl_Box* box1 = new Fl_Box(FL_DOWN_BOX, ThumbDisplayGrp->x(), ThumbDisplayGrp->y(), ThumbDisplayGrp->w()-20, 20, "");
+                        Fl_Box* box2 = new Fl_Box(FL_DOWN_BOX, ThumbDisplayGrp->x()+ThumbDisplayGrp->w()-20, ThumbDisplayGrp->y()+20, 20, ThumbDisplayGrp->h()-20, "");
+                        central->hide();
+                        box1->hide();
+                        box2->hide();
+                     Grp->end();
+                     Grp->resizable(central);
                  //Vertical Separator
-                     Fl_Box *separator = new Fl_Box(FL_PLASTIC_UP_BOX, ThumbDisplayGrp->x()+ThumbDisplayGrp->w()-5, ThumbDisplayGrp->y(), 5, ThumbDisplayGrp->h(), "");
+                     //Fl_Box *separator = new Fl_Box(FL_PLASTIC_UP_BOX, ThumbDisplayGrp->x()+ThumbDisplayGrp->w()-5, ThumbDisplayGrp->y(), 5, ThumbDisplayGrp->h(), "");
                  ThumbDisplayGrp->end();
                  ThumbDisplayGrp->color(FL_BLACK);
-                 ThumbDisplayGrp->resizable(ThumbDisplayCurrent);
+                 ThumbDisplayGrp->box(FL_DOWN_BOX);
 
                  //Sub group containing the main display and the navigation buttons
-                 MainDisplayGrp = new Fl_Group(DisplayGrp->x(), DisplayGrp->y(), DisplayGrp->w(), DisplayGrp->h());
+                 MainDisplayGrp = new Fl_Group(DisplayGrp->x()+ThumbDisplayGrp->w(), DisplayGrp->y(), DisplayGrp->w()-ThumbDisplayGrp->w(), DisplayGrp->h());
                  MainDisplayGrp->begin();
                  //Main display
-                     Display = new Fl_OpenCV(MainDisplayGrp->x(), MainDisplayGrp->y(), MainDisplayGrp->w(), MainDisplayGrp->h());
+                     Display = new /*Fl_OpenCV*/Fl_ViewerCV(MainDisplayGrp->x(), MainDisplayGrp->y(), MainDisplayGrp->w(), MainDisplayGrp->h());
+                     Display->SetMaxZoom(3.0);
+                     Display->SetHandleKeys(true);
 
                  //Navigation buttons
                      NextButton = new Fl_Overlay_Arrow_Button(Display->x()+Display->w()-0.045*window->w(), (int)(Display->y()), 0.045*window->w(), Display->h(), "", 0, 0.8, 0.15, 0);
-                     NextButton->color(fl_rgb_color(100, 100, 100));NextButton->selection_color(fl_rgb_color(245,245,200));
+                     NextButton->color(fl_rgb_color(100, 100, 100));NextButton->selection_color(fl_rgb_color(245,245,200));NextButton->labelcolor(FL_DARK_RED);
                      NextButton->callback(NextCase_cb, (void*)this);
                      //Prevent the widget to get the focus and thus prevent to use the arrow keys to
                      //navigate through the widgets: keep the Arrows shortcut behavior (to menu_items)
@@ -1215,19 +1253,19 @@ MainWindow::MainWindow(const char *exepath, const char *f)
                      NextButton->hide();
                      NextButton->tooltip("Next panel");
                      PreviousButton = new Fl_Overlay_Arrow_Button(Display->x(), (int)(Display->y()), 0.045*window->w(), Display->h(), "", 180, 0.8, 0.15, 0);
-                     PreviousButton->color(fl_rgb_color(100, 100, 100));PreviousButton->selection_color(fl_rgb_color(245,245,200));
+                     PreviousButton->color(fl_rgb_color(100, 100, 100));PreviousButton->selection_color(fl_rgb_color(245,245,200));PreviousButton->labelcolor(FL_DARK_RED);
                      PreviousButton->callback(PreviousCase_cb, (void*)this);
                      PreviousButton->clear_visible_focus();
                      PreviousButton->hide();
                      PreviousButton->tooltip("Previous panel");
                      NextPageButton = new Fl_Overlay_Arrow_Button(Display->x(), (int)(Display->y()+Display->h()-0.045*window->h()), Display->w(), 0.045*window->h(), "", -90, 0.10, 0.8, 0);
-                     NextPageButton->color(fl_rgb_color(100, 100, 100));NextPageButton->selection_color(fl_rgb_color(245,245,200));
+                     NextPageButton->color(fl_rgb_color(100, 100, 100));NextPageButton->selection_color(fl_rgb_color(245,245,200));NextPageButton->labelcolor(FL_DARK_RED);
                      NextPageButton->callback(NextPage_cb, (void*)this);
                      NextPageButton->clear_visible_focus();
                      NextPageButton->hide();
                      NextPageButton->tooltip("Next page");
                      PreviousPageButton = new Fl_Overlay_Arrow_Button(Display->x(), (int)(Display->y()), Display->w(), 0.045*window->h(), "", 90, 0.10, 0.8, 0);
-                     PreviousPageButton->color(fl_rgb_color(100, 100, 100));PreviousPageButton->selection_color(fl_rgb_color(245,245,200));
+                     PreviousPageButton->color(fl_rgb_color(100, 100, 100));PreviousPageButton->selection_color(fl_rgb_color(245,245,200));PreviousPageButton->labelcolor(FL_DARK_RED);
                      PreviousPageButton->callback(PreviousPage_cb, (void*)this);
                      PreviousPageButton->clear_visible_focus();
                      PreviousPageButton->hide();
@@ -1237,36 +1275,34 @@ MainWindow::MainWindow(const char *exepath, const char *f)
                      PageNbFullGrp=new Fl_Group(MainDisplayGrp->x()+MainDisplayGrp->w()-110, MainDisplayGrp->y()+MainDisplayGrp->h()-30, 100, 20);
                      PageNbFullGrp->begin();
                      PageNbFullProgress = new Fl_Progress(PageNbFullGrp->x(), PageNbFullGrp->y(), PageNbFullGrp->w(), PageNbFullGrp->h(), "1/1");
-                         PageNbFullProgress->color(FL_WHITE, FL_WHITE);
+                         PageNbFullProgress->color(FL_WHITE, FL_DARK_RED);
                          PageNbFullProgress->tooltip("Page");
                      PageNbFullGrp->end();
-                     PageNbFullGrp->resizable(PageNbFullProgress);
+                     PageNbFullGrp->resizable(NULL);
                      PageNbFullGrp->hide();
                 MainDisplayGrp->end();
+                MainDisplayGrp->box(FL_DOWN_BOX);
                 MainDisplayGrp->resizable(Display);
 
+                /*Invisible widgets to set resizing minimum sizes of the Fl_Tile
+                Fl_Box *MaxSizeMain = new Fl_Box(FL_FLAT_BOX, DisplayGrp->x()+1/10.*DisplayGrp->w(), DisplayGrp->y(), DisplayGrp->x()+1/6.*DisplayGrp->w(), DisplayGrp->h(), "");
+                MaxSizeMain->hide();
+                DisplayGrp->resizable(MaxSizeMain);*/
+
             DisplayGrp->end();
-            //DisplayGrp->resizable(MainDisplayGrp);
             //Hide the thumbnails (will be displayed at document opening if preferences say so)
             ThumbDisplayGrp->hide();
-            /*Invisible widgets to set resizing minimum sizes of the Fl_Tile
-                 Fl_Box *MaxSizeMain = new Fl_Box(FL_FLAT_BOX, DisplayGrp->x()+1./8.*DisplayGrp->w(), DisplayGrp->y(), 7./8.*DisplayGrp->w(), DisplayGrp->h(), "");
-                 MaxSizeMain->hide();
-                 DisplayGrp->resizable(MaxSizeMain);
-                 Fl_Box *MaxSizeThumb = new Fl_Box(FL_FLAT_BOX, DisplayGrp->x(), DisplayGrp->y(), 1./3.*DisplayGrp->w(), DisplayGrp->h(), "");
-                 MaxSizeThumb->hide();
-                 //DisplayGrp->resizable(MaxSizeThumb);*/
             DisplayGrp->remove(ThumbDisplayGrp);
 
 
          //Status bar
              StatusBar = new Fl_Box(0, window->h()-20,window->w(), 20);
              StatusBar->align(FL_ALIGN_RIGHT|FL_ALIGN_INSIDE);
-             StatusBar->box(FL_PLASTIC_UP_BOX);
+             StatusBar->box(FL_UP_BOX);
 
 
-             //TODO: A terminer et ameliorer
-             /*Fl_Counter* StatusCounter = new Fl_Counter(StatusBar->x()+StatusBar->w()/2.0-100, StatusBar->y(), 200, 20);
+             /*TODO: A terminer et ameliorer
+             Fl_Counter* StatusCounter = new Fl_Counter(StatusBar->x()+StatusBar->w()/2.0-100, StatusBar->y(), 200, 20);
              StatusCounter->box(FL_PLASTIC_ROUND_UP_BOX);
              StatusCounter->labeltype(FL_NO_LABEL);
              StatusCounter->labelcolor(FL_DARK_RED);
@@ -1297,19 +1333,16 @@ MainWindow::MainWindow(const char *exepath, const char *f)
              window->resizable(DisplayGrp);
              window->size_range(400, 400, 0, 0, 0, 0, 0);
 
-             //Apply the plastic theme/skin
-             Fl::scheme("plastic");
+             //Apply the gtk+ theme/skin
+             Fl::scheme("gtk+");
 
          //Default title for message windows
          fl_message_title_default("BDReader");
 
-         //TODO: Gerer les bds en suites d'images (folders)
     window->end();
 
     //Initialize help window
-    HelpDlg= new Fl_Help_Window(600, 400, "Help");
-    HelpDlg->value(HELP_STRING_HTML);
-    HelpDlg->hide();
+    HelpDlg=NULL;
 
 
     //Initialize the window and Document
@@ -1368,8 +1401,8 @@ void MainWindow::Init(char *filename)
                 Pref->SetWinY(window->y());
             }
             Pref->SetThumbnails(ThumbDisplayGrp->visible());
-            Pref->SetSavePref(((Fl_Menu_Item*)MenuBar->find_item("&Preferences/Save preferences"))->value());
-            Pref->SetLocalPref(((Fl_Menu_Item*)MenuBar->find_item("&Preferences/Use documents preferences"))->value());
+            Pref->SetSavePref(((Fl_Menu_Item*)MenuBar->find_item("&Preferences/Save preferences\t"))->value());
+            Pref->SetLocalPref(((Fl_Menu_Item*)MenuBar->find_item("&Preferences/Use documents preferences\t"))->value());
             Pref->Save(Doc);
             //Doc relative pref
             if(PrefDoc)

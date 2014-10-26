@@ -665,7 +665,7 @@ int Page::SetActiveCase(int val)
 
 
 
-//! Update the case/page rendering according to ActiveCase value.
+/*! Update the case/page rendering according to ActiveCase value.
 //!The ImgRender cv::Mat is filled with the case image or the whole page if ReadingMode==PAGE.
 //! \return A pointer on the valid ImgRender cv::Mat
 Mat * Page::RenderCase()
@@ -686,6 +686,36 @@ Mat * Page::RenderCase()
             (PageRenderCv(Cases[ActiveCase])).copyTo(ImgRender);
         }
         return &ImgRender;
+    }
+    else
+    {
+        return NULL;
+    }
+}*/
+
+//! Update the case/page rendering according to ActiveCase value.
+//!The ImgRender cv::Mat is filled with the case image or the whole page if ReadingMode==PAGE.
+//! \return A pointer on the valid RectRender cv::Rect
+Rect * Page::RenderCase()
+{
+    //If the detction has been done
+    if(Loaded)
+    {
+        //Render the whole page
+        if(ActiveCase==-1 || ReadingMode==PAGE)
+        {
+            //PageRenderCv.copyTo(ImgRender);
+            RectRender.width=PageRenderCv.cols;
+            RectRender.height=PageRenderCv.rows;
+            RectRender.x=0;
+            RectRender.y=0;
+        }
+        //or the active case
+        else
+        {
+            RectRender=Cases[ActiveCase];
+        }
+        return &RectRender;
     }
     else
     {

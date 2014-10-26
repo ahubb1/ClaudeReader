@@ -38,6 +38,7 @@
 				<Option projectLibDirsRelation="1" />
 				<Compiler>
 					<Add option="-O2" />
+					<Add option="-g" />
 					<Add directory="include" />
 					<Add directory="include/libarchive" />
 				</Compiler>
@@ -83,8 +84,8 @@
 			<Add library="opencv_core" />
 			<Add library="opencv_highgui" />
 			<Add library="opencv_imgproc" />
-			<Add library="fltk_images" />
-			<Add library="fltk" />
+			<Add library="/usr/local/lib/libfltk_images.a" />
+			<Add library="/usr/local/lib/libfltk.a" />
 			<Add library="Xft" />
 			<Add library="Xinerama" />
 			<Add directory="lib/unix" />
@@ -101,10 +102,10 @@
 		<Unit filename="src/Export_Document.h" />
 		<Unit filename="src/Fl_Help_Window.cpp" />
 		<Unit filename="src/Fl_Help_Window.h" />
-		<Unit filename="src/Fl_OpenCV.cxx" />
-		<Unit filename="src/Fl_OpenCV.h" />
 		<Unit filename="src/Fl_Overlay_Arrow_Button.cxx" />
 		<Unit filename="src/Fl_Overlay_Arrow_Button.h" />
+		<Unit filename="src/Fl_ViewerCV.cxx" />
+		<Unit filename="src/Fl_ViewerCV.h" />
 		<Unit filename="src/MainWindow.cpp" />
 		<Unit filename="src/MainWindow.h" />
 		<Unit filename="src/Page.cpp" />

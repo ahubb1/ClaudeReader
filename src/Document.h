@@ -55,7 +55,9 @@ class Document
         int NextPage();
         int PreviousPage();
 
-        Mat *Render() {return ImgRender=currentPage->RenderCase();}
+        //Mat *Render() {return ImgRender=currentPage->RenderCase();}
+        Rect *Render() {return RectRender=currentPage->RenderCase();}
+        Mat *RenderPage() {return ImgRender=currentPage->RenderPage();}
         Mat *ThumbnailsRenderCurrent();
         Mat *ThumbnailsRenderPrevious();
         Mat *ThumbnailsRenderNext();
@@ -81,6 +83,7 @@ class Document
         float DisplayRatio;
     private:
         Mat *ImgRender;
+        Rect *RectRender;
         Mat *ThumbnailsImgRenderCurrent;
 };
 

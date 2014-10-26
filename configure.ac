@@ -1,4 +1,4 @@
-AC_INIT([bdreader], [1.02], [kennyyy@users.sf.net])
+AC_INIT([bdreader], [1.03], [kennyyy@users.sf.net])
 AM_INIT_AUTOMAKE([foreign -Wall])
 
 #Add C++ as a language (for headers testing)

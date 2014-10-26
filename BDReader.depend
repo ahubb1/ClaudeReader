@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1409548880 source:/home/vincent/Perso/BDReader/BDReader/src/MainWindow.cpp
+1414309308 source:/home/vincent/Perso/BDReader/BDReader/src/MainWindow.cpp
 	"MainWindow.h"
 	"help.h"
 	"about.h"
@@ -18,7 +18,7 @@
 	"Document.h"
 	"icon32.xbm"
 
-1409366238 source:/home/vincent/Perso/BDReader/BDReader/src/main.cpp
+1414300014 source:/home/vincent/Perso/BDReader/BDReader/src/main.cpp
 	<getopt.h>
 	"MainWindow.h"
 	"helpcmd.h"
@@ -29,10 +29,10 @@
 	<FL/fl_ask.H>
 	<opencv2/opencv.hpp>
 
-1409794254 source:/home/vincent/Perso/BDReader/BDReader/src/Fl_OpenCV.cxx
+1413600964 source:/home/vincent/Perso/BDReader/BDReader/src/Fl_OpenCV.cxx
 	"Fl_OpenCV.h"
 
-1408779701 source:/home/vincent/Perso/BDReader/BDReader/src/Document.cpp
+1413612301 source:/home/vincent/Perso/BDReader/BDReader/src/Document.cpp
 	"Document.h"
 
 1399614367 /home/vincent/Perso/BDReader/BDReader/include/Document.h
@@ -332,7 +332,7 @@
 	<stlplus3/ntree.hpp>
 	<opencv2/opencv.hpp>
 
-1408753865 source:/home/vincent/Perso/BDReader/BDReader/src/Page.cpp
+1413612620 source:/home/vincent/Perso/BDReader/BDReader/src/Page.cpp
 	"Page.h"
 
 1389021098 /home/vincent/Perso/BDReader/BDReader/include/ntree.tpp
@@ -401,7 +401,7 @@
 1398763943 source:/home/vincent/Perso/BDReader/BDReader/src/Fl_Overlay_Arrow_Button.cxx
 	"Fl_Overlay_Arrow_Button.h"
 
-1407655680 /home/vincent/Perso/BDReader/BDReader/src/Document.h
+1413612502 /home/vincent/Perso/BDReader/BDReader/src/Document.h
 	<Page.h>
 
 1398764729 /home/vincent/Perso/BDReader/BDReader/src/Fl_Overlay_Arrow_Button.h
@@ -409,7 +409,7 @@
 	<FL/fl_draw.H>
 	<FL/Fl_Button.H>
 
-1409395041 /home/vincent/Perso/BDReader/BDReader/src/MainWindow.h
+1414307061 /home/vincent/Perso/BDReader/BDReader/src/MainWindow.h
 	<FL/Fl.H>
 	<FL/Fl_Window.H>
 	<FL/Fl_Menu_Bar.H>
@@ -419,7 +419,7 @@
 	<FL/Fl_Progress.H>
 	<FL/Fl_Counter.H>
 	"Fl_Help_Window.h"
-	"Fl_OpenCV.h"
+	"Fl_ViewerCV.h"
 	"Fl_Overlay_Arrow_Button.h"
 	"Preferences.h"
 	"Document.h"
@@ -441,7 +441,7 @@
 
 1404560587 /home/vincent/Perso/BDReader/BDReader/src/icon32.xbm
 
-1408577151 /home/vincent/Perso/BDReader/BDReader/src/Page.h
+1413612251 /home/vincent/Perso/BDReader/BDReader/src/Page.h
 	<FL/Fl.H>
 	<stlplus3/ntree.hpp>
 	<opencv2/opencv.hpp>
@@ -471,7 +471,7 @@
 	<vector>
 	<algorithm>
 
-1408752511 /home/vincent/Perso/BDReader/BDReader/src/help.h
+1414299936 /home/vincent/Perso/BDReader/BDReader/src/help.h
 
 1409365216 /home/vincent/Perso/BDReader/BDReader/src/about.h
 
@@ -519,7 +519,7 @@
 	<windows.h>
 	<unistd.h>
 
-1408783857 source:/home/vincent/Perso/BDReader/BDReader/src/Export_Document.cpp
+1414295438 source:/home/vincent/Perso/BDReader/BDReader/src/Export_Document.cpp
 	"Export_Document.h"
 
 1405478369 /home/vincent/Perso/BDReader/BDReader/src/Export_Document.h
@@ -571,5 +571,15 @@
 
 1409365994 /home/vincent/Perso/BDReader/BDReader/src/helpcmd.h
 
-1409365404 /home/vincent/Perso/BDReader/BDReader/src/version.h
+1414299339 /home/vincent/Perso/BDReader/BDReader/src/version.h
+
+1414309724 source:/home/vincent/Perso/BDReader/BDReader/src/Fl_ViewerCV.cxx
+	"Fl_ViewerCV.h"
+
+1414309794 /home/vincent/Perso/BDReader/BDReader/src/Fl_ViewerCV.h
+	<FL/Fl.H>
+	<FL/fl_draw.H>
+	<FL/Fl_Widget.H>
+	<FL/fl_ask.H>
+	<opencv2/opencv.hpp>
 

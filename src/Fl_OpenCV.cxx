@@ -39,7 +39,7 @@ Fl_OpenCV::Fl_OpenCV(int X,int Y,int W,int H, float mzoom):Fl_Widget(X,Y,W,H,0)
 
 void Fl_OpenCV::SetImage(Mat *nimage)
 {
-    if(!nimage || nimage->cols<=0 || nimage->rows<=0)
+    if(!nimage || nimage->cols<=0 || nimage->rows<=0 || w()<=0 || h()<=0)
     {
         image=NULL;
         if(FlImg)

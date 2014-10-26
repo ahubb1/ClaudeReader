@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
-	<ActiveTarget name="Debug" />
-	<File name="src/Document.cpp" open="0" top="0" tabpos="7">
-		<Cursor position="13424" topLine="118" />
+	<ActiveTarget name="Win32" />
+	<File name="src/Document.cpp" open="1" top="0" tabpos="9">
+		<Cursor position="6435" topLine="97" />
 	</File>
-	<File name="src/Document.h" open="0" top="0" tabpos="5">
-		<Cursor position="1428" topLine="15" />
+	<File name="src/Document.h" open="1" top="0" tabpos="8">
+		<Cursor position="1861" topLine="15" />
 	</File>
 	<File name="src/Document_archive.cpp" open="0" top="0" tabpos="5">
 		<Cursor position="1259" topLine="10" />
@@ -25,8 +25,8 @@
 	<File name="src/Document_pdf.h" open="0" top="0" tabpos="0">
 		<Cursor position="1390" topLine="26" />
 	</File>
-	<File name="src/Export_Document.cpp" open="0" top="0" tabpos="7">
-		<Cursor position="1572" topLine="11" />
+	<File name="src/Export_Document.cpp" open="1" top="0" tabpos="10">
+		<Cursor position="7606" topLine="16" />
 	</File>
 	<File name="src/Export_Document.h" open="0" top="0" tabpos="12">
 		<Cursor position="1091" topLine="0" />
@@ -37,26 +37,26 @@
 	<File name="src/Fl_Help_Window.h" open="0" top="0" tabpos="0">
 		<Cursor position="1097" topLine="0" />
 	</File>
-	<File name="src/Fl_OpenCV.cxx" open="1" top="1" tabpos="5">
-		<Cursor position="6426" topLine="19" />
-	</File>
-	<File name="src/Fl_OpenCV.h" open="1" top="0" tabpos="4">
-		<Cursor position="990" topLine="17" />
-	</File>
 	<File name="src/Fl_Overlay_Arrow_Button.h" open="0" top="0" tabpos="0">
 		<Cursor position="2903" topLine="44" />
 	</File>
-	<File name="src/MainWindow.cpp" open="1" top="0" tabpos="3">
-		<Cursor position="36249" topLine="165" />
+	<File name="src/Fl_ViewerCV.cxx" open="1" top="0" tabpos="5">
+		<Cursor position="4789" topLine="84" />
+	</File>
+	<File name="src/Fl_ViewerCV.h" open="1" top="0" tabpos="4">
+		<Cursor position="1936" topLine="34" />
+	</File>
+	<File name="src/MainWindow.cpp" open="1" top="1" tabpos="3">
+		<Cursor position="45423" topLine="392" />
 	</File>
 	<File name="src/MainWindow.h" open="1" top="0" tabpos="2">
-		<Cursor position="1331" topLine="38" />
+		<Cursor position="4653" topLine="38" />
 	</File>
-	<File name="src/Page.cpp" open="0" top="0" tabpos="6">
-		<Cursor position="5362" topLine="46" />
+	<File name="src/Page.cpp" open="1" top="0" tabpos="7">
+		<Cursor position="25234" topLine="139" />
 	</File>
-	<File name="src/Page.h" open="0" top="0" tabpos="9">
-		<Cursor position="2210" topLine="60" />
+	<File name="src/Page.h" open="1" top="0" tabpos="6">
+		<Cursor position="2990" topLine="21" />
 	</File>
 	<File name="src/Page_archive.cpp" open="0" top="0" tabpos="8">
 		<Cursor position="2117" topLine="38" />

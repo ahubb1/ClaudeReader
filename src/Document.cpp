@@ -35,6 +35,7 @@ Document::Document(char *filename)
     nextPage=NULL;
     previousPage=NULL;
     ImgRender=NULL;
+    RectRender=NULL;
     NbPages=0;
     PagePreview=true;
     DisplayRatio=1.2;
@@ -187,7 +188,9 @@ int Document::LoadPage(int p)
         }
 
         //Anyway get the new rendering from the new current page
-        ImgRender=currentPage->RenderCase();
+        //ImgRender=currentPage->RenderCase();
+        ImgRender=currentPage->RenderPage();
+        RectRender=currentPage->RenderCase();
 
         //Close the document, free the context..
         Close();

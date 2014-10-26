@@ -42,7 +42,8 @@
 
 
 #include "Fl_Help_Window.h"
-#include "Fl_OpenCV.h"
+//#include "Fl_OpenCV.h"
+#include "Fl_ViewerCV.h"
 #include "Fl_Overlay_Arrow_Button.h"
 #include "Preferences.h"
 #include "Document.h"
@@ -86,6 +87,7 @@ class MainWindow
         friend void PagePreview_cb(Fl_Widget* widget, void * param);
         friend void Thumbnails_cb(Fl_Widget* widget, void * param);
         friend void UpdatePage(MainWindow* mw);
+        friend void UpdatePreloadPages(void * param);
         friend void PreviousPage_cb(Fl_Widget* widget, void * param);
         friend void NextPage_cb(Fl_Widget* widget, void * param);
         friend void PreviousCase_cb(Fl_Widget* widget, void * param);
@@ -114,9 +116,10 @@ class MainWindow
             Fl_Help_Window *HelpDlg;
             Fl_Menu_Bar *MenuBar;
             Fl_Box *StatusBar;
-            Fl_Group *MainDisplayGrp, *ThumbDisplayGrp;//, *DisplayGrp;
-            Fl_Tile *DisplayGrp;
-            Fl_OpenCV *Display, *ThumbDisplayCurrent, *ThumbDisplayPrev, *ThumbDisplayNext;
+            Fl_Group *MainDisplayGrp, *ThumbDisplayGrp, *DisplayGrp;
+            //Fl_Tile *DisplayGrp;
+            //Fl_OpenCV *Display, *ThumbDisplayCurrent, *ThumbDisplayPrev, *ThumbDisplayNext;
+            Fl_ViewerCV *Display, *ThumbDisplayCurrent, *ThumbDisplayPrev, *ThumbDisplayNext;
             Fl_Button *PrevCloseButton;
             Fl_Overlay_Arrow_Button *NextButton, *PreviousButton, *NextPageButton, *PreviousPageButton;
             Fl_Group *PageNbFullGrp;

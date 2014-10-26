@@ -22,8 +22,8 @@
  * \file main.cpp
  * \brief Main file of the program containing the main function and creating a MainWindow object.
  * \author Vincent Crocher
- * \version 0.1
- * \date April 2014
+ * \version 0.3
+ * \date Oct 2014
  *
  *
  */
@@ -39,8 +39,8 @@ int main(int argc, char **argv)
     MainWindow *MW;
 
 
-    //POSIX comand-line otions management (-v and -h)
-    int OptionChar;             /* option character */
+    //POSIX comand-line options management (-v and -h)
+    int OptionChar;             //Option character
     while (1)
     {
         static struct option long_options[] =

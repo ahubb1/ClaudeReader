@@ -52,7 +52,8 @@ class Page
 
         void DetectCases();
 
-        Mat * RenderCase();
+        //Mat * RenderCase();
+        Rect * RenderCase();
         Mat * RenderPage();
 
         int NextCase();
@@ -93,7 +94,8 @@ class Page
         float DisplayRatio;
 
         Mat PageRenderCv;
-        Mat ImgRender;
+        //Mat ImgRender;
+        Rect RectRender;
 };
 
 #endif // PAGE_H
