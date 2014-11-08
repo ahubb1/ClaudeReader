@@ -56,7 +56,7 @@ int main(int argc, char **argv)
 
         OptionChar = getopt_long (argc, argv, ":vh", long_options, &option_index);
 
-        /* Detect the end of the options. */
+        // Detect the end of the options
         if (OptionChar == -1)
          break;
 
@@ -65,22 +65,17 @@ int main(int argc, char **argv)
          case 0:
             break;
 
+         //Display version (and license) and quit
          case 'v':
             printf("%s\n", VERSION_STRING);
             return 0;
             break;
          //Display help and quit
+         case '?':
          case 'h':
             printf("%s\n", HELPCMD_STRING);
             return 0;
             break;
-
-         /*case 'o':
-           printf ("option -o with value `%s'\n", optarg);
-           break;*/
-
-         case '?':
-           break;
 
          default:
            abort ();

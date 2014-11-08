@@ -22,8 +22,8 @@
  * \file Preferences.h
  * \brief Declaration file of the Preferences class
  * \author Vincent Crocher
- * \version 0.2
- * \date June 2014
+ * \version 0.3
+ * \date November 2014
  *
  *
  */
@@ -32,7 +32,14 @@
 
 #include "Document.h"
 
-#define MAX_NB_RECENT 15
+#define MAX_NB_RECENT 25
+
+struct ZoomOption
+{
+    const char *caption;
+    float value;
+};
+
 
 //! Class managing the user preferences (saving in files, loading, applying to the current document)
 class Preferences
@@ -52,6 +59,14 @@ class Preferences
         void SetPagePreview(bool val) { PagePreview = val; }
         bool GetThumbnails() { return Thumbnails; }
         void SetThumbnails(bool val) { Thumbnails = val; }
+        int GetMaxZoomIdx() { return MaxZoomIdx; }
+        int SetMaxZoomIdx(int i) { MaxZoomIdx = i; }
+        int GetAdditionnalZoomIdx() { return AdditionnalZoomIdx; }
+        int SetAdditionnalZoomIdx(int i) {AdditionnalZoomIdx = i; }
+        bool GetInContext() { return InContext; }
+        void SetInContext(bool val) { Border = val; }
+        bool GetBorder() { return Border; }
+        void SetBorder(bool val) { Border = val; }
         bool GetSavePref() { return SavePref; }
         void SetSavePref(bool val) { SavePref = val; }
         bool GetLocalPref() { return LocalPref; }
@@ -72,12 +87,17 @@ class Preferences
         int GetNbRecentDocs() { return NbRecentDocs; }
         char *GetRecentDocs(int i) { return RecentDocs[i]; }
 
+        ZoomOption GetMaxZoomOption(int i) { return MaxZoomOptionsList[i]; }
+        ZoomOption GetAdditionnalZoomOption(int i) { return AdditionnalZoomOptionsList[i]; }
+
     protected:
     private:
         char Filename[255];
         READINGMODE ReadingMode;
         bool PagePreview;
         bool Thumbnails;
+        bool InContext;
+        bool Border;
         bool SavePref, LocalPref;
         int WinW, WinH;
         int WinX, WinY;
@@ -86,6 +106,10 @@ class Preferences
         int LastDocPageNb;
         int NbRecentDocs;
         char RecentDocs[MAX_NB_RECENT][2048];
+        int MaxZoomIdx;
+        int AdditionnalZoomIdx;
+        ZoomOption MaxZoomOptionsList[5];
+        ZoomOption AdditionnalZoomOptionsList[8];
 };
 
 #endif // PREFERENCES_H

@@ -72,6 +72,91 @@ void UpdatePreloadPages(void * param)
 //-----------------------------------------------------------------------------
 
 
+
+//--------------------------------- Status ----------------------------------
+//! Update the status bar text according to current state (document current page...)
+void StatusBarUpdate(void * param)
+{
+      MainWindow *mw=(MainWindow*)param;
+
+      //Get number of pages... blabla
+      char text[1024];
+      char textZoom[1024];
+      char textMaxZoom[10];
+      if(mw->Display->GetMaxZoom()>=100)
+      {
+          sprintf(textMaxZoom, " - ");
+      }
+      else
+      {
+          sprintf(textMaxZoom, "%d%%", (int)(mw->Display->GetMaxZoom()*100.));
+      }
+
+      if(mw->Doc)
+      {
+          if(mw->Doc->GetReadingMode()==CASE)
+          {
+                sprintf(text, "PANEL\t\tPage %d/%d (Panel %d/%d)", mw->Doc->GetCurrentPageNb(), mw->Doc->GetNbOfPages(), mw->Doc->currentPage->GetActiveCase()+1, mw->Doc->currentPage->GetNbCases());
+
+                sprintf(textZoom, "Zoom: %d%% (Max:%s / Additionnal:x%0.1f)", (int)(mw->Display->GetCurrentZoom()*100.), textMaxZoom, mw->Display->GetCustomZoom());
+          }
+          else
+          {
+                if(mw->Doc->GetReadingMode()==STRIP)
+                {
+                     sprintf(text, "STRIP\t\t\t");
+                }
+                else
+                {
+                     sprintf(text, "PAGE\t\t");
+
+                }
+
+                sprintf(text, "%sPage %d/%d", text , mw->Doc->GetCurrentPageNb(), mw->Doc->GetNbOfPages());
+                sprintf(textZoom, "Zoom: %d%% (Max:%s)", (int)(mw->Display->GetCurrentZoom()*100.), textMaxZoom);
+          }
+      }
+      else
+      {
+          sprintf(text, "%s", "\0");
+      }
+      mw->StatusBar->copy_label(text);
+      mw->StatusBar->redraw();
+      mw->StatusBarZoom->copy_label(textZoom);
+      mw->StatusBarZoom->redraw();
+
+      //Auto-update (due to additionnal zoom value)
+      //Fl::repeat_timeout(0.5, StatusBarUpdate, (void*)mw);
+}
+//! Update the fullscreen status
+void StatusFullScreenUpdate(void * param)
+{
+     MainWindow *mw=(MainWindow*)param;
+
+     if(mw->Doc)
+     {
+        //Update the dial
+        mw->PageNbFullProgress->minimum(1);
+        mw->PageNbFullProgress->maximum(mw->Doc->GetNbOfPages());
+        mw->PageNbFullProgress->value(mw->Doc->GetCurrentPageNb());
+        //and the tooltip text
+        char txt[16];
+        sprintf(txt, "%d/%d", mw->Doc->GetCurrentPageNb(), mw->Doc->GetNbOfPages());
+        mw->PageNbFullProgress->copy_label(txt);
+        mw->PageNbFullProgress->redraw();
+     }
+}
+//! Call both the status bar update and the fullscreen status update
+void StatusUpdate(void * param)
+{
+    StatusBarUpdate(param);
+    StatusFullScreenUpdate(param);
+    Fl::wait(50);
+}
+//-----------------------------------------------------------------------------
+
+
+
 //-------------------------------- Events ---------------------------------
 //! Catch the Drag N Drop events (if the user drops a file on the window)
 //!This function only raise a flag that will be catched later on by the TimerDND_cb() function.
@@ -193,9 +278,9 @@ void TimerMouseWheel_cb(void* param)
         {
             Fl_Menu_Item* nextcb;
             if(page)
-                nextcb=(Fl_Menu_Item*)mw->MenuBar->find_item("&View/Next page");
+                nextcb=(Fl_Menu_Item*)mw->MenuBar->find_item("&Navigation/Next page\t");
             else
-               nextcb=(Fl_Menu_Item*)mw->MenuBar->find_item("&View/Next panel");
+               nextcb=(Fl_Menu_Item*)mw->MenuBar->find_item("&Navigation/Next panel\t");
 
             if(nextcb && nextcb->active())
                 nextcb->do_callback((Fl_Widget*)mw->MenuBar);
@@ -205,9 +290,9 @@ void TimerMouseWheel_cb(void* param)
         {
             Fl_Menu_Item* previouscb;
             if(page)
-                previouscb=(Fl_Menu_Item*)mw->MenuBar->find_item("&View/Previous page");
+                previouscb=(Fl_Menu_Item*)mw->MenuBar->find_item("&Navigation/Previous page\t");
             else
-                previouscb=(Fl_Menu_Item*)mw->MenuBar->find_item("&View/Previous panel");
+                previouscb=(Fl_Menu_Item*)mw->MenuBar->find_item("&Navigation/Previous panel\t");
 
             if(previouscb && previouscb->active())
                 previouscb->do_callback((Fl_Widget*)mw->MenuBar);
@@ -226,6 +311,7 @@ void ResizingEvents(Fl_Widget* widget, void* param)
 {
     MainWindow *mw=(MainWindow*)param;
 
+    //printf("Ratio:%f (=1.33)\n", (float)mw->window->w()/mw->window->h());
 
     //If in STRIP MODE: recall the Detection (through the SetDisplayRatio) to adjust the size of the strip sto the window width
     if(mw->Doc)
@@ -238,82 +324,22 @@ void ResizingEvents(Fl_Widget* widget, void* param)
         {
             //And re-render
             mw->Doc->Render();
-            StatusUpdate(mw);
-
-            //Give some time to fltk
-            Fl::check();
         }
         if(mw->Doc->GetReadingMode()==STRIP || mw->Doc->GetReadingMode()==CASE)
         {
             //Update the preloaded pages (let time to fltk to redraw first)
             Fl::add_timeout(0.2, UpdatePreloadPages, (void*)mw);
         }
+
+        //Update status bar (for zoom values)
+        StatusBarUpdate((void*)mw);
+
+        //Give some time to fltk
+        Fl::check();
     }
 }
 //-----------------------------------------------------------------------------
 
-
-//--------------------------------- Status ----------------------------------
-//! Update the status bar text according to current state (document current page...)
-void StatusBarUpdate(void * param)
-{
-      MainWindow *mw=(MainWindow*)param;
-
-      //Get number of pages... blabla
-      char text[1024];
-      if(mw->Doc)
-      {
-          if(mw->Doc->GetReadingMode()==CASE)
-          {
-                sprintf(text, "PANEL\t\tPage %d/%d (Panel %d/%d)", mw->Doc->GetCurrentPageNb(), mw->Doc->GetNbOfPages(), mw->Doc->currentPage->GetActiveCase()+1, mw->Doc->currentPage->GetNbCases());
-          }
-          else
-          {
-                if(mw->Doc->GetReadingMode()==STRIP)
-                {
-                     sprintf(text, "STRIP\t\t\t");
-                }
-                else
-                {
-                     sprintf(text, "PAGE\t\t");
-                }
-
-                sprintf(text, "%sPage %d/%d", text , mw->Doc->GetCurrentPageNb(), mw->Doc->GetNbOfPages());
-          }
-      }
-      else
-      {
-          sprintf(text, "%s", "\0");
-      }
-      mw->StatusBar->copy_label(text);
-      mw->StatusBar->redraw();
-}
-//! Update the fullscreen status
-void StatusFullScreenUpdate(void * param)
-{
-     MainWindow *mw=(MainWindow*)param;
-
-     if(mw->Doc)
-     {
-        //Update the dial
-        mw->PageNbFullProgress->minimum(1);
-        mw->PageNbFullProgress->maximum(mw->Doc->GetNbOfPages());
-        mw->PageNbFullProgress->value(mw->Doc->GetCurrentPageNb());
-        //and the tooltip text
-        char txt[16];
-        sprintf(txt, "%d/%d", mw->Doc->GetCurrentPageNb(), mw->Doc->GetNbOfPages());
-        mw->PageNbFullProgress->copy_label(txt);
-        mw->PageNbFullProgress->redraw();
-     }
-}
-//! Call both the status bar update and the fullscreen status update
-void StatusUpdate(void * param)
-{
-    StatusBarUpdate(param);
-    StatusFullScreenUpdate(param);
-    Fl::wait(50);
-}
-//-----------------------------------------------------------------------------
 
 
 //---------------------------------File menu----------------------------------
@@ -499,6 +525,7 @@ void ExportDoc_cb(Fl_Widget* widget, void * param)
                 ProgressBar->minimum(0);
                 ProgressBar->maximum(mw->Doc->GetNbOfPages());
                 ProgressBar->value(0);
+                ProgressBar->selection_color(FL_DARK_RED);
                 Fl_Button cancelButton((ww-70)/2., 150, 70, 30, "Cancel");
                 cancelButton.take_focus();
                 cancelButton.callback(ExportCancel_cb, (void*)&exportdoc);
@@ -557,6 +584,53 @@ void Quit_cb(Fl_Widget* widget, void * param)
     MainWindow *mw=(MainWindow*)param;
 
     mw->window->do_callback();
+}
+
+//! Add recent documents items according to global Preferences
+void AddRecentDocsItems(void *param)
+{
+    MainWindow *mw=(MainWindow*)param;
+
+    //WARNING: MenuItem is doing its own filtering to "delete" the potential duplicates
+    //Use only the gloabl preferences (doesn't make sense with doc prefrences)
+    if(mw->Pref->GetNbRecentDocs()>0)
+    {
+        //First remove the recent docs menu item (to delete the previous submenus)
+        int recent_item_index=mw->MenuBar->find_index("&File/Recent files");
+        if(recent_item_index!=-1)
+            mw->MenuBar->remove(recent_item_index);
+        //and re-create it (at its previous position)
+        mw->MenuBar->insert(recent_item_index, "Recent files", 0, 0, 0, FL_SUBMENU);
+
+        //Then re-create the recent docs items
+        for(int i=0; i<mw->Pref->GetNbRecentDocs(); i++)
+        {
+            char tmp[FL_PATH_MAX];
+            //init the menu item
+            sprintf(tmp, "&File/Recent files/");
+            //Copy the string and replace '\' by '\\' for windows style files paths
+            int n_d=strlen(tmp);
+            for(unsigned int n_s=0; n_s<strlen(mw->Pref->GetRecentDocs(i)); n_s++)
+            {
+                if(mw->Pref->GetRecentDocs(i)[n_s]=='\\')
+                {
+                    tmp[n_d++]='\\';
+                }
+                tmp[n_d++]=mw->Pref->GetRecentDocs(i)[n_s];
+            }
+            //Terminating char
+            tmp[n_d++]='\0';
+            //Add it to the menu
+            mw->MenuBar->add(tmp, 0, (Fl_Callback *)Open_cb, mw);
+        }
+    }
+    //If no recent documents
+    else
+    {
+        //Deactivate the corresponding menu item
+        Fl_Menu_Item* recentitem=(Fl_Menu_Item*)mw->MenuBar->find_item("&File/Recent files");
+        recentitem->deactivate();
+    }
 }
 //-----------------------------------------------------------------------------
 
@@ -621,45 +695,6 @@ void Fullscreen_cb(Fl_Widget* widget, void * param)
     }
 }
 
-//! Switch to page reading mode
-void PageMode_cb(Fl_Widget* widget, void * param)
-{
-    MainWindow *mw=(MainWindow*)param;
-
-    mw->Doc->SetReadingMode(PAGE);
-    //mw->Display->SetImage(mw->Doc->Render());
-    mw->Display->SetImage(mw->Doc->RenderPage(), *mw->Doc->Render());
-    StatusUpdate(mw);
-    Fl::check();
-    mw->Doc->UpdatePreloadedPages();
-}
-//! Switch to strip reading mode
-void StripMode_cb(Fl_Widget* widget, void * param)
-{
-    MainWindow *mw=(MainWindow*)param;
-
-    mw->Doc->SetReadingMode(STRIP);
-    //Adjust the strip size according to the new display ratio
-    mw->Doc->SetDisplayRatio(mw->Display->w()/(float)mw->Display->h());
-    //mw->Display->SetImage(mw->Doc->Render());
-    mw->Display->SetImage(mw->Doc->RenderPage(), *mw->Doc->Render());
-    StatusUpdate(mw);
-    Fl::check();
-    mw->Doc->UpdatePreloadedPages();
-}
-//! Switch to case reading mode
-void CaseMode_cb(Fl_Widget* widget, void * param)
-{
-    MainWindow *mw=(MainWindow*)param;
-
-    mw->Doc->SetReadingMode(CASE);
-    //mw->Display->SetImage(mw->Doc->Render());
-    mw->Display->SetImage(mw->Doc->RenderPage(), *mw->Doc->Render());
-    StatusUpdate(mw);
-    Fl::check();
-    mw->Doc->UpdatePreloadedPages();
-}
-
 //! Actvate/deactivate the page preview
 void PagePreview_cb(Fl_Widget* widget, void * param)
 {
@@ -716,6 +751,166 @@ void Thumbnails_cb(Fl_Widget* widget, void * param)
         ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Thumbnails view\t"))->set();
         Fl::wait(100);
     }
+}
+
+void MaxZoom_cb(Fl_Widget* widget, void * param)
+{
+    MainWindow *mw=(MainWindow*)param;
+
+    //Get the option index based on the submenu index
+    int option_index=((Fl_Menu_*)widget)->value()-((Fl_Menu_*)widget)->find_index("&View/Maximal zoom\t")-1;
+    //Apply new value
+    mw->Display->SetMaxZoom((mw->Pref->GetMaxZoomOption(option_index)).value);
+    mw->Display->UpdateView();
+
+    //Update status bar
+    StatusBarUpdate((void*)mw);
+
+    //Update the preferences accordingly
+    mw->Pref->SetMaxZoomIdx(option_index);
+    mw->PrefDoc->SetMaxZoomIdx(option_index);
+}
+
+void AdditionnalZoom_cb(Fl_Widget* widget, void * param)
+{
+    MainWindow *mw=(MainWindow*)param;
+
+    //Get the option index relative to the submenu index
+    int base_index=((Fl_Menu_*)widget)->find_index("&View/Panel mode view\t/Additional zoom\t\t+\\-");
+    int option_index=((Fl_Menu_*)widget)->value()-base_index-1;
+
+
+    //Get the current selected value (if it's a +/- item)
+    int current_index=0;
+    if(option_index==8 || option_index==9)
+    {
+        const Fl_Menu_Item* items=((Fl_Menu_*)widget)->menu();
+        for(int i=1; i<9; i++)
+        {
+            const Fl_Menu_Item item=items[base_index+i];
+            if(item.checked())
+                current_index=i;
+        }
+    }
+
+    //Value item or +/- item ?
+    char item_name[255];
+    switch(option_index)
+    {
+        //"+" shortcut
+        case 8:
+            //New value: -1 on the item list or minimum
+            option_index=fmin(7, current_index);
+            //Apply on to the display
+            mw->Display->SetCustomZoom(mw->Pref->GetAdditionnalZoomOption(option_index).value);
+            //Update the menu item accordingly
+            sprintf(item_name, "&View/Panel mode view\t/Additional zoom\t\t+\\-/%s", (mw->Pref->GetAdditionnalZoomOption(option_index).caption));
+            ((Fl_Menu_Item*)mw->MenuBar->find_item(item_name))->setonly();
+            break;
+
+        //"-" shortcut
+        case 9:
+           //New value: -1 on the item list or minimum
+            option_index=fmax(0, current_index-2);
+            //Apply on to the display
+            mw->Display->SetCustomZoom(mw->Pref->GetAdditionnalZoomOption(option_index).value);
+            //Update the menu item accordingly
+            sprintf(item_name, "&View/Panel mode view\t/Additional zoom\t\t+\\-/%s", (mw->Pref->GetAdditionnalZoomOption(option_index).caption));
+            ((Fl_Menu_Item*)mw->MenuBar->find_item(item_name))->setonly();
+            break;
+
+        //Values
+        default:
+            //Apply new value
+            mw->Display->SetCustomZoom((mw->Pref->GetAdditionnalZoomOption(option_index)).value);
+    }
+    //Update display accordingly
+    mw->Display->UpdateView();
+
+    //Update status bar
+    StatusBarUpdate((void*)mw);
+
+    //Update the preferences accordingly
+    mw->Pref->SetAdditionnalZoomIdx(option_index);
+    mw->PrefDoc->SetAdditionnalZoomIdx(option_index);
+}
+
+//! Show the panel in context or not
+void InContext_cb(Fl_Widget* widget, void * param)
+{
+    MainWindow *mw=(MainWindow*)param;
+
+    //In context or not depending on the current state
+    mw->Display->SetInContext(!mw->Display->IsInContext());
+    mw->Display->UpdateView();
+    //activate/deactivate the depending options (Panel border and additionnal zoom)
+    if(mw->Display->IsInContext())
+    {
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Panel mode view\t/Show panel border\t"))->activate();
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Panel mode view\t/Additional zoom\t\t+\\-"))->activate();
+    }
+    else
+    {
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Panel mode view\t/Show panel border\t"))->deactivate();
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Panel mode view\t/Additional zoom\t\t+\\-"))->deactivate();
+    }
+
+
+}
+//! Show or hide the panel border when in panel mode
+void PanelBorder_cb(Fl_Widget* widget, void * param)
+{
+    MainWindow *mw=(MainWindow*)param;
+
+    //Invert border/no border
+    mw->Display->SetBorder(!mw->Display->IsBorder());
+    mw->Display->UpdateView();
+}
+//-----------------------------------------------------------------------------
+
+
+
+//-------------------------------Navigation menu-------------------------------
+//! Switch to page reading mode
+void PageMode_cb(Fl_Widget* widget, void * param)
+{
+    MainWindow *mw=(MainWindow*)param;
+
+    mw->Doc->SetReadingMode(PAGE);
+    //mw->Display->SetImage(mw->Doc->Render());
+    mw->Display->SetImage(mw->Doc->RenderPage(), *mw->Doc->Render());
+    StatusUpdate(mw);
+    ActivatePanelViewWidgets(mw, false);
+    Fl::check();
+    mw->Doc->UpdatePreloadedPages();
+}
+//! Switch to strip reading mode
+void StripMode_cb(Fl_Widget* widget, void * param)
+{
+    MainWindow *mw=(MainWindow*)param;
+
+    mw->Doc->SetReadingMode(STRIP);
+    //Adjust the strip size according to the new display ratio
+    mw->Doc->SetDisplayRatio(mw->Display->w()/(float)mw->Display->h());
+    //mw->Display->SetImage(mw->Doc->Render());
+    mw->Display->SetImage(mw->Doc->RenderPage(), *mw->Doc->Render());
+    StatusUpdate(mw);
+    ActivatePanelViewWidgets(mw, false);
+    Fl::check();
+    mw->Doc->UpdatePreloadedPages();
+}
+//! Switch to case reading mode
+void CaseMode_cb(Fl_Widget* widget, void * param)
+{
+    MainWindow *mw=(MainWindow*)param;
+
+    mw->Doc->SetReadingMode(CASE);
+    //mw->Display->SetImage(mw->Doc->Render());
+    mw->Display->SetImage(mw->Doc->RenderPage(), *mw->Doc->Render());
+    StatusUpdate(mw);
+    ActivatePanelViewWidgets(mw, true);
+    Fl::check();
+    mw->Doc->UpdatePreloadedPages();
 }
 
 //! Go to previous page (through Doc)
@@ -869,20 +1064,10 @@ void ActivateNavigationWidgets(void *param, bool val)
     {
         //Check if they are navigation ones
         if(items[i].label()!=NULL &&
-          (/*strcmp(items[i].label(), "Next page")==0 ||
-           strcmp(items[i].label(), "Previous page")==0 ||
-           strcmp(items[i].label(), "First page")==0 ||
-           strcmp(items[i].label(), "Last page")==0 ||
-           strcmp(items[i].label(), "Go to page")==0 ||
-           strcmp(items[i].label(), "Next panel")==0 ||
-           strcmp(items[i].label(), "Previous panel")==0 ||
-           strcmp(items[i].label(), "Panel mode")==0 ||
-           strcmp(items[i].label(), "Strip mode")==0 ||
-           strcmp(items[i].label(), "Page mode")==0 ||
-           strcmp(items[i].label(), "Page preview")==0 ||
-           strcmp(items[i].label(), "Thumbnails view")==0 ||*/
+          (
            strcmp(items[i].label(), "&View")==0 ||
-           strcmp(items[i].label(), "Export (as images)")==0
+           strcmp(items[i].label(), "&Navigation")==0 ||
+           strcmp(items[i].label(), "Export (as images)\t")==0
           ))
         {
             //Then activate or deactivate it
@@ -914,51 +1099,15 @@ void ActivateNavigationWidgets(void *param, bool val)
         mw->NextPageButton->hide();
     }
 }
-//! Add recent documents items according to global Preferences
-void AddRecentDocsItems(void *param)
+//! Actvate or deactivate (depending on bool val), the panel view menu items (border, in context...)
+void ActivatePanelViewWidgets(void *param, bool val)
 {
     MainWindow *mw=(MainWindow*)param;
 
-    //WARNING: MenuItem is doing its own filtering to "delete" the potential duplicates
-    //Use only the gloabl preferences (doesn't make sense with doc prefrences)
-    if(mw->Pref->GetNbRecentDocs()>0)
-    {
-        //First remove the recent docs menu item (to delete the previous submenus)
-        int recent_item_index=mw->MenuBar->find_index("&File/Recent files");
-        if(recent_item_index!=-1)
-            mw->MenuBar->remove(recent_item_index);
-        //and re-create it (at its previous position)
-        mw->MenuBar->insert(recent_item_index, "Recent files", 0, 0, 0, FL_SUBMENU);
-
-        //Then re-create the recent docs items
-        for(int i=0; i<mw->Pref->GetNbRecentDocs(); i++)
-        {
-            char tmp[FL_PATH_MAX];
-            //init the menu item
-            sprintf(tmp, "&File/Recent files/");
-            //Copy the string and replace '\' by '\\' for windows style files paths
-            int n_d=strlen(tmp);
-            for(unsigned int n_s=0; n_s<strlen(mw->Pref->GetRecentDocs(i)); n_s++)
-            {
-                if(mw->Pref->GetRecentDocs(i)[n_s]=='\\')
-                {
-                    tmp[n_d++]='\\';
-                }
-                tmp[n_d++]=mw->Pref->GetRecentDocs(i)[n_s];
-            }
-            //Terminating char
-            tmp[n_d++]='\0';
-            //Add it to the menu
-            mw->MenuBar->add(tmp, 0, (Fl_Callback *)Open_cb, mw);
-        }
-    }
-    //If no recent documents
+    if(val)
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Panel mode view\t"))->activate();
     else
-    {
-        //Deactivate the corresponding menu item
-        Fl_Menu_Item* recentitem=(Fl_Menu_Item*)mw->MenuBar->find_item("&File/Recent files");
-        recentitem->deactivate();
-    }
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Panel mode view\t"))->deactivate();
 }
 //-----------------------------------------------------------------------------
 
@@ -1005,25 +1154,28 @@ void UpdateWidgets(void * param)
     //The reading mode
     if(localPref->GetReadingMode()==PAGE)
     {
-        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Page mode\t"))->setonly();
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&Navigation/Page mode\t"))->setonly();
+        ActivatePanelViewWidgets(mw, false);
     }
     if(localPref->GetReadingMode()==CASE)
     {
-        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Panel mode\t"))->setonly();
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&Navigation/Panel mode\t"))->setonly();
+        ActivatePanelViewWidgets(mw, true);
     }
     if(localPref->GetReadingMode()==STRIP)
     {
-        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Strip mode\t"))->setonly();
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&Navigation/Strip mode\t"))->setonly();
+        ActivatePanelViewWidgets(mw, false);
     }
 
     //Preview page
     if(localPref->GetPagePreview())
     {
-        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Page preview\t"))->set();
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&Navigation/Page preview\t"))->set();
     }
     else
     {
-        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Page preview\t"))->clear();
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&Navigation/Page preview\t"))->clear();
     }
 
     //Thumbnails view
@@ -1042,6 +1194,43 @@ void UpdateWidgets(void * param)
             Thumbnails_cb(mw->DisplayGrp, mw);
         }
     }
+
+    //Max zoom
+    char item_name[255];
+    sprintf(item_name, "&View/Maximal zoom\t/%s", (mw->Pref->GetMaxZoomOption(localPref->GetMaxZoomIdx())).caption);
+    ((Fl_Menu_Item*)mw->MenuBar->find_item(item_name))->setonly();
+    mw->Display->SetMaxZoom((mw->Pref->GetMaxZoomOption(localPref->GetMaxZoomIdx())).value);
+
+    //Additionnal zoom
+    sprintf(item_name, "&View/Panel mode view\t/Additional zoom\t\t+\\-/%s", (mw->Pref->GetAdditionnalZoomOption(localPref->GetAdditionnalZoomIdx())).caption);
+    ((Fl_Menu_Item*)mw->MenuBar->find_item(item_name))->setonly();
+    mw->Display->SetCustomZoom((mw->Pref->GetAdditionnalZoomOption(localPref->GetAdditionnalZoomIdx())).value);
+
+
+    //Panel in context or not
+    if(localPref->GetInContext())
+    {
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Panel mode view\t/Show panel in context\t"))->set();
+        mw->Display->SetInContext(true);
+    }
+    else
+    {
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Panel mode view\t/Show panel in context\t"))->clear();
+        mw->Display->SetInContext(false);
+    }
+
+    //Panel border
+    if(localPref->GetBorder())
+    {
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Panel mode view\t/Show panel border\t"))->set();
+        mw->Display->SetBorder(true);
+    }
+    else
+    {
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Panel mode view\t/Show panel border\t"))->clear();
+        mw->Display->SetBorder(false);
+    }
+
 
     //The preferences preferences (!): use the global ones for these
     if(mw->Pref->GetSavePref())
@@ -1156,13 +1345,38 @@ MainWindow::MainWindow(const char *exepath, const char *f)
                     { "Quit\t", FL_COMMAND + 'q', (Fl_Callback *)Quit_cb, this },
                     { 0 },
                 { "&View",              0, 0, 0, FL_SUBMENU | FL_MENU_INACTIVE},
-                    {"Fullscreen2\t", FL_Escape, (Fl_Callback *)Fullscreen_cb, this, FL_MENU_INVISIBLE | FL_MENU_INACTIVE},
-                    {"Fullscreen\t", FL_COMMAND + 'f', (Fl_Callback *)Fullscreen_cb, this, FL_MENU_DIVIDER },
+                    {"Fullscreen2\t", FL_Escape, (Fl_Callback *)Fullscreen_cb, this, FL_MENU_INVISIBLE | FL_MENU_INACTIVE },
+                    {"Fullscreen\t", FL_COMMAND + 'f', (Fl_Callback *)Fullscreen_cb, this },
+                    { "Thumbnails view\t", FL_COMMAND + 't', (Fl_Callback *)Thumbnails_cb, this, FL_MENU_TOGGLE },
+                    { "Maximal zoom\t", 0, 0, 0, FL_SUBMENU },
+                        { Pref->GetMaxZoomOption(0).caption, 0, (Fl_Callback *)MaxZoom_cb, this, FL_MENU_RADIO | FL_MENU_CHECK },
+                        { Pref->GetMaxZoomOption(1).caption, 0, (Fl_Callback *)MaxZoom_cb, this, FL_MENU_RADIO },
+                        { Pref->GetMaxZoomOption(2).caption, 0, (Fl_Callback *)MaxZoom_cb, this, FL_MENU_RADIO },
+                        { Pref->GetMaxZoomOption(3).caption, 0, (Fl_Callback *)MaxZoom_cb, this, FL_MENU_RADIO },
+                        { Pref->GetMaxZoomOption(4).caption, 0, (Fl_Callback *)MaxZoom_cb, this, FL_MENU_RADIO },
+                        { 0 },
+                    { "Panel mode view\t", 0, 0, 0, FL_SUBMENU },
+                        { "Show panel in context\t", FL_COMMAND + 'i', (Fl_Callback *)InContext_cb, this, FL_MENU_TOGGLE },
+                        { "Show panel border\t", FL_COMMAND + 'b', (Fl_Callback *)PanelBorder_cb, this, FL_MENU_TOGGLE },
+                        { "Additional zoom\t\t+\\-", 0, 0, 0, FL_SUBMENU },
+                            { Pref->GetAdditionnalZoomOption(0).caption, 0, (Fl_Callback *)AdditionnalZoom_cb, this, FL_MENU_RADIO },
+                            { Pref->GetAdditionnalZoomOption(1).caption, 0, (Fl_Callback *)AdditionnalZoom_cb, this, FL_MENU_RADIO },
+                            { Pref->GetAdditionnalZoomOption(2).caption, 0, (Fl_Callback *)AdditionnalZoom_cb, this, FL_MENU_RADIO },
+                            { Pref->GetAdditionnalZoomOption(3).caption, 0, (Fl_Callback *)AdditionnalZoom_cb, this, FL_MENU_RADIO },
+                            { Pref->GetAdditionnalZoomOption(4).caption, 0, (Fl_Callback *)AdditionnalZoom_cb, this, FL_MENU_RADIO | FL_MENU_CHECK },
+                            { Pref->GetAdditionnalZoomOption(5).caption, 0, (Fl_Callback *)AdditionnalZoom_cb, this, FL_MENU_RADIO },
+                            { Pref->GetAdditionnalZoomOption(6).caption, 0, (Fl_Callback *)AdditionnalZoom_cb, this, FL_MENU_RADIO },
+                            { Pref->GetAdditionnalZoomOption(7).caption, 0, (Fl_Callback *)AdditionnalZoom_cb, this, FL_MENU_RADIO },
+                            { "+", '+', (Fl_Callback *)AdditionnalZoom_cb, this, FL_MENU_INVISIBLE },
+                            { "-", '-', (Fl_Callback *)AdditionnalZoom_cb, this, FL_MENU_INVISIBLE },
+                            { 0 },
+                        { 0 },
+                    { 0 },
+                { "&Navigation",              0, 0, 0, FL_SUBMENU | FL_MENU_INACTIVE},
                     { "Panel mode\t", 'c', (Fl_Callback *)CaseMode_cb, this, FL_MENU_RADIO },
                     { "Strip mode\t", 's', (Fl_Callback *)StripMode_cb, this, FL_MENU_RADIO },
                     { "Page mode\t", 'p', (Fl_Callback *)PageMode_cb, this, FL_MENU_RADIO | FL_MENU_DIVIDER },
                     { "Page preview\t", FL_COMMAND+'p', (Fl_Callback *)PagePreview_cb, this, FL_MENU_TOGGLE | FL_MENU_DIVIDER },
-                    { "Thumbnails view\t", FL_COMMAND + 't', (Fl_Callback *)Thumbnails_cb, this, FL_MENU_TOGGLE | FL_MENU_DIVIDER },
                     { "Next panel\t", FL_Right, (Fl_Callback *)NextCase_cb, this },
                     { "Previous panel\t", FL_Left, (Fl_Callback *)PreviousCase_cb, this },
                     { "Next page\t", FL_Down , (Fl_Callback *)NextPage_cb, this },
@@ -1239,8 +1453,7 @@ MainWindow::MainWindow(const char *exepath, const char *f)
                  MainDisplayGrp->begin();
                  //Main display
                      Display = new /*Fl_OpenCV*/Fl_ViewerCV(MainDisplayGrp->x(), MainDisplayGrp->y(), MainDisplayGrp->w(), MainDisplayGrp->h());
-                     Display->SetMaxZoom(3.0);
-                     Display->SetHandleKeys(true);
+                     //Display->SetHandleKeys(true);
 
                  //Navigation buttons
                      NextButton = new Fl_Overlay_Arrow_Button(Display->x()+Display->w()-0.045*window->w(), (int)(Display->y()), 0.045*window->w(), Display->h(), "", 0, 0.8, 0.15, 0);
@@ -1296,9 +1509,11 @@ MainWindow::MainWindow(const char *exepath, const char *f)
 
 
          //Status bar
-             StatusBar = new Fl_Box(0, window->h()-20,window->w(), 20);
+             StatusBar = new Fl_Box(0, window->h()-20, window->w(), 20);
              StatusBar->align(FL_ALIGN_RIGHT|FL_ALIGN_INSIDE);
              StatusBar->box(FL_UP_BOX);
+             StatusBarZoom = new Fl_Box(0, window->h()-20, window->w()/2., 20);
+             StatusBarZoom->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
 
 
              /*TODO: A terminer et ameliorer

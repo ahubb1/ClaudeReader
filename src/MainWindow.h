@@ -42,7 +42,6 @@
 
 
 #include "Fl_Help_Window.h"
-//#include "Fl_OpenCV.h"
 #include "Fl_ViewerCV.h"
 #include "Fl_Overlay_Arrow_Button.h"
 #include "Preferences.h"
@@ -86,6 +85,10 @@ class MainWindow
         friend void CaseMode_cb(Fl_Widget* widget, void * param);
         friend void PagePreview_cb(Fl_Widget* widget, void * param);
         friend void Thumbnails_cb(Fl_Widget* widget, void * param);
+        friend void MaxZoom_cb(Fl_Widget* widget, void * param);
+        friend void AdditionnalZoom_cb(Fl_Widget* widget, void * param);
+        friend void InContext_cb(Fl_Widget* widget, void * param);
+        friend void PanelBorder_cb(Fl_Widget* widget, void * param);
         friend void UpdatePage(MainWindow* mw);
         friend void UpdatePreloadPages(void * param);
         friend void PreviousPage_cb(Fl_Widget* widget, void * param);
@@ -104,6 +107,7 @@ class MainWindow
         //Info/status/update
         friend void UpdateWidgets(void * param);
         friend void ActivateNavigationWidgets(void *param, bool val);
+        friend void ActivatePanelViewWidgets(void *param, bool val);
         friend void AddRecentDocsItems(void *param);
         friend void StatusUpdate(void * param);
         friend void StatusBarUpdate(void * param);
@@ -116,6 +120,7 @@ class MainWindow
             Fl_Help_Window *HelpDlg;
             Fl_Menu_Bar *MenuBar;
             Fl_Box *StatusBar;
+            Fl_Box *StatusBarZoom;
             Fl_Group *MainDisplayGrp, *ThumbDisplayGrp, *DisplayGrp;
             //Fl_Tile *DisplayGrp;
             //Fl_OpenCV *Display, *ThumbDisplayCurrent, *ThumbDisplayPrev, *ThumbDisplayNext;

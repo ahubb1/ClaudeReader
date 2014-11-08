@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1414309308 source:/home/vincent/Perso/BDReader/BDReader/src/MainWindow.cpp
+1415409517 source:/home/vincent/Perso/BDReader/BDReader/src/MainWindow.cpp
 	"MainWindow.h"
 	"help.h"
 	"about.h"
@@ -18,7 +18,7 @@
 	"Document.h"
 	"icon32.xbm"
 
-1414300014 source:/home/vincent/Perso/BDReader/BDReader/src/main.cpp
+1415019166 source:/home/vincent/Perso/BDReader/BDReader/src/main.cpp
 	<getopt.h>
 	"MainWindow.h"
 	"helpcmd.h"
@@ -374,7 +374,7 @@
 1399727871 /home/vincent/Perso/BDReader/BDReader/include/Preferences.h
 	"Document.h"
 
-1405768929 source:/home/vincent/Perso/BDReader/BDReader/src/Preferences.cpp
+1415409306 source:/home/vincent/Perso/BDReader/BDReader/src/Preferences.cpp
 	"Preferences.h"
 
 1397837284 /home/vincent/Perso/BDReader/BDReader/icon32.xbm
@@ -409,7 +409,7 @@
 	<FL/fl_draw.H>
 	<FL/Fl_Button.H>
 
-1414307061 /home/vincent/Perso/BDReader/BDReader/src/MainWindow.h
+1415175809 /home/vincent/Perso/BDReader/BDReader/src/MainWindow.h
 	<FL/Fl.H>
 	<FL/Fl_Window.H>
 	<FL/Fl_Menu_Bar.H>
@@ -436,7 +436,7 @@
 	<FL/fl_ask.H>
 	<opencv2/opencv.hpp>
 
-1405768895 /home/vincent/Perso/BDReader/BDReader/src/Preferences.h
+1415409029 /home/vincent/Perso/BDReader/BDReader/src/Preferences.h
 	"Document.h"
 
 1404560587 /home/vincent/Perso/BDReader/BDReader/src/icon32.xbm
@@ -569,17 +569,19 @@
 1408577053 /home/vincent/Perso/BDReader/BDReader/src/SupportedImageFormats.h
 	<string>
 
-1409365994 /home/vincent/Perso/BDReader/BDReader/src/helpcmd.h
+1414757452 /home/vincent/Perso/BDReader/BDReader/src/helpcmd.h
 
 1414299339 /home/vincent/Perso/BDReader/BDReader/src/version.h
 
-1414309724 source:/home/vincent/Perso/BDReader/BDReader/src/Fl_ViewerCV.cxx
+1415180654 source:/home/vincent/Perso/BDReader/BDReader/src/Fl_ViewerCV.cxx
 	"Fl_ViewerCV.h"
 
-1414309794 /home/vincent/Perso/BDReader/BDReader/src/Fl_ViewerCV.h
+1415176478 /home/vincent/Perso/BDReader/BDReader/src/Fl_ViewerCV.h
 	<FL/Fl.H>
 	<FL/fl_draw.H>
 	<FL/Fl_Widget.H>
 	<FL/fl_ask.H>
 	<opencv2/opencv.hpp>
+
+1414322957 /home/vincent/Perso/BDReader/BDReader/src/Icon2_32.xbm
 

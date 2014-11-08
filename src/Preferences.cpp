@@ -29,10 +29,44 @@ Preferences::Preferences()
     LastDocPageNb=0;
     PagePreview=true;
     Thumbnails=true;
+    MaxZoomIdx=0;
+    AdditionnalZoomIdx=4;
+    InContext=true;
+    Border=true;
     SavePref=true;
     LocalPref=true;
     WinW=600;
     WinH=600;
+
+    //Max zoom possible values
+    MaxZoomOptionsList[0].caption="None (Default)\t";
+    MaxZoomOptionsList[0].value=100;
+    MaxZoomOptionsList[1].caption="80%\t";
+    MaxZoomOptionsList[1].value=0.8;
+    MaxZoomOptionsList[2].caption="100% (PP2)\t";
+    MaxZoomOptionsList[2].value=1.;
+    MaxZoomOptionsList[3].caption="150%\t";
+    MaxZoomOptionsList[3].value=1.5;
+    MaxZoomOptionsList[4].caption="200%\t";
+    MaxZoomOptionsList[4].value=2.;
+
+    //Additionnal zoom possible values
+    AdditionnalZoomOptionsList[0].caption="x0.5\t";
+    AdditionnalZoomOptionsList[0].value=0.5;
+    AdditionnalZoomOptionsList[1].caption="x0.6\t";
+    AdditionnalZoomOptionsList[1].value=0.6;
+    AdditionnalZoomOptionsList[2].caption="x0.7\t";
+    AdditionnalZoomOptionsList[2].value=0.7;
+    AdditionnalZoomOptionsList[3].caption="x0.8\t";
+    AdditionnalZoomOptionsList[3].value=0.8;
+    AdditionnalZoomOptionsList[4].caption="x0.9 (Default)\t";
+    AdditionnalZoomOptionsList[4].value=0.9;
+    AdditionnalZoomOptionsList[5].caption="x1.0 (None)\t";
+    AdditionnalZoomOptionsList[5].value=1.0;
+    AdditionnalZoomOptionsList[6].caption="x1.1\t";
+    AdditionnalZoomOptionsList[6].value=1.1;
+    AdditionnalZoomOptionsList[7].caption="x1.2\t";
+    AdditionnalZoomOptionsList[7].value=1.2;
 }
 
 //! Destructor (nothing).
@@ -74,7 +108,7 @@ int Preferences::Load(const char prefFilename[255], const char windir[2048])
         int savepref, localpref;
         if(fscanf(prefFile, "%d %d ", &savepref, &localpref)!=2)
         {
-            //return -2; //Don't return: for back compatibility
+            return -2;
         }
         else
         {
@@ -86,7 +120,7 @@ int Preferences::Load(const char prefFilename[255], const char windir[2048])
         int win_w=600, win_h=600;
         if(fscanf(prefFile, "%d %d ", &win_w, &win_h)!=2)
         {
-            //return -2; //Don't return: for back compatibility
+            return -2;
         }
         else
         {
@@ -98,12 +132,26 @@ int Preferences::Load(const char prefFilename[255], const char windir[2048])
         int win_x=0, win_y=0;
         if(fscanf(prefFile, "%d %d ", &win_x, &win_y)!=2)
         {
-            //return -2; //Don't return: for back compatibility
+            return -2;
         }
         else
         {
             WinX=win_x;
             WinY=win_y;
+        }
+
+        //The max and additionall zoom
+        int max_z=MaxZoomIdx, add_z=AdditionnalZoomIdx;
+        if(fscanf(prefFile, "%d %d ", &max_z, &add_z)!=2)
+        {
+            //return -2  //Don't return: for back compatibility;
+            printf("No values !\n");
+        }
+        else
+        {
+            MaxZoomIdx=max_z;
+            AdditionnalZoomIdx=add_z;
+            printf("%d %d\n", MaxZoomIdx, AdditionnalZoomIdx);
         }
 
         //The last document filename
@@ -181,6 +229,9 @@ void Preferences::Save(Document *doc)
 
             //The window position
             fprintf(prefFile, "%d\n%d\n", WinX, WinY);
+
+            //The max and additionall zoom
+            fprintf(prefFile, "%d\n%d\n", MaxZoomIdx, AdditionnalZoomIdx);
 
             //The last document filename
             fprintf(prefFile, "%s\n", doc->GetFilename());
