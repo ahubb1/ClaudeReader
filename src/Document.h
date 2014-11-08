@@ -55,7 +55,7 @@ class Document
         int NextPage();
         int PreviousPage();
 
-        //Mat *Render() {return ImgRender=currentPage->RenderCase();}
+        Mat *RenderMat() {return ImgRender=currentPage->RenderCaseMat();}
         Rect *Render() {return RectRender=currentPage->RenderCase();}
         Mat *RenderPage() {return ImgRender=currentPage->RenderPage();}
         Mat *ThumbnailsRenderCurrent();

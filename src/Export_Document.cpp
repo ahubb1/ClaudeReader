@@ -165,10 +165,10 @@ int Export_Document::Export(Fl_Progress *progressbar)
 
                     //Render
                     //!!!!!!!!!!!!!!!!!!!!!!!
-                    /*Mat rendering(*Doc->Render());
+                    Mat rendering(*Doc->RenderMat());
 
                     //Write it (extension already choosen)
-                    imwrite(filename, rendering);*/
+                    imwrite(filename, rendering);
                     nbimages++;
 
                     casenb++;
@@ -198,10 +198,10 @@ int Export_Document::Export(Fl_Progress *progressbar)
 
                 //Render
                 //!!!!!!!!!!!!!!!!!!!!!!!
-                /*Mat rendering(*Doc->Render());
+                Mat rendering(*Doc->RenderMat());
 
                 //Write it (extension already choosen)
-                imwrite(filename, rendering);*/
+                imwrite(filename, rendering);
                 nbimages++;
 
                 //If we are in Panel but failed, double the page: easier for a user on another reader
@@ -209,7 +209,7 @@ int Export_Document::Export(Fl_Progress *progressbar)
                 {
                     sprintf(filename, "%s%s_%s01%s", PathToExport, BaseFilename, longpagenb, FilesExtension);
                     //!!!!!!!!!!!!!!!!!!!!!!!
-                    //imwrite(filename, rendering);
+                    imwrite(filename, rendering);
                     nbimages++;
                 }
             }

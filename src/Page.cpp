@@ -665,10 +665,10 @@ int Page::SetActiveCase(int val)
 
 
 
-/*! Update the case/page rendering according to ActiveCase value.
+//! Update the case/page rendering according to ActiveCase value.
 //!The ImgRender cv::Mat is filled with the case image or the whole page if ReadingMode==PAGE.
 //! \return A pointer on the valid ImgRender cv::Mat
-Mat * Page::RenderCase()
+Mat * Page::RenderCaseMat()
 {
     //If the detction has been done
     if(Loaded)
@@ -691,7 +691,7 @@ Mat * Page::RenderCase()
     {
         return NULL;
     }
-}*/
+}
 
 //! Update the case/page rendering according to ActiveCase value.
 //!The ImgRender cv::Mat is filled with the case image or the whole page if ReadingMode==PAGE.
