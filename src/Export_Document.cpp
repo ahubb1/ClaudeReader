@@ -164,7 +164,6 @@ int Export_Document::Export(Fl_Progress *progressbar)
                     }
 
                     //Render
-                    //!!!!!!!!!!!!!!!!!!!!!!!
                     Mat rendering(*Doc->RenderMat());
 
                     //Write it (extension already choosen)
@@ -197,7 +196,6 @@ int Export_Document::Export(Fl_Progress *progressbar)
                 }
 
                 //Render
-                //!!!!!!!!!!!!!!!!!!!!!!!
                 Mat rendering(*Doc->RenderMat());
 
                 //Write it (extension already choosen)
@@ -208,7 +206,6 @@ int Export_Document::Export(Fl_Progress *progressbar)
                 if(PanelMode)
                 {
                     sprintf(filename, "%s%s_%s01%s", PathToExport, BaseFilename, longpagenb, FilesExtension);
-                    //!!!!!!!!!!!!!!!!!!!!!!!
                     imwrite(filename, rendering);
                     nbimages++;
                 }

@@ -15,6 +15,9 @@ AC_CHECK_HEADERS([archive_entry.h], [break;])
 AC_CHECK_LIB([fltk], [main], [], [
   AC_MSG_ERROR([unable to find fltk library.])
 ])
+AC_CHECK_LIB([fltk_images], [main], [], [
+  AC_MSG_ERROR([unable to find fltk_images library.])
+])
 AC_CHECK_LIB([Xft], [XftFontOpen], [], [
   AC_MSG_ERROR([unable to find Xft library.])
 ])

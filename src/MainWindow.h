@@ -119,11 +119,9 @@ class MainWindow
             Fl_Double_Window *window;
             Fl_Help_Window *HelpDlg;
             Fl_Menu_Bar *MenuBar;
-            Fl_Box *StatusBar;
-            Fl_Box *StatusBarZoom;
+            Fl_Group *StatusBarGrp;
+            Fl_Box *StatusBar, *StatusBarZoom;
             Fl_Group *MainDisplayGrp, *ThumbDisplayGrp, *DisplayGrp;
-            //Fl_Tile *DisplayGrp;
-            //Fl_OpenCV *Display, *ThumbDisplayCurrent, *ThumbDisplayPrev, *ThumbDisplayNext;
             Fl_ViewerCV *Display, *ThumbDisplayCurrent, *ThumbDisplayPrev, *ThumbDisplayNext;
             Fl_Button *PrevCloseButton;
             Fl_Overlay_Arrow_Button *NextButton, *PreviousButton, *NextPageButton, *PreviousPageButton;

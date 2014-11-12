@@ -642,6 +642,7 @@ void Fullscreen_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
 
+    //If not in fullscreem
     if( mw->window->fullscreen_active() == 0 )
     {
         //Go in fullscreen mode
@@ -651,7 +652,8 @@ void Fullscreen_cb(Fl_Widget* widget, void * param)
         Fl::wait(10);
         //Hide the bars (but not really, just make them 0px width=> trick to keep the shortcuts and remember their size/position (only w() is forgotten but it's the window one))
         mw->MenuBar->resize(mw->MenuBar->x(), mw->MenuBar->y(), 0, mw->MenuBar->h());
-        mw->StatusBar->resize(mw->StatusBar->x(), mw->StatusBar->y(), 0, mw->StatusBar->h());
+        mw->StatusBarGrp->resize(mw->StatusBar->x(), mw->StatusBar->y(), 0, mw->StatusBar->h());
+
         //Adapt the displayGrp size (no more menu and status bar shown=>screen size)
         while(mw->window->w()<Fl::w() && mw->window->h()<Fl::h())
             Fl::wait(10);
@@ -666,6 +668,7 @@ void Fullscreen_cb(Fl_Widget* widget, void * param)
         //Add the ESC control as a fullscreen shortcut
         ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Fullscreen2\t"))->activate();
     }
+    //If was in fullscreem
     else
     {
         //Go back from fullscreen
@@ -675,7 +678,7 @@ void Fullscreen_cb(Fl_Widget* widget, void * param)
         Fl::wait(100);
         //Show the bars again: redefine their width equal to the window one
         mw->MenuBar->resize(mw->MenuBar->x(), mw->MenuBar->y(), mw->window->w(), 25);
-        mw->StatusBar->resize(mw->StatusBar->x(), mw->window->h()-20, mw->window->w(), 20);
+        mw->StatusBarGrp->resize(mw->StatusBar->x(), mw->window->h()-20, mw->window->w(), 20);
         Fl::wait(100);
         //HIde the page number indicator
         mw->PageNbFullGrp->hide();
@@ -1509,12 +1512,13 @@ MainWindow::MainWindow(const char *exepath, const char *f)
 
 
          //Status bar
-             StatusBar = new Fl_Box(0, window->h()-20, window->w(), 20);
-             StatusBar->align(FL_ALIGN_RIGHT|FL_ALIGN_INSIDE);
-             StatusBar->box(FL_UP_BOX);
-             StatusBarZoom = new Fl_Box(0, window->h()-20, window->w()/2., 20);
-             StatusBarZoom->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
-
+             StatusBarGrp = new Fl_Group(0, window->h()-20, window->w(), 20);
+                StatusBar = new Fl_Box(0, window->h()-20, window->w(), 20);
+                StatusBar->align(FL_ALIGN_RIGHT|FL_ALIGN_INSIDE);
+                StatusBar->box(FL_UP_BOX);
+                StatusBarZoom = new Fl_Box(0, window->h()-20, window->w()/2., 20);
+                StatusBarZoom->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
+            StatusBarGrp->end();
 
              /*TODO: A terminer et ameliorer
              Fl_Counter* StatusCounter = new Fl_Counter(StatusBar->x()+StatusBar->w()/2.0-100, StatusBar->y(), 200, 20);
