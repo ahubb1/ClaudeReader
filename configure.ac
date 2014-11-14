@@ -13,7 +13,7 @@ AC_CHECK_HEADERS([archive_entry.h], [break;])
 #Libraries check
 #fltk
 AC_CHECK_LIB([fltk], [main], [], [
-  AC_MSG_ERROR([unable to find fltk library.])
+  AC_MSG_ERROR([unable to find fltk library (1.3).])
 ])
 AC_CHECK_LIB([fltk_images], [main], [], [
   AC_MSG_ERROR([unable to find fltk_images library.])

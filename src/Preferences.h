@@ -60,9 +60,9 @@ class Preferences
         bool GetThumbnails() { return Thumbnails; }
         void SetThumbnails(bool val) { Thumbnails = val; }
         int GetMaxZoomIdx() { return MaxZoomIdx; }
-        int SetMaxZoomIdx(int i) { MaxZoomIdx = i; }
+        void SetMaxZoomIdx(int i) { MaxZoomIdx = i; }
         int GetAdditionnalZoomIdx() { return AdditionnalZoomIdx; }
-        int SetAdditionnalZoomIdx(int i) {AdditionnalZoomIdx = i; }
+        void SetAdditionnalZoomIdx(int i) {AdditionnalZoomIdx = i; }
         bool GetInContext() { return InContext; }
         void SetInContext(bool val) { Border = val; }
         bool GetBorder() { return Border; }

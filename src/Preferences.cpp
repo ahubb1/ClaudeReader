@@ -145,13 +145,11 @@ int Preferences::Load(const char prefFilename[255], const char windir[2048])
         if(fscanf(prefFile, "%d %d ", &max_z, &add_z)!=2)
         {
             //return -2  //Don't return: for back compatibility;
-            printf("No values !\n");
         }
         else
         {
             MaxZoomIdx=max_z;
             AdditionnalZoomIdx=add_z;
-            printf("%d %d\n", MaxZoomIdx, AdditionnalZoomIdx);
         }
 
         //The last document filename

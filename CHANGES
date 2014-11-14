@@ -1,6 +1,14 @@
 BDReader changes
-Vincent Crocher 31/08/2014
+Vincent Crocher 13/11/2014
 
+v1.03
+	-New viewing/navgation: option to show panel in context, zoom options
+	-Added a maximal zoom option to avoid to large zooming
+	-Menus redesign
+	-Display page number on fullscreen
+	-Increase number of recent documents stored
+	-Minimal command line options: help and version
+	-Added CHANGES and README files in package
 v1.02
    -Panel detection improved
    -Faster detection and navigation

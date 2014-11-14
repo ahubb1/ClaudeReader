@@ -24,9 +24,11 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O2" />
+					<Add option="-v" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
+					<Add option="-v" />
 				</Linker>
 			</Target>
 			<Target title="Win32">
@@ -38,7 +40,6 @@
 				<Option projectLibDirsRelation="1" />
 				<Compiler>
 					<Add option="-O2" />
-					<Add option="-g" />
 					<Add directory="include" />
 					<Add directory="include/libarchive" />
 				</Compiler>
@@ -84,8 +85,8 @@
 			<Add library="opencv_core" />
 			<Add library="opencv_highgui" />
 			<Add library="opencv_imgproc" />
-			<Add library="/usr/local/lib/libfltk_images.a" />
-			<Add library="/usr/local/lib/libfltk.a" />
+			<Add library="fltk_images" />
+			<Add library="fltk" />
 			<Add library="Xft" />
 			<Add library="Xinerama" />
 			<Add directory="lib/unix" />

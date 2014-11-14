@@ -151,7 +151,7 @@ void StatusUpdate(void * param)
 {
     StatusBarUpdate(param);
     StatusFullScreenUpdate(param);
-    Fl::wait(50);
+    Fl::wait(.50);
 }
 //-----------------------------------------------------------------------------
 
@@ -301,7 +301,7 @@ void TimerMouseWheel_cb(void* param)
         mouseWheel=0;
     }
 
-    Fl::wait(50);
+    Fl::wait(.50);
     //Repeat...
     Fl::repeat_timeout(0.1, TimerMouseWheel_cb, (void*)mw);
 }
@@ -647,22 +647,22 @@ void Fullscreen_cb(Fl_Widget* widget, void * param)
     {
         //Go in fullscreen mode
         mw->window->resizable(NULL);
-        Fl::wait(10);
+        Fl::wait(.10);
         mw->window->fullscreen();
-        Fl::wait(10);
+        Fl::wait(.10);
         //Hide the bars (but not really, just make them 0px width=> trick to keep the shortcuts and remember their size/position (only w() is forgotten but it's the window one))
         mw->MenuBar->resize(mw->MenuBar->x(), mw->MenuBar->y(), 0, mw->MenuBar->h());
         mw->StatusBarGrp->resize(mw->StatusBar->x(), mw->StatusBar->y(), 0, mw->StatusBar->h());
 
         //Adapt the displayGrp size (no more menu and status bar shown=>screen size)
         while(mw->window->w()<Fl::w() && mw->window->h()<Fl::h())
-            Fl::wait(10);
+            Fl::wait(.10);
         mw->DisplayGrp->resize(0, 0, mw->window->w(), mw->window->h());
         mw->PageNbFullGrp->resize((int)(mw->window->w()-(mw->window->w()/15.)), (int)(mw->window->h()-(mw->window->w()/40.)), mw->window->w()/20., mw->window->w()/80.);
         mw->PageNbFullGrp->show();
-        Fl::wait(10);
+        Fl::wait(.10);
         mw->DisplayGrp->redraw();
-        Fl::wait(10);
+        Fl::wait(.10);
         Fl::check();
 
         //Add the ESC control as a fullscreen shortcut
@@ -673,24 +673,24 @@ void Fullscreen_cb(Fl_Widget* widget, void * param)
     {
         //Go back from fullscreen
         mw->window->fullscreen_off();
-        Fl::wait(100);
+        Fl::wait(.20);
         mw->window->resizable(NULL);
-        Fl::wait(100);
+        Fl::wait(.20);
         //Show the bars again: redefine their width equal to the window one
         mw->MenuBar->resize(mw->MenuBar->x(), mw->MenuBar->y(), mw->window->w(), 25);
         mw->StatusBarGrp->resize(mw->StatusBar->x(), mw->window->h()-20, mw->window->w(), 20);
-        Fl::wait(100);
+        Fl::wait(.20);
         //HIde the page number indicator
         mw->PageNbFullGrp->hide();
         //Resize the display group
         mw->DisplayGrp->resize(0, 25, mw->window->w(), mw->window->h()-45);
-        Fl::wait(100);
+        Fl::wait(.20);
         mw->window->resizable(mw->DisplayGrp);
-        Fl::wait(100);
+        Fl::wait(.20);
 
         //and let some time to update that
         mw->window->redraw();
-        Fl::wait(100);
+        Fl::wait(.20);
         Fl::check();
 
         //Remove the ESC control as a fullscreen shortcut
@@ -729,7 +729,7 @@ void Thumbnails_cb(Fl_Widget* widget, void * param)
         mw->DisplayGrp->remove(mw->ThumbDisplayGrp);
         //and resize the main display to take the full space
         mw->MainDisplayGrp->resize(mw->DisplayGrp->x(), mw->DisplayGrp->y(), mw->DisplayGrp->w(), mw->DisplayGrp->h());
-        Fl::wait(10);
+        Fl::wait(0.1);
         //Update the menu item state if needed
         ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Thumbnails view\t"))->clear();
     }
@@ -752,8 +752,11 @@ void Thumbnails_cb(Fl_Widget* widget, void * param)
         mw->ThumbDisplayGrp->redraw();
         //Update the menu item state if needed
         ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Thumbnails view\t"))->set();
-        Fl::wait(100);
+        Fl::wait(0.2);
     }
+
+    //Update fullscreen state
+    StatusFullScreenUpdate((void*)mw);
 }
 
 void MaxZoom_cb(Fl_Widget* widget, void * param)
@@ -926,7 +929,7 @@ void PreviousPage_cb(Fl_Widget* widget, void * param)
     StatusUpdate(mw);
     //wait some time
     Fl::check();
-    Fl::wait(10);
+    Fl::wait(.10);
     //If still the same page asked, load it, otherwise do nothing
     if(p==mw->Doc->GetCurrentPageNb())
     {
@@ -949,7 +952,7 @@ void NextPage_cb(Fl_Widget* widget, void * param)
     StatusUpdate(mw);
     //wait some time
     Fl::check();
-    Fl::wait(10);
+    Fl::wait(.10);
     //If still the same page asked, load it, otherwise do nothing
     if(p==mw->Doc->GetCurrentPageNb())
     {
@@ -1142,6 +1145,7 @@ void About_cb(Fl_Widget* widget, void * param)
 //-----------------------------------------------------------------------------
 
 
+
 //! Update widgets according to preferences values
 void UpdateWidgets(void * param)
 {
@@ -1280,7 +1284,7 @@ void Window_cb(Fl_Widget* widget, void * param)
          mw->Pref->SetLocalPref(((Fl_Menu_Item*)mw->MenuBar->find_item("&Preferences/Use documents preferences\t"))->value());
          //Write to pref file
          mw->Pref->Save(mw->Doc);
-       //Current doc preferences
+         //Current doc preferences
          if(mw->PrefDoc)
          {
              //The thumbnails view
@@ -1293,7 +1297,7 @@ void Window_cb(Fl_Widget* widget, void * param)
      mw->window->hide();
      //Close other windows if some (Help)
      Fl_Widget * toclose;
-     while(toclose=Fl::first_window())
+     while((toclose=Fl::first_window()))
      {
         toclose->hide();
      }
@@ -1506,9 +1510,9 @@ MainWindow::MainWindow(const char *exepath, const char *f)
                 DisplayGrp->resizable(MaxSizeMain);*/
 
             DisplayGrp->end();
+            DisplayGrp->resizable(MainDisplayGrp);
             //Hide the thumbnails (will be displayed at document opening if preferences say so)
-            ThumbDisplayGrp->hide();
-            DisplayGrp->remove(ThumbDisplayGrp);
+            Thumbnails_cb(ThumbDisplayGrp, (void*)this);
 
 
          //Status bar

@@ -91,7 +91,6 @@ int main(int argc, char **argv)
     //Run the Fltk main loop
     Fl::run();
 
-
     //Delete the MainWindow object when Fltk loops return (on closing)
     delete MW;
 
