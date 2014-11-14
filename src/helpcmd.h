@@ -1,0 +1,1 @@
+#define HELPCMD_STRING "Usage: bdreader [options] [filename]\n\nBDReader - An e-comics reader\n\nGeneric options:\n   -h, --help\t\tShow help\n   -v, --version\tShow version information\n\nArguments:\n   filename\tComics file to open. Supported formats: PDF, CBR, CBZ, CBT, CB7, RAR, ZIP, TAR, 7Z and image folders.\n"
