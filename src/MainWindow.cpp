@@ -357,7 +357,7 @@ void Open_cb(Fl_Widget* widget, void * param)
         //Window to define a directory and filename
         Fl_Native_File_Chooser chooser=Fl_Native_File_Chooser();
         chooser.title("Open a file");
-        chooser.filter("Supported formats\t*.{pdf,cbz,cbr,cbt,cb7,rar,zip,tar,7z}\nPdf\t*.pdf\nComics archive\t*.{cbz,cbr,cbt,cb7}\nArchive\t*.{rar,zip,tar,7z}");
+        chooser.filter("Supported formats\t*.{pdf,cbz,cbr,cbt,cb7,epub,rar,zip,tar,7z}\nPdf\t*.pdf\nComics archive\t*.{cbz,cbr,cbt,cb7}\nEbook\t*.epub\nArchive\t*.{rar,zip,tar,7z}");
         chooser.options(Fl_Native_File_Chooser::PREVIEW);
 
         //Select either open a file or a folder depending on the calling widget label
@@ -407,6 +407,7 @@ void Open_cb(Fl_Widget* widget, void * param)
         if( tmpFilename[0]=='\0' ||
            ( strstr(tmpFilename, ".pdf")==NULL &&
              strstr(tmpFilename, ".cbz")==NULL && strstr(tmpFilename, ".cbr")==NULL && strstr(tmpFilename, ".cbt")==NULL && strstr(tmpFilename, ".cb7")==NULL &&
+             strstr(tmpFilename, ".epub")==NULL &&
              strstr(tmpFilename, ".rar")==NULL && strstr(tmpFilename, ".zip")==NULL && strstr(tmpFilename, ".tar")==NULL && strstr(tmpFilename, ".7z")==NULL  &&
              fl_filename_isdir(tmpFilename)==0
            ))
@@ -1647,6 +1648,7 @@ void MainWindow::Init(char *filename)
         else
         {
             if( (strstr(Filename, ".cbr" )!=NULL) || (strstr(Filename, ".cbz" )!=NULL) || (strstr(Filename, ".cbt" )!=NULL) || (strstr(Filename, ".cb7" )!=NULL) ||
+                (strstr(Filename, ".epub" )!=NULL) ||
                 (strstr(Filename, ".zip" )!=NULL) || (strstr(Filename, ".rar" )!=NULL) || (strstr(Filename, ".tar" )!=NULL) || (strstr(Filename, ".7z" )!=NULL))
             {
                 new_doc=new Document_archive(Filename);

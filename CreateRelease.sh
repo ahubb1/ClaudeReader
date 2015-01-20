@@ -20,6 +20,7 @@ then
 	if [[ $valid == y* ]]
 	then
 		sudo rm -rf $fullname
+		sudo rm $base_file'_'$version_nb-1_amd64.deb
 	else
 		exit
 	fi

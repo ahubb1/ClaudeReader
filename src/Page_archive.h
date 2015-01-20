@@ -30,8 +30,8 @@
 #ifndef PAGE_ARCHIVE_H
 #define PAGE_ARCHIVE_H
 
-#define LIBARCHIVE_STATIC
-#define LIBZ_STATIC
+//#define LIBARCHIVE_STATIC
+//#define LIBZ_STATIC
 #include <archive.h>
 #include <archive_entry.h>
 

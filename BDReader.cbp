@@ -89,6 +89,9 @@
 			<Add library="fltk" />
 			<Add library="Xft" />
 			<Add library="Xinerama" />
+			<Add library="z" />
+			<Add library="X11" />
+			<Add library="freetype" />
 			<Add directory="lib/unix" />
 		</Linker>
 		<Unit filename="src/Document.cpp" />

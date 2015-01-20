@@ -1,6 +1,9 @@
 BDReader changes
-Vincent Crocher 13/11/2014
+Vincent Crocher 23/11/2014
 
+v1.031
+	-Minimal (beta) support of Epub (3.0)
+	-Update configure.ac for Mupdf detection
 v1.03
 	-New viewing/navgation: option to show panel in context, zoom options
 	-Added a maximal zoom option to avoid to large zooming

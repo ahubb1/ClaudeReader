@@ -1,4 +1,4 @@
-AC_INIT([bdreader], [1.03], [kennyyy@users.sf.net])
+AC_INIT([bdreader], [1.031], [kennyyy@users.sf.net])
 AM_INIT_AUTOMAKE([foreign -Wall])
 
 #Add C++ as a language (for headers testing)
@@ -11,6 +11,18 @@ AC_CHECK_HEADERS([mupdf/fitz.h], [break;])
 AC_CHECK_HEADERS([archive_entry.h], [break;])
 
 #Libraries check
+#X11
+AC_CHECK_LIB([X11], [main], [], [
+  AC_MSG_ERROR([unable to find X11 library.])
+])
+#libz
+AC_CHECK_LIB([z], [main], [], [
+  AC_MSG_ERROR([unable to find libz library.])
+])
+#freetype
+AC_CHECK_LIB([freetype], [main], [], [
+  AC_MSG_ERROR([unable to find freetype library.])
+])
 #fltk
 AC_CHECK_LIB([fltk], [main], [], [
   AC_MSG_ERROR([unable to find fltk library (1.3).])
@@ -25,10 +37,16 @@ AC_CHECK_LIB([Xinerama], [XineramaQueryScreens], [], [
   AC_MSG_ERROR([unable to find Xinerama library.])
 ])
 #mupdf
-AC_SEARCH_LIBS([fz_free], [mupdf], [], [
+#AC_SEARCH_LIBS([fz_free], [mupdf], [], [
+#  AC_MSG_ERROR([unable to find fz_free() function (mupdf library).])
+#])
+AC_CHECK_LIB([mupdf], [fz_free], [], [
   AC_MSG_ERROR([unable to find fz_free() function (mupdf library).])
 ])
-AC_SEARCH_LIBS([pdf_new_js], [mupdf-js-none], [], [
+#AC_SEARCH_LIBS([pdf_new_js], [mupdf-js-none], [], [
+#  AC_MSG_ERROR([unable to find pdf_new_js() function (mupdf-js-none library).])
+#])
+AC_CHECK_LIB([mupdf-js-none], [pdf_new_js], [], [
   AC_MSG_ERROR([unable to find pdf_new_js() function (mupdf-js-none library).])
 ])
 AC_CHECK_LIB([jpeg], [main], [], [
