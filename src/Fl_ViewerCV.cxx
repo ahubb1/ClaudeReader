@@ -101,9 +101,12 @@ void Fl_ViewerCV::UpdateView()
         cv::resize(*image, image_roi, Size(cvFloor(image->cols/Scale), cvFloor(image->rows/Scale)), 0, 0, INTER_CUBIC);
 
         //Add a visual border around the current panel
+        Mat image_roi_rect;
+        image_roi.copyTo(image_roi_rect);
         if(DisplayRect.width!=image->cols && Border)
             for (int i=1; i<12; i++)
-                cv::rectangle(image_roi, Rect(DisplayRect.x/Scale-i, DisplayRect.y/Scale-i, DisplayRect.width/Scale+2*i, DisplayRect.height/Scale+2*i), Scalar(0,0,17*i), 1);
+                cv::rectangle(image_roi_rect, Rect(DisplayRect.x/Scale-i, DisplayRect.y/Scale-i, DisplayRect.width/Scale+2*i, DisplayRect.height/Scale+2*i), Scalar(0,0,22*i), 1);
+        addWeighted(image_roi_rect, 0.5, image_roi, 0.5, 0.0, image_roi);
 
         //Display in context or not
         if(!InContext)
