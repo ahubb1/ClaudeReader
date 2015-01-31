@@ -37,10 +37,10 @@
 const Fl_Color FL_TRANS = 0xffffffff;
 
 //! Fl_Overlay_Arrow_Button is a Fl_Button drawing a "stylistic" arrow and behave such that it only appears when overlayed by the mouse cursor
-//!The class is inherited from the Fl_Button class. It reproduces the classical behaviour of a Fl_Button (callback on click) but
-//!has the particularity to dissapear when not overlaid by the mouse cursor and to draw an arrow on a transparent background instead
-//!of displaying the classical button label. The label is not used anymore. For a description of arrow style and widget parameters
-//!see the constructor description.
+/**The class is inherited from the Fl_Button class. It reproduces the classical behaviour of a Fl_Button (callback on click) but
+has the particularity to dissapear when not overlaid by the mouse cursor and to draw an arrow on a transparent background instead
+of displaying the classical button label. The label is not used anymore. For a description of arrow style and widget parameters
+see the constructor description.*/
 class Fl_Overlay_Arrow_Button : public Fl_Button
 {
     public:

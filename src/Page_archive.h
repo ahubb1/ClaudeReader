@@ -44,6 +44,7 @@ struct NameNb
 	int nb;
 };
 
+//! Derived from class Page. Intended to load a page (an image) from an archive file in accordance with Document_archive.
 class Page_archive : public Page
 {
     public:

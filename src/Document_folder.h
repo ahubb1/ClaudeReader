@@ -34,6 +34,7 @@
 #include "Document.h"
 #include "Page_folder.h"
 
+//! Derived from Document class. Meant to open and manage folders of images.
 class Document_folder : public Document
 {
     public:

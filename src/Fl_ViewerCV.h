@@ -52,7 +52,7 @@ bool fl_SaveImage(char*filename,IplImage *image);
 int fl_event2cv_event(int fl_event);
 
 
-
+//! A widget displaying an image in OpenCv format (or a portion of it) and managing user interaction.
 class FL_EXPORT Fl_ViewerCV : public Fl_Widget
 {
     public:

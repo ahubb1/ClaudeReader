@@ -159,7 +159,7 @@ void SortAndMerge(vector<Rect> *CasesTmp, int counter)
 
 
 //! Virtual constructor of the page
-//!Initialize some values (common to all page types).
+/**Initialize values common to all page types.*/
 Page::Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, float display_ratio)
 {
     //Init values common to all type of pages
@@ -212,10 +212,10 @@ void Page::LoadErrorPage()
 
 
 //! Detect and order the cases on the page.
-//!A real detection is done if in CASE or PAGE mode, or a strip cutting is done if
-//!in STRIP mode. If the cases detection failed, a default strip cutting is done.
-//!The method actually fill the vector<Rect>Cases vector and get the actual number
-//! of cases on the page (NbCases).
+/**A real detection is done if in CASE or PAGE mode, or a strip cutting is done if
+in STRIP mode. If the cases detection failed, a default strip cutting is done.
+The method actually fill the vector<Rect>Cases vector and get the actual number
+of cases on the page (NbCases).*/
 void Page::DetectCases()
 {
     #ifdef DEBUG
@@ -310,8 +310,8 @@ void Page::DetectCases()
 }
 
 //! Attempt to detect the cases on the page given a binarized image
-//! \param CasesTmp: A vector of Rect to fill with the detected cases
-//! \param src: An OpenCv Mat containing the binarized image
+/** \param CasesTmp: A vector of Rect to fill with the detected cases
+\param src: An OpenCv Mat containing the binarized image*/
 void Page::DetectionDetect(vector<Rect> *CasesTmp, Mat* src)
 {
     //Contours detection
@@ -388,10 +388,10 @@ void Page::DetectionDetect(vector<Rect> *CasesTmp, Mat* src)
 }
 
 //! Check if parts of the page not covered by the detected cases
-//! \param CasesTmp: A vector of Rect (filled with the currently detected cases)
-//! \param src: An OpenCv Mat containing the binarized image
-//! \return true if the detection has failed (parts NOT covered)
-//! \return false if the detection succeed
+/** \param CasesTmp: A vector of Rect (filled with the currently detected cases)
+\param src: An OpenCv Mat containing the binarized image
+\return true if the detection has failed (parts NOT covered)
+\return false if the detection succeed*/
 bool Page::DetectionCheck(vector<Rect> *CasesTmp, Mat* src, int nbdetections)
 {
     //If covered by only one case (not likely to happen since too large cases have been removed)
@@ -484,8 +484,8 @@ bool Page::DetectionCheck(vector<Rect> *CasesTmp, Mat* src, int nbdetections)
 }
 
 //! Order the page cases in a comics style (TopLeft to Bottom Right)
-//! \param CasesTmp: A vector of Rect (filled with the currently detected cases)
-//! \param src: An OpenCv Mat containing the binarized image
+/** \param CasesTmp: A vector of Rect (filled with the currently detected cases)
+\param src: An OpenCv Mat containing the binarized image*/
 void Page::DetectionOrganize(vector<Rect> *CasesTmp, Mat *src)
 {
     //Initialize some variables
@@ -616,25 +616,25 @@ void Page::DetectionStripCutting()
 
 
 //! Call SetActiveCase with ActiveCase+1 in parameter
-//! \return the return value of SetActiveCase
+/** \return the return value of SetActiveCase*/
 int Page::NextCase()
 {
     return SetActiveCase(ActiveCase+1);
 }
 
 //! Call SetActiveCase with ActiveCase-1 in parameter
-//! \return the return value of SetActiveCase
+/** \return the return value of SetActiveCase*/
 int Page::PreviousCase()
 {
     return SetActiveCase(ActiveCase-1);
 }
 
 //! Set a case as active and render it
-//! \param val the case number (-1 for the whole page)
-//! \return 0 if the page is loaded and the case is valid (the case has been rendered)
-//! \return -1 if val if less than -1
-//! \return -2 if val if greater than the number of cases (int NbCases)
-//! \return -3 if the page is not loaded (no render done)
+/**\param val the case number (-1 for the whole page)
+\return 0 if the page is loaded and the case is valid (the case has been rendered)
+\return -1 if val if less than -1
+\return -2 if val if greater than the number of cases (int NbCases)
+\return -3 if the page is not loaded (no render done)*/
 int Page::SetActiveCase(int val)
 {
     //Check if the page is ready to be displayed
@@ -666,8 +666,8 @@ int Page::SetActiveCase(int val)
 
 
 //! Update the case/page rendering according to ActiveCase value.
-//!The ImgRender cv::Mat is filled with the case image or the whole page if ReadingMode==PAGE.
-//! \return A pointer on the valid ImgRender cv::Mat
+/**The ImgRender cv::Mat is filled with the case image or the whole page if ReadingMode==PAGE.
+\return A pointer on the valid ImgRender cv::Mat*/
 Mat * Page::RenderCaseMat()
 {
     //If the detction has been done
@@ -694,8 +694,8 @@ Mat * Page::RenderCaseMat()
 }
 
 //! Update the case/page rendering according to ActiveCase value.
-//!The ImgRender cv::Mat is filled with the case image or the whole page if ReadingMode==PAGE.
-//! \return A pointer on the valid RectRender cv::Rect
+/**The ImgRender cv::Mat is filled with the case image or the whole page if ReadingMode==PAGE.
+\return A pointer on the valid RectRender cv::Rect*/
 Rect * Page::RenderCase()
 {
     //If the detction has been done
@@ -724,8 +724,8 @@ Rect * Page::RenderCase()
 }
 
 //! Update the page rendering (whole page).
-//!The ImgRender cv::Mat is filled with the page image.
-//! \return A pointer on the valid PageRenderCv cv::Mat
+/**The ImgRender cv::Mat is filled with the page image.
+\return A pointer on the valid PageRenderCv cv::Mat*/
 Mat * Page::RenderPage()
 {
     if(Loaded)

@@ -1308,9 +1308,10 @@ void Window_cb(Fl_Widget* widget, void * param)
 
 
 
-//! Constructor.
-//!Create the widgets, build the window and call the Init() with NULL parameters (no document).
-//!\param f the filename of a file top open on startup, can be '\0' if nothing
+/// Constructor.
+/**Create the widgets, build the window and call the Init() with the document filename to open (NULL if no document specified).
+\param exepath the fullpath of execution
+\param f the filename of a file top open on startup, can be '\0' if nothing*/
 MainWindow::MainWindow(const char *exepath, const char *f)
 {
     //No doc or doc pref yet
@@ -1586,8 +1587,6 @@ MainWindow::MainWindow(const char *exepath, const char *f)
 //! Destructor.
 MainWindow::~MainWindow()
 {
-    //TODO delete the wigets
-
    if(Doc)
         delete Doc;
 
@@ -1597,9 +1596,9 @@ MainWindow::~MainWindow()
     delete Pref;
 }
 
-//! New document openning.
-//!Create and load the document and update the window and widgets accordingly.
-//!\param filename the full filename (path+name) of the document to open, can be "\0" if nothing
+/// New document opening.
+/**Create and load the document and update the window and widgets accordingly.
+\param filename the full filename (path+name) of the document to open, can be "\0" if nothing*/
 void MainWindow::Init(char *filename)
 {
     //Show the main window

@@ -23,7 +23,7 @@
 
 #include <FL/Fl_Help_View.H>
 
-
+//! A help window derived from Fl_Window to display help text formatted in HTML thanks to a Fl_Help_View widget.
 class Fl_Help_Window : public Fl_Window
 {
     public:

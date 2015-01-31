@@ -33,6 +33,7 @@
 #include "Document.h"
 #include "Page_archive.h"
 
+//! Derived from Document class. Meant to open and manage archive files thanks to libarchive library.
 class Document_archive : public Document
 {
     public:

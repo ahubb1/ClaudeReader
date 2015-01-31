@@ -36,7 +36,7 @@ extern "C" {
 }
 #include "Page.h"
 
-
+//! Derived from class Page. Intended to load a page from a pdf file in accordance with Document_pdf.
 class Page_pdf : public Page
 {
     public:

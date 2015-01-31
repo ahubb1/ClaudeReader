@@ -56,7 +56,7 @@
 
 
 
-//! The main window and all it widgets (buttons, sliders...). Also the main "document" of the program.
+//! The main window and all its widgets (buttons, sliders...). Also the main "document" of the program.
 class MainWindow
 {
     public:

@@ -34,7 +34,7 @@
 
 #include "Page.h"
 
-
+//! Derived from class Page. Intended to load a page (an image) from an image file from a folder in accordance with Document_folder.
 class Page_folder : public Page
 {
     public:

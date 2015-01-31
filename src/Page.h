@@ -40,8 +40,8 @@ using namespace stlplus;
 
 enum READINGMODE { PAGE, STRIP, CASE };
 
-//! Class managing document pages: loading, rendering and case detection
-//! NOT INTENDED TO BE USED DIRECTLY, USE DERIVED CLASSES INSTEAD
+//! Class managing document pages: loading, rendering and panels detection. Interface between original image format and OpenCv format.
+/** NOT INTENDED TO BE USED DIRECTLY, USE DERIVED CLASSES INSTEAD (Page_archive, Page_pdf...)*/
 class Page
 {
     public:

@@ -33,7 +33,7 @@
 #include "Document.h"
 #include "Page_pdf.h"
 
-
+//! Derived from Document class. Meant to open and manage pdf files thanks to mupdf library.
 class Document_pdf : public Document
 {
     public:
