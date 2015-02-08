@@ -180,7 +180,7 @@ int DragNDrop(int e)
 
          //After a DND_RELEASE occured, we need to catch any event untill the event_text() is updated
          default:
-            if(isDNDavailableTmp && strlen(Fl::event_text())==Fl::event_length())
+            if(isDNDavailableTmp && (int)strlen(Fl::event_text())==Fl::event_length())
             {
                 //Get the content of the dropped object (=>the filename)
                 strncpy(DNDFilename, Fl::event_text(), Fl::event_length());
@@ -493,7 +493,7 @@ void ExportDoc_cb(Fl_Widget* widget, void * param)
                     sprintf(fileext, ".bmp");
                     break;
                 default:
-                    sprintf(fileext, ".jpg\0");
+                    sprintf(fileext, ".jpg");
             }
 
             //Ask for confirmation first
