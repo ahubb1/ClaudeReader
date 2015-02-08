@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1423317913 source:/home/vincent/Perso/BDReader/BDReader/src/MainWindow.cpp
+1423358263 source:/home/vincent/Perso/BDReader/BDReader/src/MainWindow.cpp
 	"MainWindow.h"
 	"help.h"
 	"about.h"
@@ -401,7 +401,7 @@
 1398763943 source:/home/vincent/Perso/BDReader/BDReader/src/Fl_Overlay_Arrow_Button.cxx
 	"Fl_Overlay_Arrow_Button.h"
 
-1422666035 /home/vincent/Perso/BDReader/BDReader/src/Document.h
+1423370405 /home/vincent/Perso/BDReader/BDReader/src/Document.h
 	<Page.h>
 
 1422666417 /home/vincent/Perso/BDReader/BDReader/src/Fl_Overlay_Arrow_Button.h
@@ -496,7 +496,7 @@
 	"Document.h"
 	"Page_archive.h"
 
-1422667032 /home/vincent/Perso/BDReader/BDReader/src/Page_archive.h
+1423370247 /home/vincent/Perso/BDReader/BDReader/src/Page_archive.h
 	<archive.h>
 	<archive_entry.h>
 	"Page.h"

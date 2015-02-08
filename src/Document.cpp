@@ -22,7 +22,7 @@
 
 
 //! Create a new document object according to the given filename.
-//!The constructor will initialize the object and try to open the pdf file. This can be
+//!The constructor will initialize the object and try to open file. This can be
 //!tested further using the NbPages variable. A value greater than zero means the document
 //!has been successfully openned.
 Document::Document(char *filename)
@@ -42,10 +42,10 @@ Document::Document(char *filename)
 }
 
 //! Main destructor.
-//!Free the Pages objects created if some and release free the mudpf context
-//!and document if some still open.
+//!Free the Pages objects created if some and document if some still open.
 Document::~Document()
 {
+    //Free pages
     if(currentPage)
     {
         if( (previousPage && currentPage!=previousPage) || (nextPage && currentPage!=nextPage) )

@@ -39,7 +39,7 @@ class Document
 {
     public:
         Document(char *filename);
-        ~Document();
+        virtual ~Document();
 
         virtual int Open() =0;
         virtual void Close() =0;
