@@ -64,6 +64,7 @@ class MainWindow
         ~MainWindow();
 
         void Init(char *filename);
+        void SavePref();
 
 
         friend void Window_cb(Fl_Widget* widget, void * param);                       //!< Window callback function (when closing)

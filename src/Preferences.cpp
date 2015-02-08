@@ -254,3 +254,15 @@ void Preferences::Save(Document *doc)
         }
     }
 }
+
+//! Copy all local preferences from a Preferences object to another (no "global only" preferences)
+void Preferences::CopyLocalTo(Preferences *pref)
+{
+     pref->ReadingMode=ReadingMode;
+     pref->PagePreview=PagePreview;
+     pref->Thumbnails=Thumbnails;
+     pref->MaxZoomIdx=MaxZoomIdx;
+     pref->AdditionnalZoomIdx=AdditionnalZoomIdx;
+     pref->InContext=InContext;
+     pref->Border=Border;
+}

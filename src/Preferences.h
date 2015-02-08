@@ -52,6 +52,8 @@ class Preferences
         int Apply(Document *doc);
         void Save(Document *doc);
 
+        void CopyLocalTo(Preferences *pref);
+
 
         READINGMODE GetReadingMode() { return ReadingMode; }
         void SetReadingMode(READINGMODE val) { ReadingMode = val; }

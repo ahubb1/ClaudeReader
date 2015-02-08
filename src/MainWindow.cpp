@@ -1269,30 +1269,7 @@ void Window_cb(Fl_Widget* widget, void * param)
      MainWindow *mw=(MainWindow*)param;
 
      //Save the preferences in files
-        //Global preferences
-         //The window size, except if in Fullscreen
-         if(mw->window->fullscreen_active()==0)
-         {
-            mw->Pref->SetWinW(mw->window->w());
-            mw->Pref->SetWinH(mw->window->h());
-            mw->Pref->SetWinX(mw->window->x());
-            mw->Pref->SetWinY(mw->window->y());
-         }
-         //The thumbnails view
-         mw->Pref->SetThumbnails(mw->ThumbDisplayGrp->visible());
-         //The preferences preferences
-         mw->Pref->SetSavePref(((Fl_Menu_Item*)mw->MenuBar->find_item("&Preferences/Save preferences\t"))->value());
-         mw->Pref->SetLocalPref(((Fl_Menu_Item*)mw->MenuBar->find_item("&Preferences/Use documents preferences\t"))->value());
-         //Write to pref file
-         mw->Pref->Save(mw->Doc);
-         //Current doc preferences
-         if(mw->PrefDoc)
-         {
-             //The thumbnails view
-             mw->PrefDoc->SetThumbnails(mw->ThumbDisplayGrp->visible());
-             //Write to pref file
-             mw->PrefDoc->Save(mw->Doc);
-         }
+     mw->SavePref();
 
      //Close the main window
      mw->window->hide();
@@ -1614,25 +1591,8 @@ void MainWindow::Init(char *filename)
         //If an active document was open, save the preferences
         if(Doc)
         {
-            //Global pref
-            //Save preferences (especially add the doc to the recent docs)
-            if(window->fullscreen_active()==0)
-            {
-                Pref->SetWinW(window->w());
-                Pref->SetWinH(window->h());
-                Pref->SetWinX(window->x());
-                Pref->SetWinY(window->y());
-            }
-            Pref->SetThumbnails(ThumbDisplayGrp->visible());
-            Pref->SetSavePref(((Fl_Menu_Item*)MenuBar->find_item("&Preferences/Save preferences\t"))->value());
-            Pref->SetLocalPref(((Fl_Menu_Item*)MenuBar->find_item("&Preferences/Use documents preferences\t"))->value());
-            Pref->Save(Doc);
-            //Doc relative pref
-            if(PrefDoc)
-            {
-                PrefDoc->SetThumbnails(ThumbDisplayGrp->visible());
-                PrefDoc->Save(Doc);
-            }
+           //Save the preferences in files
+           SavePref();
         }
 
         //Create a document using the new filename
@@ -1702,7 +1662,7 @@ void MainWindow::Init(char *filename)
                 //Otherwise apply the gloabl pref to the newly created doc pref
                 else
                 {
-                    PrefDoc->SetThumbnails(Pref->GetThumbnails());
+                    Pref->CopyLocalTo(PrefDoc);
                     PrefDoc->Save(Doc);
                     //and reload
                     PrefDoc->Load(filenameshort, ExePath);
@@ -1748,4 +1708,37 @@ void MainWindow::Init(char *filename)
             }
         }
     }
+}
+
+
+//! Save the preferences in files
+void MainWindow::SavePref()
+{
+    //Current doc preferences (if there are some)
+     if(PrefDoc)
+     {
+         //The thumbnails view
+         PrefDoc->SetThumbnails(ThumbDisplayGrp->visible());
+         //Write to pref file
+         PrefDoc->Save(Doc);
+
+         //Copy current doc pref to global ones
+         PrefDoc->CopyLocalTo(Pref);
+     }
+
+    //Then set the global only preferences
+     //The window size, except if in Fullscreen
+     if(window->fullscreen_active()==0)
+     {
+        Pref->SetWinW(window->w());
+        Pref->SetWinH(window->h());
+        Pref->SetWinX(window->x());
+        Pref->SetWinY(window->y());
+     }
+     //The preferences preferences
+     Pref->SetSavePref(((Fl_Menu_Item*)MenuBar->find_item("&Preferences/Save preferences\t"))->value());
+     Pref->SetLocalPref(((Fl_Menu_Item*)MenuBar->find_item("&Preferences/Use documents preferences\t"))->value());
+
+     //Write to global pref file
+     Pref->Save(Doc);
 }
