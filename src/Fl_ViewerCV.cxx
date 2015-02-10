@@ -63,8 +63,6 @@ void Fl_ViewerCV::draw(int xx, int yy, int ww, int hh)
 
     //Or draw the image
     FlImg->draw(xx, yy);
-    //TODO
-    //FlImg->draw(xx, yy, w(), h(), w(), h());
     return;
 }
 
@@ -101,15 +99,17 @@ void Fl_ViewerCV::UpdateView()
         cv::resize(*image, image_roi, Size(cvFloor(image->cols/Scale), cvFloor(image->rows/Scale)), 0, 0, INTER_CUBIC);
 
         //Add a visual border around the current panel
-        Mat image_roi_rect;
-        image_roi.copyTo(image_roi_rect);
         if(DisplayRect.width!=image->cols && Border)
+        {
+            Mat image_roi_rect;
+            image_roi.copyTo(image_roi_rect);
             for (int i=1; i<12; i++)
                 cv::rectangle(image_roi_rect, Rect(DisplayRect.x/Scale-i, DisplayRect.y/Scale-i, DisplayRect.width/Scale+2*i, DisplayRect.height/Scale+2*i), Scalar(0,0,22*i), 1);
-        addWeighted(image_roi_rect, 0.5, image_roi, 0.5, 0.0, image_roi);
+            addWeighted(image_roi_rect, 0.5, image_roi, 0.5, 0.0, image_roi);
+        }
 
         //Display in context or not
-        if(!InContext)
+        if(!InContext && DisplayRect.width!=image->cols)
             image_roi(Rect(DisplayRect.x/Scale, DisplayRect.y/Scale, DisplayRect.width/Scale, DisplayRect.height/Scale)).copyTo(image_roi);
 
         //Center of the display in resized image
@@ -190,6 +190,15 @@ void Fl_ViewerCV::UpdateView()
 }
 
 
+void Fl_ViewerCV::SetDisplayRect(Rect disprect)
+{
+    if(image)
+    {
+        DisplayRect=disprect;
+        UpdateView();
+    }
+}
+
 void Fl_ViewerCV::SetImage(Mat *nimage, Rect disprect)
 {
     if(!nimage || nimage->cols<=0 || nimage->rows<=0)
@@ -207,15 +216,9 @@ void Fl_ViewerCV::SetImage(Mat *nimage, Rect disprect)
     if(image)
     {
         SetDisplayRect(disprect);
-        //UpdateView();
     }
 }
 
-
-/*void Fl_ViewerCV::FitWindows()
-{
-   fit=true;
-}*/
 
 void ResizingTimer_cb(void *flopencv)
 {

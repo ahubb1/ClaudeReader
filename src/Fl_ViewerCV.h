@@ -61,18 +61,8 @@ class FL_EXPORT Fl_ViewerCV : public Fl_Widget
         Fl_ViewerCV(int X,int Y,int W,int H, float mzoom=1.);
         ~Fl_ViewerCV();
 
-        //Assign a new image to draw (in Mat Opencv format)
-        void SetImage(Mat *nimage, Rect disprect=Rect(0,0,0,0));
-
-        void SetDisplayRect(Rect disprect)
-        {
-            if(image)
-            {
-                DisplayRect=disprect;
-                UpdateView();
-            }
-        }
-
+        void SetImage(Mat *nimage, Rect disprect=Rect(0,0,0,0));    //!< Assign a new image to draw (in Mat Opencv format)
+        void SetDisplayRect(Rect disprect);                         //!< Assign a new portion (rectangle) of the image to draw (in Rect Opencv format)
         void UpdateView();
 
 
@@ -133,6 +123,7 @@ class FL_EXPORT Fl_ViewerCV : public Fl_Widget
         float Scale;
         float MaxZoom;
         float CustomZoom;
+
         //Callbacks
         bool HandleKeys;
         void (*Resizing_cb)(Fl_Widget *, void *);
