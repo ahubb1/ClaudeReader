@@ -40,12 +40,14 @@ void Page_pdf::Load(fz_context *fzctx, fz_document *fzdoc)
     fz_page *fzpage = fz_load_page(fzdoc, PageNb-1);
 
     //Transform of the display
-    int rotation=0, zoom=300;
+    int rotation=0;
+    float zoom = DEFAULT_DPI / 72.; //Compute zoom value to get the default_dpi value (300dpi)
+
     fz_matrix transform;
     fz_try(fzctx)
     {
         fz_rotate(&transform, rotation);
-        fz_pre_scale(&transform, zoom / 100.0f, zoom / 100.0f);
+        fz_pre_scale(&transform, zoom, zoom);
     }
     fz_catch(fzctx)
     {

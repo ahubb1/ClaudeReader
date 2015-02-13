@@ -145,7 +145,6 @@ void Fl_ViewerCV::UpdateView()
         if((y1-y0)<h())
             yd0=(h()-(y1-y0))/2.;
 
-        //fimage=image_roi;
         fimage=cv::Mat::zeros(h(), w(), image_roi.type());
         //fimage=fimage+Scalar(255,255,255); //For white background
         cv::Mat fimageROI=fimage(Rect(xd0, yd0, (x1-x0), (y1-y0)));

@@ -36,6 +36,9 @@ extern "C" {
 }
 #include "Page.h"
 
+
+#define DEFAULT_DPI 300
+
 //! Derived from class Page. Intended to load a page from a pdf file in accordance with Document_pdf.
 class Page_pdf : public Page
 {
