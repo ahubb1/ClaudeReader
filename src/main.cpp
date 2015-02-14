@@ -38,7 +38,6 @@ int main(int argc, char **argv)
 {
     MainWindow *MW;
 
-
     //POSIX comand-line options management (-v and -h)
     int OptionChar;             //Option character
     while (1)

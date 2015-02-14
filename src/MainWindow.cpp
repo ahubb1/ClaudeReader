@@ -1318,6 +1318,8 @@ MainWindow::MainWindow(const char *exepath, const char *f)
         Pixmap mask;
         XpmCreatePixmapFromData(fl_display, DefaultRootWindow(fl_display), (char **)Icon2_48_xpm, &p, &mask, 0);
         window->icon((char *)p);
+    /*#else
+        window->icon((char *)LoadIcon(fl_display, MAKEINTRESOURCE(MAIN_ICON)));*/
     #endif
 
     //Widgets creation

@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1423882771 source:/home/vincent/Perso/BDReader/BDReader/src/MainWindow.cpp
+1423902250 source:/home/vincent/Perso/BDReader/BDReader/src/MainWindow.cpp
 	"MainWindow.h"
 	"help.h"
 	"about.h"
@@ -409,7 +409,8 @@
 	<FL/fl_draw.H>
 	<FL/Fl_Button.H>
 
-1423883355 /home/vincent/Perso/BDReader/BDReader/src/MainWindow.h
+1423896223 /home/vincent/Perso/BDReader/BDReader/src/MainWindow.h
+	<X11/xpm.h>
 	<FL/Fl.H>
 	<FL/Fl_Window.H>
 	<FL/Fl_Menu_Bar.H>
@@ -427,8 +428,8 @@
 	"Document_archive.h"
 	"Document_folder.h"
 	"Export_Document.h"
-	<X11/xpm.h>
 	"Icon2_48.xpm"
+	"WinRC.h"
 
 1408780731 /home/vincent/Perso/BDReader/BDReader/src/Fl_OpenCV.h
 	<FL/Fl.H>
@@ -497,7 +498,7 @@
 	"Document.h"
 	"Page_archive.h"
 
-1423370247 /home/vincent/Perso/BDReader/BDReader/src/Page_archive.h
+1423893679 /home/vincent/Perso/BDReader/BDReader/src/Page_archive.h
 	<archive.h>
 	<archive_entry.h>
 	"Page.h"
@@ -601,4 +602,8 @@
 1423882680 /home/vincent/Perso/BDReader/BDReader/src/Icon2_48.xpm
 
 1423883281 /home/vincent/Perso/BDReader/BDReader/src/Icon2_simple48.xpm
+
+1423888317 /home/vincent/Perso/BDReader/BDReader/src/windows.rc
+
+1423888441 /home/vincent/Perso/BDReader/BDReader/src/WinRC.h
 

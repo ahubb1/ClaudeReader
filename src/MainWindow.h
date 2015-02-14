@@ -31,7 +31,9 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <X11/xpm.h> //To load icon xpm image
+#ifndef __WINDOWS__
+    #include <X11/xpm.h> //To load icon xpm image
+#endif
 #include <FL/Fl.H>
 #include <FL/Fl_Window.H>
 #include <FL/Fl_Menu_Bar.H>
@@ -53,7 +55,11 @@
 #include "Export_Document.h"
 
 //Icon
-#include "Icon2_48.xpm"
+#ifndef __WINDOWS__
+    #include "Icon2_48.xpm"
+/*#else
+    #include "WinRC.h"*/
+#endif
 
 
 
