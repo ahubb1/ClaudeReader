@@ -20,7 +20,7 @@
 //---------------------------------------------------------------------------
 #include "Fl_Help_Window.h"
 
-Fl_Help_Window::Fl_Help_Window(int W, int H, const char *L):Fl_Window(W, H, L)
+Fl_Help_Window::Fl_Help_Window(int W, int H, const char *L):Fl_Double_Window(W, H, L)
 {
     //Create a help_view on the window
     begin();
@@ -33,8 +33,7 @@ Fl_Help_Window::Fl_Help_Window(int W, int H, const char *L):Fl_Window(W, H, L)
 
 void Fl_Help_Window::value(const char *html)
 {
-    //Assign the value and redraw
+    //Assign the value
     HelpView->value(html);
-    HelpView->redraw();
 }
 

@@ -21,16 +21,16 @@
 #ifndef FL_HELP_WINDOW_H
 #define FL_HELP_WINDOW_H
 
+#include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Help_View.H>
 
 //! A help window derived from Fl_Window to display help text formatted in HTML thanks to a Fl_Help_View widget.
-class Fl_Help_Window : public Fl_Window
+class Fl_Help_Window : public Fl_Double_Window
 {
     public:
         Fl_Help_Window(int W, int H, const char *L=0);
 
         void value(const char *html);
-    protected:
     private:
         Fl_Help_View *HelpView;
 };
