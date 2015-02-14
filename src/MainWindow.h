@@ -22,8 +22,8 @@
  * \file MainWindow.h
  * \brief Declaration file of the MainWindow class (managing the windows and widgets).
  * \author Vincent Crocher
- * \version 0.8
- * \date June 2014
+ * \version 0.9
+ * \date February 2015
  *
  *
  */
@@ -31,6 +31,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <X11/xpm.h> //To load icon xpm image
 #include <FL/Fl.H>
 #include <FL/Fl_Window.H>
 #include <FL/Fl_Menu_Bar.H>
@@ -52,7 +53,8 @@
 #include "Export_Document.h"
 
 //Icon
-#include "icon32.xbm"
+#include "Icon2_48.xpm"
+
 
 
 
@@ -132,9 +134,9 @@ class MainWindow
         //Other param
             char ExePath[FL_PATH_MAX];     //!< Executable path, used to store preferences file on Windows
             char Filename[FL_PATH_MAX];    //!< Local copy of the filename of the currently open document
-            Preferences *Pref;              //!< User global preferences (last one used and saved)
-            Preferences *PrefDoc;           //!< User preferences for this document
-            Document *Doc;                  //!< Pdf document
+            Preferences *Pref;             //!< User global preferences (last one used and saved)
+            Preferences *PrefDoc;          //!< User preferences for this document
+            Document *Doc;                 //!< Openened document
 };
 
 

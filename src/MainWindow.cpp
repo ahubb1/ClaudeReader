@@ -1311,8 +1311,12 @@ MainWindow::MainWindow(const char *exepath, const char *f)
     //Set an icon
     //Problem with windows compile (Pixmap not declared)
     #ifndef __WINDOWS__
-        fl_open_display();
-        Pixmap p = XCreateBitmapFromData(fl_display, DefaultRootWindow(fl_display), (char *)icon32_bits, icon32_width, icon32_height);
+        /*Apparently not needed
+        fl_open_display();*/
+
+        static Pixmap p;
+        Pixmap mask;
+        XpmCreatePixmapFromData(fl_display, DefaultRootWindow(fl_display), (char **)Icon2_48_xpm, &p, &mask, 0);
         window->icon((char *)p);
     #endif
 

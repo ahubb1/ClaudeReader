@@ -12,8 +12,8 @@ AC_CHECK_HEADERS([archive_entry.h], [break;])
 
 #Libraries check
 #X11
-AC_CHECK_LIB([X11], [main], [], [
-  AC_MSG_ERROR([unable to find X11 library.])
+AC_CHECK_LIB([Xpm], [main], [], [
+  AC_MSG_ERROR([unable to find Xpm library.])
 ])
 #libz
 AC_CHECK_LIB([z], [main], [], [
