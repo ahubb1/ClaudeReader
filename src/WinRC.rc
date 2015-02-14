@@ -1,0 +1,3 @@
+#include "WinRC.h"
+
+MAIN_ICON     ICON    "Icon2_48.ico"
