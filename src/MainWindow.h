@@ -57,8 +57,8 @@
 //Icon
 #ifndef __WINDOWS__
     #include "Icon2_48.xpm"
-/*#else
-    #include "WinRC.h"*/
+#else
+    #include "WinRC.h"
 #endif
 
 
@@ -136,6 +136,10 @@ class MainWindow
             Fl_Overlay_Arrow_Button *NextButton, *PreviousButton, *NextPageButton, *PreviousPageButton;
             Fl_Group *PageNbFullGrp;
             Fl_Progress * PageNbFullProgress;               //!< The fullscreen page number indicator
+
+         #ifndef __WINDOWS__
+            Pixmap icon_pix;
+         #endif
 
         //Other param
             char ExePath[FL_PATH_MAX];     //!< Executable path, used to store preferences file on Windows

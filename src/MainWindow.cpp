@@ -1313,13 +1313,11 @@ MainWindow::MainWindow(const char *exepath, const char *f)
     #ifndef __WINDOWS__
         /*Apparently not needed
         fl_open_display();*/
-
-        static Pixmap p;
         Pixmap mask;
-        XpmCreatePixmapFromData(fl_display, DefaultRootWindow(fl_display), (char **)Icon2_48_xpm, &p, &mask, 0);
-        window->icon((char *)p);
-    /*#else
-        window->icon((char *)LoadIcon(fl_display, MAKEINTRESOURCE(MAIN_ICON)));*/
+        XpmCreatePixmapFromData(fl_display, DefaultRootWindow(fl_display), (char **)Icon2_48_xpm, &icon_pix, &mask, 0);
+        window->icon((char *)icon_pix);
+    #else
+        window->icon((char *)LoadIcon(fl_display, MAKEINTRESOURCE(MAIN_ICON)));
     #endif
 
     //Widgets creation
