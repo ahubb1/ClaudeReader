@@ -1595,7 +1595,7 @@ MainWindow::MainWindow(const char *exepath, const char *f)
                 MainDisplayGrp->resizable(Display);
 
             DisplayGrp->end();
-            //DisplayGrp->resizable(MainDisplayGrp);
+            DisplayGrp->resizable(MainDisplayGrp);
             //Hide the thumbnails (will be displayed at document opening if preferences say so)
             Thumbnails_cb(ThumbDisplayGrp, (void*)this);
 
