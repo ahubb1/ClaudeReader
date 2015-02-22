@@ -193,6 +193,15 @@ void Fl_ViewerCV::SetDisplayRect(Rect disprect)
 {
     if(image)
     {
+        //Bound display rect to image size
+        disprect.x=fmax(0, disprect.x);
+        disprect.y=fmax(0, disprect.y);
+        int max_rect_w=image->cols-disprect.x;
+        int max_rect_h=image->rows-disprect.y;
+        disprect.width=fmin(max_rect_w, disprect.width);
+        disprect.height=fmin(max_rect_h, disprect.height);
+
+        //Apply and update the view
         DisplayRect=disprect;
         UpdateView();
     }
