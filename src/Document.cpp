@@ -39,6 +39,8 @@ Document::Document(char *filename)
     NbPages=0;
     PagePreview=true;
     DisplayRatio=1.2;
+    Rotation=0;
+    ContrastEnhancement=false;
 }
 
 //! Main destructor.
@@ -169,7 +171,7 @@ int Document::LoadPage(int p)
                     Fl::wait(1);
                 }
             }
-            //If it's a completely new page
+            //If it's a completely new page (or the current one to reload)
             else
             {
                 //Change the current page
@@ -319,7 +321,39 @@ void Document::UpdatePreloadedPages()
     }
 }
 
+void Document::ReloadPages()
+{
+    //Open the document and create the context...
+    if(Open()<0)
+        return;
 
+    if(currentPage)
+        delete currentPage;
+    currentPage=CreatePage(ActivePage);
+
+    if(nextPage)
+        delete nextPage;
+    if( (ActivePage+1)<=NbPages )
+    {
+        //Load the new next page
+        nextPage=CreatePage(ActivePage+1);
+    }
+    else
+        nextPage=NULL;
+
+    if(previousPage)
+        delete previousPage;
+    if( (ActivePage-1)>0 )
+    {
+        //Load the new previous page
+        previousPage=CreatePage(ActivePage-1);
+    }
+    else
+        previousPage=NULL;
+
+    //Close the document, free the context..
+    Close();
+}
 
 //! Return the current Page thumnails view: the whole page view.
 Mat *Document::ThumbnailsRenderCurrent()

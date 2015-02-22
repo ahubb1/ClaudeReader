@@ -45,10 +45,12 @@ enum READINGMODE { PAGE, STRIP, CASE };
 class Page
 {
     public:
-        Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, float display_ratio);
+        Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, float display_ratio, int rotation=0, bool contrast=false);
         ~Page();
 
         void LoadErrorPage();
+
+        void Transform();
 
         void DetectCases();
 
@@ -92,6 +94,8 @@ class Page
         bool Loaded;
         bool DetectionFailed;
         float DisplayRatio;
+        unsigned int Rotation;
+        bool ContrastEnhancement;
 
         Mat PageRenderCv;
         Mat ImgRender;

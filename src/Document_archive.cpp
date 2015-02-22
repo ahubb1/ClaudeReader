@@ -122,7 +122,7 @@ void Document_archive::Order()
 Page_archive *Document_archive::CreatePage(int pagenb)
 {
     Page_archive *page;
-    page=new Page_archive(pagenb, NbPages, ReadingMode, PagePreview, DisplayRatio, Arch, Entry, ImgNames[pagenb-1].nb);
+    page=new Page_archive(pagenb, NbPages, ReadingMode, PagePreview, DisplayRatio, Rotation, ContrastEnhancement, Arch, Entry, ImgNames[pagenb-1].nb);
     //If page creation have failed try re-open the document and re-try the page creation
     if(page->HasLoadingFailed())
     {
@@ -132,7 +132,7 @@ Page_archive *Document_archive::CreatePage(int pagenb)
         delete page;
         archive_read_close(Arch);
         Open();
-        page=new Page_archive(pagenb, NbPages, ReadingMode, PagePreview, DisplayRatio, Arch, Entry, ImgNames[pagenb-1].nb);
+        page=new Page_archive(pagenb, NbPages, ReadingMode, PagePreview, DisplayRatio, Rotation, ContrastEnhancement, Arch, Entry, ImgNames[pagenb-1].nb);
     }
     return page;
 }

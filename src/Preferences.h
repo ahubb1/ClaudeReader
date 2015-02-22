@@ -40,6 +40,12 @@ struct ZoomOption
     float value;
 };
 
+struct IntOption
+{
+    const char *caption;
+    int value;
+};
+
 
 //! Class managing the user preferences (saving in files, loading, applying to the current document)
 class Preferences
@@ -92,6 +98,8 @@ class Preferences
         ZoomOption GetMaxZoomOption(int i) { return MaxZoomOptionsList[i]; }
         ZoomOption GetAdditionnalZoomOption(int i) { return AdditionnalZoomOptionsList[i]; }
 
+        IntOption GetRotationOption(int i) { return RotationOptionsList[i]; }
+
     protected:
     private:
         char Filename[255];
@@ -112,6 +120,7 @@ class Preferences
         int AdditionnalZoomIdx;
         ZoomOption MaxZoomOptionsList[5];
         ZoomOption AdditionnalZoomOptionsList[8];
+        IntOption RotationOptionsList[4];
 };
 
 #endif // PREFERENCES_H

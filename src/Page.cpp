@@ -160,7 +160,7 @@ void SortAndMerge(vector<Rect> *CasesTmp, int counter)
 
 //! Virtual constructor of the page
 /**Initialize values common to all page types.*/
-Page::Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, float display_ratio)
+Page::Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, float display_ratio, int rotation, bool contrast)
 {
     //Init values common to all type of pages
     Failed=false; //Not failed yet...
@@ -181,6 +181,8 @@ Page::Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, float di
     Cases.clear();
     PageNb=page_nb;
     NbPages=nb_pages;
+    Rotation=rotation;
+    ContrastEnhancement=contrast;
 
     #ifdef DEBUG
         printf("create %d\n", PageNb);
@@ -613,6 +615,57 @@ void Page::DetectionStripCutting()
     NbCases=Cases.size();
 }
 
+
+//! Apply image transformation (rotation, contrast) on the page is needed
+void Page::Transform()
+{
+    if(!Failed)
+    {
+        //Rotate the image if needed
+        switch(Rotation)
+        {
+            //No rotation
+            case 0:
+                break;
+            //+90
+            case 1:
+                PageRenderCv=PageRenderCv.t();
+                flip(PageRenderCv, PageRenderCv, 1);
+                break;
+            //180
+            case 2:
+                flip(PageRenderCv, PageRenderCv, -1);
+                break;
+            //-90
+            case 3:
+                PageRenderCv=PageRenderCv.t();
+                flip(PageRenderCv, PageRenderCv, 0);
+                break;
+            default:
+                break;
+        }
+
+        //Apply contrast enhancement if needed
+        if(ContrastEnhancement)
+        {
+            //Histogram normalization on Luminance channel (Lab colorspace), but w/o touching pure white
+            Mat equalized, white_mask;
+            PageRenderCv.copyTo(equalized);
+            vector<Mat> channels;
+            cvtColor(equalized, equalized, CV_BGR2Lab); //change the color image from BGR to CIE-Lab format
+            split(equalized,channels); //split the image into channels
+            equalizeHist(channels[0], channels[0]); //equalize histogram on the L channel
+            merge(channels,equalized); //merge back the 3 channels
+            cvtColor(equalized, equalized, CV_Lab2BGR); //change back the image from CIE Lab to BGR
+            //Apply only on not white areas
+            cvtColor(PageRenderCv, white_mask, CV_BGR2GRAY);
+            threshold(white_mask, white_mask, 240, 255, CV_THRESH_BINARY_INV);
+            cvtColor(white_mask, white_mask, CV_GRAY2BGR);
+            PageRenderCv=Mat::ones(PageRenderCv.cols, PageRenderCv.rows, PageRenderCv.type())+Scalar(255,255,255,255);
+            equalized.copyTo(PageRenderCv, white_mask);
+        }
+    }
+}
 
 
 //! Call SetActiveCase with ActiveCase+1 in parameter

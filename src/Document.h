@@ -49,6 +49,7 @@ class Document
         int LoadPage(int p);
         void PreloadPages();
         void UpdatePreloadedPages();
+        void ReloadPages();
 
         int NextCase();
         int PreviousCase();
@@ -71,6 +72,10 @@ class Document
         void SetPagePreview(bool val);
         bool IsPagePreview() {return PagePreview;}
         void SetDisplayRatio(float val);
+        void SetRotation(unsigned int rot){Rotation=(rot<4)?rot:0;}
+        int GetRotation(){return Rotation;}
+        void SetContrast(bool cont){ContrastEnhancement=cont;}
+        bool GetContrast(){return ContrastEnhancement;}
 
         Page *currentPage, *nextPage, *previousPage;
 
@@ -81,6 +86,8 @@ class Document
         bool PagePreview;
         READINGMODE ReadingMode;
         float DisplayRatio;
+        unsigned int Rotation;
+        bool ContrastEnhancement;
     private:
         Mat *ImgRender;
         Rect *RectRender;

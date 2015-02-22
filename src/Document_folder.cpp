@@ -114,5 +114,5 @@ void Document_folder::Order()
 //! Create a new Page_folder.
 Page_folder *Document_folder::CreatePage(int pagenb)
 {
-    return new Page_folder(pagenb, NbPages, ReadingMode, PagePreview, DisplayRatio, ImgNames[pagenb-1]);
+    return new Page_folder(pagenb, NbPages, ReadingMode, PagePreview, DisplayRatio, Rotation, ContrastEnhancement, ImgNames[pagenb-1]);
 }

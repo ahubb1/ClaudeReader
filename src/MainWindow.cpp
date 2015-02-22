@@ -40,12 +40,20 @@ char DNDFilename[FL_PATH_MAX];
 //!Called when a new page should be displayed.
 void UpdatePage(MainWindow *mw)
 {
+    //Turn cursor to wait
+    mw->window->cursor(FL_CURSOR_WAIT);
+    Fl::check();
+
     //Update the main display
     //mw->Display->SetImage(mw->Doc->Render());
     mw->Display->SetImage(mw->Doc->RenderPage(), *mw->Doc->Render());
 
     //Update the status bar
     StatusUpdate(mw);
+    Fl::check();
+
+    //Turn cursor back to normal
+    mw->window->cursor(FL_CURSOR_DEFAULT);
     Fl::check();
 
     //Preload the surrounding pages
@@ -348,6 +356,10 @@ void Open_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
 
+    //Turn cursor to wait
+    mw->window->cursor(FL_CURSOR_WAIT);
+    Fl::check();
+
     char tmpFilename[FL_PATH_MAX];
 
     //Retrieve the menu item value to know if it's an open or a recent document item
@@ -419,6 +431,10 @@ void Open_cb(Fl_Widget* widget, void * param)
 
     //Open file and do stuff
     mw->Init(tmpFilename);
+
+    //Turn cursor back to normal
+    mw->window->cursor(FL_CURSOR_DEFAULT);
+    Fl::check();
 }
 
 //! Export cancel button callback
@@ -871,7 +887,68 @@ void PanelBorder_cb(Fl_Widget* widget, void * param)
 
     //Invert border/no border
     mw->Display->SetBorder(!mw->Display->IsBorder());
+    mw->Doc->ReloadPages();
     mw->Display->UpdateView();
+}
+
+//! Page rotation callback
+void Rotate_cb(Fl_Widget* widget, void * param)
+{
+    MainWindow *mw=(MainWindow*)param;
+
+    //Turn cursor to wait
+    mw->window->cursor(FL_CURSOR_WAIT);
+    Fl::check();
+
+    //If a specific rotation is picked, set it
+    if(strstr(((Fl_Menu_*)widget)->mvalue()->label(), mw->Pref->GetRotationOption(0).caption)!=NULL)
+        mw->Doc->SetRotation(0);
+    else
+        if(strstr(((Fl_Menu_*)widget)->mvalue()->label(), mw->Pref->GetRotationOption(1).caption)!=NULL)
+            mw->Doc->SetRotation(1);
+        else
+            if(strstr(((Fl_Menu_*)widget)->mvalue()->label(), mw->Pref->GetRotationOption(2).caption)!=NULL)
+                mw->Doc->SetRotation(2);
+            else
+                if(strstr(((Fl_Menu_*)widget)->mvalue()->label(), mw->Pref->GetRotationOption(3).caption)!=NULL)
+                    mw->Doc->SetRotation(3);
+                else
+                {
+                    //otherwise rotate +90 (next rotation value)
+                    mw->Doc->SetRotation(mw->Doc->GetRotation()+1);
+
+                    //and update the menu item accordingly
+                    char item_name[255];
+                    sprintf(item_name, "&View/Rotation\t\tCtrl+R/%s", (mw->Pref->GetRotationOption(mw->Doc->GetRotation()).caption));
+                    ((Fl_Menu_Item*)mw->MenuBar->find_item(item_name))->setonly();
+                }
+
+    //And update everything (long...)
+    mw->Doc->ReloadPages();
+    UpdatePage(mw);
+
+    //Turn cursor back to normal
+    mw->window->cursor(FL_CURSOR_DEFAULT);
+    Fl::check();
+}
+//! Contrast enhancement callback
+void Contrast_cb(Fl_Widget* widget, void * param)
+{
+    MainWindow *mw=(MainWindow*)param;
+
+    //Turn cursor to wait
+    mw->window->cursor(FL_CURSOR_WAIT);
+    Fl::check();
+
+    //Toggle contrast enhancement
+    mw->Doc->SetContrast(!mw->Doc->GetContrast());
+    //And update everything (long...)
+    mw->Doc->ReloadPages();
+    UpdatePage(mw);
+
+    //Turn cursor back to normal
+    mw->window->cursor(FL_CURSOR_DEFAULT);
+    Fl::check();
 }
 //-----------------------------------------------------------------------------
 
@@ -1239,6 +1316,23 @@ void UpdateWidgets(void * param)
         mw->Display->SetBorder(false);
     }
 
+    //Rotation
+    if(mw->Doc)
+        sprintf(item_name, "&View/Rotation\t\tCtrl+R/%s", (mw->Pref->GetRotationOption(mw->Doc->GetRotation()).caption));
+    else
+        sprintf(item_name, "&View/Rotation\t\tCtrl+R/%s", (mw->Pref->GetRotationOption(0).caption));
+    ((Fl_Menu_Item*)mw->MenuBar->find_item(item_name))->setonly();
+
+    /*Contrast
+    if(mw->Doc && mw->Doc->GetContrast())
+    {
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Enhance contrast\t"))->set();
+    }
+    else
+    {
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Enhance contrast\t"))->clear();
+    }*/
+
 
     //The preferences preferences (!): use the global ones for these
     if(mw->Pref->GetSavePref())
@@ -1328,16 +1422,16 @@ MainWindow::MainWindow(const char *exepath, const char *f)
             {
                 { "&File",              0, 0, 0, FL_SUBMENU },
                     { "Open file\t", FL_COMMAND + 'o', (Fl_Callback *)Open_cb, this },
-                    { "Open folder\t", FL_SHIFT + FL_COMMAND + 'o', (Fl_Callback *)Open_cb, this },
-                    { "Recent files", 0, 0, 0, FL_SUBMENU },
+                    { "Open folder\t", FL_COMMAND + FL_SHIFT + 'o', (Fl_Callback *)Open_cb, this },
+                    { "Recent files", 0, 0, 0, FL_SUBMENU | FL_MENU_DIVIDER },
                         { 0 },
-                    { "Export (as images)\t", FL_COMMAND + 'e', (Fl_Callback *)ExportDoc_cb, this, FL_MENU_INACTIVE },
+                    { "Export (as images)\t", FL_COMMAND + 'e', (Fl_Callback *)ExportDoc_cb, this, FL_MENU_INACTIVE | FL_MENU_DIVIDER },
                     { "Quit\t", FL_COMMAND + 'q', (Fl_Callback *)Quit_cb, this },
                     { 0 },
                 { "&View",              0, 0, 0, FL_SUBMENU | FL_MENU_INACTIVE},
-                    {"Fullscreen2\t", FL_Escape, (Fl_Callback *)Fullscreen_cb, this, FL_MENU_INVISIBLE | FL_MENU_INACTIVE },
-                    {"Fullscreen\t", FL_COMMAND + 'f', (Fl_Callback *)Fullscreen_cb, this },
                     { "Thumbnails view\t", FL_COMMAND + 't', (Fl_Callback *)Thumbnails_cb, this, FL_MENU_TOGGLE },
+                    {"Fullscreen2\t", FL_Escape, (Fl_Callback *)Fullscreen_cb, this, FL_MENU_INVISIBLE | FL_MENU_INACTIVE },
+                    {"Fullscreen\t", FL_COMMAND + 'f', (Fl_Callback *)Fullscreen_cb, this, FL_MENU_DIVIDER },
                     { "Maximal zoom\t", 0, 0, 0, FL_SUBMENU },
                         { Pref->GetMaxZoomOption(0).caption, 0, (Fl_Callback *)MaxZoom_cb, this, FL_MENU_RADIO | FL_MENU_CHECK },
                         { Pref->GetMaxZoomOption(1).caption, 0, (Fl_Callback *)MaxZoom_cb, this, FL_MENU_RADIO },
@@ -1345,7 +1439,7 @@ MainWindow::MainWindow(const char *exepath, const char *f)
                         { Pref->GetMaxZoomOption(3).caption, 0, (Fl_Callback *)MaxZoom_cb, this, FL_MENU_RADIO },
                         { Pref->GetMaxZoomOption(4).caption, 0, (Fl_Callback *)MaxZoom_cb, this, FL_MENU_RADIO },
                         { 0 },
-                    { "Panel mode view\t", 0, 0, 0, FL_SUBMENU },
+                    { "Panel mode view\t", 0, 0, 0, FL_SUBMENU | FL_MENU_DIVIDER },
                         { "Show panel in context\t", FL_COMMAND + 'i', (Fl_Callback *)InContext_cb, this, FL_MENU_TOGGLE },
                         { "Show panel border\t", FL_COMMAND + 'b', (Fl_Callback *)PanelBorder_cb, this, FL_MENU_TOGGLE },
                         { "Additional zoom\t\t+\\-", 0, 0, 0, FL_SUBMENU },
@@ -1361,6 +1455,13 @@ MainWindow::MainWindow(const char *exepath, const char *f)
                             { "-", '-', (Fl_Callback *)AdditionnalZoom_cb, this, FL_MENU_INVISIBLE },
                             { 0 },
                         { 0 },
+                    { "Rotation\t\tCtrl+R", FL_COMMAND + 'r', (Fl_Callback *)Rotate_cb, this, FL_SUBMENU },
+                        { Pref->GetRotationOption(0).caption, 0, (Fl_Callback *)Rotate_cb, this, FL_MENU_RADIO | FL_MENU_CHECK },
+                        { Pref->GetRotationOption(1).caption, 0, (Fl_Callback *)Rotate_cb, this, FL_MENU_RADIO },
+                        { Pref->GetRotationOption(2).caption, 0, (Fl_Callback *)Rotate_cb, this, FL_MENU_RADIO },
+                        { Pref->GetRotationOption(3).caption, 0, (Fl_Callback *)Rotate_cb, this, FL_MENU_RADIO },
+                        { 0 },
+                    //{ "Enhance contrast\t", FL_COMMAND + 'c', (Fl_Callback *)Contrast_cb, this, FL_MENU_TOGGLE},
                     { 0 },
                 { "&Navigation",              0, 0, 0, FL_SUBMENU | FL_MENU_INACTIVE},
                     { "Panel mode\t", 'c', (Fl_Callback *)CaseMode_cb, this, FL_MENU_RADIO },
@@ -1488,7 +1589,7 @@ MainWindow::MainWindow(const char *exepath, const char *f)
                 MainDisplayGrp->resizable(Display);
 
             DisplayGrp->end();
-            DisplayGrp->resizable(MainDisplayGrp);
+            //DisplayGrp->resizable(MainDisplayGrp);
             //Hide the thumbnails (will be displayed at document opening if preferences say so)
             Thumbnails_cb(ThumbDisplayGrp, (void*)this);
 

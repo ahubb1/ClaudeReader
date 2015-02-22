@@ -73,5 +73,5 @@ void Document_pdf::Close()
 //! Create a new Page_pdf
 Page_pdf *Document_pdf::CreatePage(int pagenb)
 {
-    return new Page_pdf(pagenb, NbPages, ReadingMode, PagePreview, DisplayRatio, FzCtx, FzDoc);
+    return new Page_pdf(pagenb, NbPages, ReadingMode, PagePreview, DisplayRatio, Rotation, ContrastEnhancement, FzCtx, FzDoc);
 }

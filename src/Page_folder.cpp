@@ -23,10 +23,13 @@
 //! Constructor of the image folder page.
 //!Initialize, load a page, render it and call the cases detection if needed (not a
 //!first or last page).
-Page_folder::Page_folder(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, float display_ratio, string imgname):Page(page_nb, nb_pages, rd_mode, page_p, display_ratio)
+Page_folder::Page_folder(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, float display_ratio, int rotation, bool contrast, string imgname):Page(page_nb, nb_pages, rd_mode, page_p, display_ratio, rotation, contrast)
 {
     //Load the page=> to an OpenCv Mat
     Load(imgname);
+
+    //Apply image transformation if required
+    Transform();
 
     //Case detection on the page (test is done later for first or last page)
     DetectCases();

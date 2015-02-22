@@ -98,6 +98,8 @@ class MainWindow
         friend void AdditionnalZoom_cb(Fl_Widget* widget, void * param);
         friend void InContext_cb(Fl_Widget* widget, void * param);
         friend void PanelBorder_cb(Fl_Widget* widget, void * param);
+        friend void Contrast_cb(Fl_Widget* widget, void * param);
+        friend void Rotate_cb(Fl_Widget* widget, void * param);
         friend void UpdatePage(MainWindow* mw);
         friend void UpdatePreloadPages(void * param);
         friend void PreviousPage_cb(Fl_Widget* widget, void * param);

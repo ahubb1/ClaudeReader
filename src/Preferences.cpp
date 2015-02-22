@@ -67,6 +67,16 @@ Preferences::Preferences()
     AdditionnalZoomOptionsList[6].value=1.1;
     AdditionnalZoomOptionsList[7].caption="x1.2\t";
     AdditionnalZoomOptionsList[7].value=1.2;
+
+    //Rotations possible values
+    RotationOptionsList[0].caption="None (Default)\t";
+    RotationOptionsList[0].value=0;
+    RotationOptionsList[1].caption="+90 (Clockwise)\t";
+    RotationOptionsList[1].value=1;
+    RotationOptionsList[2].caption="180 (Flip vertcial)\t";
+    RotationOptionsList[2].value=2;
+    RotationOptionsList[3].caption="-90 (Counter-clockwise)\t";
+    RotationOptionsList[3].value=3;
 }
 
 //! Destructor (nothing).
