@@ -275,14 +275,12 @@ void Page::DetectCases()
         if(!DetectionFailed)
         {
             /*----------------------------------------------ORGANIZE-----------------------------------------------------*/
-            DetectionOrganize(&CasesTmp, &src);
+            DetectionFailed=DetectionOrganize(&CasesTmp, &src);
             /*-----------------------------------------------------------------------------------------------------------*/
         }
 
         //Release some memory
         CasesTmp.clear();
-        /*src.release();
-        srcG.release();*/
 
     } //if CASE
 
@@ -488,7 +486,7 @@ bool Page::DetectionCheck(vector<Rect> *CasesTmp, Mat* src, int nbdetections)
 //! Order the page cases in a comics style (TopLeft to Bottom Right)
 /** \param CasesTmp: A vector of Rect (filled with the currently detected cases)
 \param src: An OpenCv Mat containing the binarized image*/
-void Page::DetectionOrganize(vector<Rect> *CasesTmp, Mat *src)
+bool Page::DetectionOrganize(vector<Rect> *CasesTmp, Mat *src)
 {
     //Initialize some variables
         //The minimum width/height of cases is used for the gaps between two cases
@@ -546,7 +544,11 @@ void Page::DetectionOrganize(vector<Rect> *CasesTmp, Mat *src)
             //Test if we have reached the end of the tree... (not supposed to happen if some cases left in CasesTmp)
             if(currentParentPre==CasesTree.prefix_end())
             {
-                break;
+                //Say organization has failed to fallback in strip mode
+                #ifdef DEBUG
+                    printf("Cases organization Failed\n");
+                #endif // DEBUG
+                return true;
             }
         }
 
@@ -563,6 +565,9 @@ void Page::DetectionOrganize(vector<Rect> *CasesTmp, Mat *src)
 
     //Free some memory
     CasesTree.empty();
+
+    //Not failed
+    return false;
 }
 
 //! Do a default cutting of the page (when the case detection has failed or when in strip mode)

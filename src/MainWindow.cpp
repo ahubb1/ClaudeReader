@@ -408,6 +408,9 @@ void Open_cb(Fl_Widget* widget, void * param)
         }
         else
         {
+            //Turn cursor back to normal
+            mw->window->cursor(FL_CURSOR_DEFAULT);
+            Fl::check();
             return;
         }
     }
@@ -425,6 +428,9 @@ void Open_cb(Fl_Widget* widget, void * param)
            ))
         {
             fl_alert("Invalid filename !");
+            //Turn cursor back to normal
+            mw->window->cursor(FL_CURSOR_DEFAULT);
+            Fl::check();
             return;
         }
     }

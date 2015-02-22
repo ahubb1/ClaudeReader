@@ -77,7 +77,7 @@ class Page
     private:
         void DetectionDetect(vector<Rect> *CasesTmp, Mat* src);
         bool DetectionCheck(vector<Rect> *CasesTmp, Mat* src, int nbdetections);
-        void DetectionOrganize(vector<Rect> *CasesTmp, Mat* src);
+        bool DetectionOrganize(vector<Rect> *CasesTmp, Mat* src);
         void DetectionStripCutting();
 
 
