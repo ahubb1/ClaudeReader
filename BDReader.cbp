@@ -12,9 +12,7 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
-					<Add option="-O2" />
 					<Add option="-g" />
-					<Add option="-DDEBUG" />
 				</Compiler>
 			</Target>
 			<Target title="Release">
@@ -39,10 +37,12 @@
 				<Option projectLinkerOptionsRelation="1" />
 				<Option projectLibDirsRelation="1" />
 				<Compiler>
+					<Add option="-O2" />
 					<Add directory="include" />
 					<Add directory="include/libarchive" />
 				</Compiler>
 				<Linker>
+					<Add option="-s" />
 					<Add option="-static-libgcc" />
 					<Add option="-static-libstdc++" />
 					<Add option="-static" />
@@ -59,8 +59,8 @@
 					<Add library="liblibtiff.a" />
 					<Add library="liblibpng.a" />
 					<Add library="liblibjasper.a" />
-					<Add library="libIlmImf.a" />
 					<Add library="libopenjpeg.a" />
+					<Add library="libIlmImf.a" />
 					<Add library="libjbig2dec.a" />
 					<Add library="libfreetype.a" />
 					<Add library="libfonts.a" />

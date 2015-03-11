@@ -32,7 +32,9 @@
 
 #include <FL/Fl.H>          //For fl::wait
 #include <stlplus3/ntree.hpp>
-#include <opencv2/opencv.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
 
 using namespace cv;
 using namespace stlplus;

@@ -653,6 +653,8 @@ void Page::Transform()
         //Apply contrast enhancement if needed
         if(ContrastEnhancement)
         {
+            int whiteThreshold=150;
+
             //Histogram normalization on Luminance channel (Lab colorspace), but w/o touching pure white
             Mat equalized, white_mask;
             PageRenderCv.copyTo(equalized);
@@ -664,7 +666,7 @@ void Page::Transform()
             cvtColor(equalized, equalized, CV_Lab2BGR); //change back the image from CIE Lab to BGR
             //Apply only on not white areas
             cvtColor(PageRenderCv, white_mask, CV_BGR2GRAY);
-            threshold(white_mask, white_mask, 240, 255, CV_THRESH_BINARY_INV);
+            threshold(white_mask, white_mask, whiteThreshold, 255, CV_THRESH_BINARY_INV);
             cvtColor(white_mask, white_mask, CV_GRAY2BGR);
             PageRenderCv=Mat::ones(PageRenderCv.cols, PageRenderCv.rows, PageRenderCv.type())+Scalar(255,255,255,255);
             equalized.copyTo(PageRenderCv, white_mask);

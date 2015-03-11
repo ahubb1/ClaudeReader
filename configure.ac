@@ -1,4 +1,4 @@
-AC_INIT([bdreader], [1.031], [kennyyy@users.sf.net])
+AC_INIT([bdreader], [1.04], [kennyyy@users.sf.net])
 AM_INIT_AUTOMAKE([foreign -Wall])
 
 #Add C++ as a language (for headers testing)
@@ -6,7 +6,10 @@ AC_LANG_PUSH([C++])
 
 #Check headers
 AC_CHECK_HEADERS([FL/Fl.H Fl.H Fl.h], [break;])
-AC_CHECK_HEADERS([opencv2/opencv.hpp opencv.hpp], [break;])
+#AC_CHECK_HEADERS([opencv2/opencv.hpp opencv.hpp], [break;])
+AC_CHECK_HEADERS([opencv2/core/core.hpp core/core.hpp], [break;])
+AC_CHECK_HEADERS([opencv2/imgproc/imgproc.hpp imgproc/imgproc.hpp], [break;])
+AC_CHECK_HEADERS([opencv2/highgui/highgui.hpp highgui/highgui.hpp], [break;])
 AC_CHECK_HEADERS([mupdf/fitz.h], [break;])
 AC_CHECK_HEADERS([archive_entry.h], [break;])
 

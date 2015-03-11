@@ -311,7 +311,7 @@ void TimerMouseWheel_cb(void* param)
 
     Fl::wait(.50);
     //Repeat...
-    Fl::repeat_timeout(0.1, TimerMouseWheel_cb, (void*)mw);
+    Fl::repeat_timeout(0.01, TimerMouseWheel_cb, (void*)mw);
 }
 
 //! Catch the resizing events and update the Display aspect ratio accordingly to new size
@@ -1467,7 +1467,7 @@ MainWindow::MainWindow(const char *exepath, const char *f)
                         { Pref->GetRotationOption(2).caption, 0, (Fl_Callback *)Rotate_cb, this, FL_MENU_RADIO },
                         { Pref->GetRotationOption(3).caption, 0, (Fl_Callback *)Rotate_cb, this, FL_MENU_RADIO },
                         { 0 },
-                    //{ "Enhance contrast\t", FL_COMMAND + 'c', (Fl_Callback *)Contrast_cb, this, FL_MENU_TOGGLE},
+                    { "Enhance contrast\t", FL_COMMAND + 'c', (Fl_Callback *)Contrast_cb, this, FL_MENU_TOGGLE},
                     { 0 },
                 { "&Navigation",              0, 0, 0, FL_SUBMENU | FL_MENU_INACTIVE},
                     { "Panel mode\t", 'c', (Fl_Callback *)CaseMode_cb, this, FL_MENU_RADIO },

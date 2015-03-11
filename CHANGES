@@ -1,6 +1,12 @@
 BDReader changes
-Vincent Crocher 23/11/2014
+Vincent Crocher 22/02/2015
 
+v1.04
+	-Border transparency when In Context
+	-Pages rotation option (+90,-90,180)
+	-Several bugs fixed (InContext switching bug, 'random' crashing, fallback to STRIP mode, global zoom preferences...)
+	-Icon displayed in Windows version
+	-PDF files now loaded at 300dpi
 v1.031
 	-Minimal (beta) support of Epub (3.0)
 	-Update configure.ac for Mupdf detection

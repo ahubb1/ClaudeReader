@@ -39,7 +39,9 @@ http://derindelimavi.blogspot.com/ bluekid70@gmail.com
 #include <FL/fl_draw.H>
 #include <FL/Fl_Widget.H>
 #include <FL/fl_ask.H>
-#include <opencv2/opencv.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
 
 
 using namespace cv;

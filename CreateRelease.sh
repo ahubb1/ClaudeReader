@@ -123,7 +123,7 @@ then
 	echo "done."
 	echo -n -e '\t' Creation of the package...
 	cd $base_file-$version_nb/ && dh_make --single -e kennyyy@users.sf.net -c gpl3
-	cp ../DebFilesTemplates/* debian/
+	cp -R ../DebFilesTemplates/* debian/
 	rm debian/*.ex
 	rm debian/*.EX
 	dpkg-buildpackage -rsudo
