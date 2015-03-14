@@ -520,7 +520,7 @@ void ExportDoc_cb(Fl_Widget* widget, void * param)
 
             //Ask for confirmation first
             fl_message_title("Export");
-            if(fl_ask("Export %s to %s as images (%s) ?", fl_filename_name(mw->Doc->GetFilename()), chooser.filename(), fileext)==0)
+            if(fl_choice("Export %s to %s as images (%s) ?", "Cancel", "Export", NULL, fl_filename_name(mw->Doc->GetFilename()), chooser.filename(), fileext)!=1)
                 return;
 
             //Go to document first page
@@ -533,13 +533,16 @@ void ExportDoc_cb(Fl_Widget* widget, void * param)
             mw->window->hide();
 
             //Create a progress window
-            int ww=fmax(500., mw->window->w()/1.5);
+            char label[255]; //Window label
+            sprintf(label, "Exporting: %s\nTo: %s\nFormat:\t%s\n\n", fl_filename_name(mw->Doc->GetFilename()), chooser.filename(), fileext);
+            int label_w=0, label_h=0;
+            fl_measure(label, label_w, label_h, 1); //Get label length to adjust window size accordingly
+
+            int ww=fmax(500., label_w+40);
             Fl_Window ProgressWindow(mw->window->x()+mw->window->w()/2.-ww/2., mw->window->y()+mw->window->h()/2.-100, ww, 200, "Export in progress...");
             ProgressWindow.set_modal();
             ProgressWindow.begin();
                 Fl_Button fileLabel(20, 10, (ww-40), 80, "Exporting ");
-                char label[255];
-                sprintf(label, "Exporting: %s\nTo: %s\nFormat:\t%s\n\n", fl_filename_name(mw->Doc->GetFilename()), chooser.filename(), fileext);
                 fileLabel.label(label);
                 fileLabel.box(FL_FLAT_BOX);
                 fileLabel.align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
@@ -560,7 +563,7 @@ void ExportDoc_cb(Fl_Widget* widget, void * param)
             if(retexp>=0)
             {
                 fl_message_title("Export");
-                fl_alert("Export succesfull (%d images created) !", retexp);
+                fl_alert("Export succesfull ! (%d images created)", retexp);
             }
             else
             {

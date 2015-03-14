@@ -2,14 +2,14 @@ SUBDIRS = src
 
 #Custom (un)/install target
 install: install-recursive
-	install -m 0755 share/bdreader.desktop $(datarootdir)/applications
-	install -m 0755 share/bdreader.xpm $(datarootdir)/pixmaps
-	install -m 0755 share/bdreader32.xpm $(datarootdir)/pixmaps
-	install -m 0755 doc/bdreader.1 $(datarootdir)/man/man1
+	install -m 0755 share/bdreader.desktop $(prefix)/share/applications
+	install -m 0755 share/bdreader.xpm $(prefix)/share/pixmaps
+	install -m 0755 share/bdreader32.xpm $(prefix)/share/pixmaps
+	install -m 0755 doc/bdreader.1 $(prefix)/share/man/man1
 
 uninstall: uninstall-recursive
 	rm -f $(prefix)/bin/bdreader
-	rm -f $(datarootdir)/applications/bdreader.desktop
-	rm -f $(datarootdir)/pixmaps/bdreader.xpm
-	rm -f $(datarootdir)/pixmaps/bdreader32.xpm
-	rm -f $(datarootdir)/man/man1/bdreader.1
+	rm -f $(prefix)/share/applications/bdreader.desktop
+	rm -f $(prefix)/share/pixmaps/bdreader.xpm
+	rm -f $(prefix)/share/pixmaps/bdreader32.xpm
+	rm -f $(prefix)/share/man/man1/bdreader.1

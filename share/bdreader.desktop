@@ -5,7 +5,7 @@ TryExec=bdreader
 Exec=bdreader %u
 Terminal=false
 Type=Application
-MimeType=application/pdf;application/x-rar;application/zip;
+MimeType=application/pdf;application/x-rar;application/zip;application/x-7z-compressed;
 Icon=bdreader
-Categories=GNOME;Viewer;Graphics;
+Categories=Graphics;Viewer;GNOME;
 
