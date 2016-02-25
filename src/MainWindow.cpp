@@ -1,6 +1,6 @@
 //--------------------------------------------------------------------------
 //
-//    Copyright (C) 2014 Vincent Crocher
+//    Copyright (C) 2014-2016 Vincent Crocher
 //
 //	  This file is part of BDReader.
 //
@@ -41,7 +41,8 @@ char DNDFilename[FL_PATH_MAX];
 void UpdatePage(MainWindow *mw)
 {
     //Turn cursor to wait
-    mw->window->cursor(FL_CURSOR_WAIT);
+    fl_cursor(FL_CURSOR_WAIT);
+    //mw->window->cursor(FL_CURSOR_WAIT);
     Fl::check();
 
     //Update the main display
@@ -132,9 +133,6 @@ void StatusBarUpdate(void * param)
       mw->StatusBar->redraw();
       mw->StatusBarZoom->copy_label(textZoom);
       mw->StatusBarZoom->redraw();
-
-      //Auto-update (due to additionnal zoom value)
-      //Fl::repeat_timeout(0.5, StatusBarUpdate, (void*)mw);
 }
 //! Update the fullscreen status
 void StatusFullScreenUpdate(void * param)
@@ -351,6 +349,27 @@ void ResizingEvents(Fl_Widget* widget, void* param)
 
 
 //---------------------------------File menu----------------------------------
+//! Open document from library
+void Library_cb(Fl_Widget* widget, void * param)
+{
+    MainWindow *mw=(MainWindow*)param;
+
+    //Make library unavailabe
+    mw->Library->deactivate();
+    Fl::check();
+
+    //Turn cursor to wait
+    mw->window->cursor(FL_CURSOR_WAIT);
+    Fl::check();
+
+    //Open doc
+    mw->Init(((Fl_Library_Element*)widget)->GetAbsoluteFilename());
+
+    //Turn cursor back to normal
+    mw->window->cursor(FL_CURSOR_DEFAULT);
+    Fl::check();
+}
+
 //! Open a document and load it (through a call to Init())
 void Open_cb(Fl_Widget* widget, void * param)
 {
@@ -370,7 +389,7 @@ void Open_cb(Fl_Widget* widget, void * param)
         Fl_Native_File_Chooser chooser=Fl_Native_File_Chooser();
         chooser.title("Open a file");
         chooser.filter("Supported formats\t*.{pdf,cbz,cbr,cbt,cb7,epub,rar,zip,tar,7z}\nPdf\t*.pdf\nComics archive\t*.{cbz,cbr,cbt,cb7}\nEbook\t*.epub\nArchive\t*.{rar,zip,tar,7z}");
-        chooser.options(Fl_Native_File_Chooser::PREVIEW);
+        //chooser.options(Fl_Native_File_Chooser::PREVIEW);
 
         //Select either open a file or a folder depending on the calling widget label
         if(strstr(((Fl_Menu_*)widget)->mvalue()->label(), "folder")!=NULL)
@@ -703,13 +722,13 @@ void Fullscreen_cb(Fl_Widget* widget, void * param)
         mw->window->resizable(NULL);
         Fl::wait(.20);
         //Show the bars again: redefine their width equal to the window one
-        mw->MenuBar->resize(mw->MenuBar->x(), mw->MenuBar->y(), mw->window->w(), 25);
-        mw->StatusBarGrp->resize(mw->StatusBar->x(), mw->window->h()-20, mw->window->w(), 20);
+        mw->MenuBar->resize(mw->MenuBar->x(), mw->MenuBar->y(), mw->window->w(), mw->MenuBar->h());
+        mw->StatusBarGrp->resize(mw->StatusBar->x(), mw->window->h()-mw->StatusBar->h(), mw->window->w(), mw->StatusBar->h());
         Fl::wait(.20);
         //HIde the page number indicator
         mw->PageNbFullGrp->hide();
         //Resize the display group
-        mw->DisplayGrp->resize(0, 25, mw->window->w(), mw->window->h()-45);
+        mw->DisplayGrp->resize(0, 25, mw->window->w(), mw->window->h()-(mw->MenuBar->h()+mw->StatusBar->h()));
         Fl::wait(.20);
         mw->window->resizable(mw->DisplayGrp);
         Fl::wait(.20);
@@ -1191,6 +1210,16 @@ void ActivateNavigationWidgets(void *param, bool val)
         mw->PreviousPageButton->hide();
         mw->NextPageButton->hide();
     }
+
+    //The main display
+    if(val)
+    {
+        mw->Display->activate();
+    }
+    else
+    {
+        mw->Display->deactivate();
+    }
 }
 //! Actvate or deactivate (depending on bool val), the panel view menu items (border, in context...)
 void ActivatePanelViewWidgets(void *param, bool val)
@@ -1391,7 +1420,7 @@ void Window_cb(Fl_Widget* widget, void * param)
 /// Constructor.
 /**Create the widgets, build the window and call the Init() with the document filename to open (NULL if no document specified).
 \param exepath the fullpath of execution
-\param f the filename of a file top open on startup, can be '\0' if nothing*/
+\param f the filename of a file to open on startup, can be '\0' if nothing*/
 MainWindow::MainWindow(const char *exepath, const char *f)
 {
     //No doc or doc pref yet
@@ -1410,6 +1439,7 @@ MainWindow::MainWindow(const char *exepath, const char *f)
     //Main window creation
         //Use saved window size and position (will be 0, 0, 600, 600 if nothing saved, and always lower than the available space on the screen)
         window=new Fl_Double_Window(Pref->GetWinX(), Pref->GetWinY(), min(Fl::w()-2,Pref->GetWinW()) , min(Fl::h()-2,Pref->GetWinH()), "BDReader");
+        window->color(fl_rgb_color(242,241,240));
 
     //Set an icon
     //Problem with windows compile (Pixmap not declared)
@@ -1425,6 +1455,11 @@ MainWindow::MainWindow(const char *exepath, const char *f)
 
     //Widgets creation
     window->begin();
+
+        //Change predefined colors
+        Fl::set_color(FL_BACKGROUND_COLOR, 242,241,240);
+        Fl::set_color(FL_BACKGROUND2_COLOR, 229,229,228);
+        Fl::set_color(FL_SELECTION_COLOR, 120, 0, 0);
 
         //Main menu
             Fl_Menu_Item menuitems[] =
@@ -1499,7 +1534,7 @@ MainWindow::MainWindow(const char *exepath, const char *f)
 
              MenuBar = new Fl_Menu_Bar(0, 0, window->w(), 25);
              MenuBar->copy(menuitems);
-             MenuBar->selection_color(FL_DARK_RED);
+             MenuBar->box(FL_FLAT_BOX);
 
 
              //Create the list of recent docs
@@ -1507,7 +1542,7 @@ MainWindow::MainWindow(const char *exepath, const char *f)
 
 
          //Main group containing the main display, navigation buttons and page preview display
-            DisplayGrp = new Fl_Group(0, 25, window->w(), window->h()-45);
+            DisplayGrp = new Fl_Group(0, MenuBar->h(), window->w(), window->h()-2*MenuBar->h());
             //DisplayGrp = new Fl_Tile(0, 25, window->w(), window->h()-45);
             DisplayGrp->begin();
 
@@ -1516,10 +1551,10 @@ MainWindow::MainWindow(const char *exepath, const char *f)
                 ThumbDisplayGrp->begin();
                  //Thumbnails display
                      int rounding = (int)(ThumbDisplayGrp->h()-3.*round(ThumbDisplayGrp->h()/3.));
-                     ThumbDisplayPrev = new /*Fl_OpenCV*/Fl_ViewerCV(ThumbDisplayGrp->x(), ThumbDisplayGrp->y(), ThumbDisplayGrp->w(), round(ThumbDisplayGrp->h()/3.)-20-4);
+                     ThumbDisplayPrev = new Fl_ViewerCV(ThumbDisplayGrp->x(), ThumbDisplayGrp->y(), ThumbDisplayGrp->w(), round(ThumbDisplayGrp->h()/3.)-20-4);
                      ThumbDisplayPrev->SetOnRelease_cb(PreviousPage_cb, (void*)this);
-                     ThumbDisplayCurrent = new /*Fl_OpenCV*/Fl_ViewerCV(ThumbDisplayGrp->x(), ThumbDisplayPrev->y()+ThumbDisplayPrev->h()+6+rounding, ThumbDisplayGrp->w(), round(ThumbDisplayGrp->h()/3.)+40-4);
-                     ThumbDisplayNext = new /*Fl_OpenCV*/Fl_ViewerCV(ThumbDisplayGrp->x(), ThumbDisplayCurrent->y()+ThumbDisplayCurrent->h()+6, ThumbDisplayGrp->w(), round(ThumbDisplayGrp->h()/3.)-20-4);
+                     ThumbDisplayCurrent = new Fl_ViewerCV(ThumbDisplayGrp->x(), ThumbDisplayPrev->y()+ThumbDisplayPrev->h()+6+rounding, ThumbDisplayGrp->w(), round(ThumbDisplayGrp->h()/3.)+40-4);
+                     ThumbDisplayNext = new Fl_ViewerCV(ThumbDisplayGrp->x(), ThumbDisplayCurrent->y()+ThumbDisplayCurrent->h()+6, ThumbDisplayGrp->w(), round(ThumbDisplayGrp->h()/3.)-20-4);
                      ThumbDisplayNext->SetOnRelease_cb(NextPage_cb, (void*)this);
                      ThumbDisplayGrp->selection_color(FL_BLACK);ThumbDisplayPrev->color(FL_BLACK);ThumbDisplayCurrent->color(FL_BLACK);ThumbDisplayNext->color(FL_BLACK);
                  //Horizontal separators
@@ -1552,12 +1587,13 @@ MainWindow::MainWindow(const char *exepath, const char *f)
                  MainDisplayGrp = new Fl_Group(DisplayGrp->x()+ThumbDisplayGrp->w(), DisplayGrp->y(), DisplayGrp->w()-ThumbDisplayGrp->w(), DisplayGrp->h());
                  MainDisplayGrp->begin();
                  //Main display
-                     Display = new /*Fl_OpenCV*/Fl_ViewerCV(MainDisplayGrp->x(), MainDisplayGrp->y(), MainDisplayGrp->w(), MainDisplayGrp->h());
-                     //Display->SetHandleKeys(true);
+                     Display = new Fl_ViewerCV(MainDisplayGrp->x(), MainDisplayGrp->y(), MainDisplayGrp->w(), MainDisplayGrp->h());
+                     Display->SetHandleKeys(true);
+                     Display->color(FL_BACKGROUND2_COLOR);
 
                  //Navigation buttons
                      NextButton = new Fl_Overlay_Arrow_Button(Display->x()+Display->w()-0.045*window->w(), (int)(Display->y()), 0.045*window->w(), Display->h(), "", 0, 0.8, 0.15, 0);
-                     NextButton->color(fl_rgb_color(100, 100, 100));NextButton->selection_color(fl_rgb_color(245,245,200));NextButton->labelcolor(FL_DARK_RED);
+                     NextButton->color(fl_rgb_color(100, 100, 100));NextButton->selection_color(fl_rgb_color(245,245,200));NextButton->labelcolor(FL_SELECTION_COLOR);
                      NextButton->callback(NextCase_cb, (void*)this);
                      //Prevent the widget to get the focus and thus prevent to use the arrow keys to
                      //navigate through the widgets: keep the Arrows shortcut behavior (to menu_items)
@@ -1566,19 +1602,19 @@ MainWindow::MainWindow(const char *exepath, const char *f)
                      NextButton->hide();
                      NextButton->tooltip("Next panel");
                      PreviousButton = new Fl_Overlay_Arrow_Button(Display->x(), (int)(Display->y()), 0.045*window->w(), Display->h(), "", 180, 0.8, 0.15, 0);
-                     PreviousButton->color(fl_rgb_color(100, 100, 100));PreviousButton->selection_color(fl_rgb_color(245,245,200));PreviousButton->labelcolor(FL_DARK_RED);
+                     PreviousButton->color(fl_rgb_color(100, 100, 100));PreviousButton->selection_color(fl_rgb_color(245,245,200));PreviousButton->labelcolor(FL_SELECTION_COLOR);
                      PreviousButton->callback(PreviousCase_cb, (void*)this);
                      PreviousButton->clear_visible_focus();
                      PreviousButton->hide();
                      PreviousButton->tooltip("Previous panel");
                      NextPageButton = new Fl_Overlay_Arrow_Button(Display->x(), (int)(Display->y()+Display->h()-0.045*window->h()), Display->w(), 0.045*window->h(), "", -90, 0.10, 0.8, 0);
-                     NextPageButton->color(fl_rgb_color(100, 100, 100));NextPageButton->selection_color(fl_rgb_color(245,245,200));NextPageButton->labelcolor(FL_DARK_RED);
+                     NextPageButton->color(fl_rgb_color(100, 100, 100));NextPageButton->selection_color(fl_rgb_color(245,245,200));NextPageButton->labelcolor(FL_SELECTION_COLOR);
                      NextPageButton->callback(NextPage_cb, (void*)this);
                      NextPageButton->clear_visible_focus();
                      NextPageButton->hide();
                      NextPageButton->tooltip("Next page");
                      PreviousPageButton = new Fl_Overlay_Arrow_Button(Display->x(), (int)(Display->y()), Display->w(), 0.045*window->h(), "", 90, 0.10, 0.8, 0);
-                     PreviousPageButton->color(fl_rgb_color(100, 100, 100));PreviousPageButton->selection_color(fl_rgb_color(245,245,200));PreviousPageButton->labelcolor(FL_DARK_RED);
+                     PreviousPageButton->color(fl_rgb_color(100, 100, 100));PreviousPageButton->selection_color(fl_rgb_color(245,245,200));PreviousPageButton->labelcolor(FL_SELECTION_COLOR);
                      PreviousPageButton->callback(PreviousPage_cb, (void*)this);
                      PreviousPageButton->clear_visible_focus();
                      PreviousPageButton->hide();
@@ -1588,7 +1624,7 @@ MainWindow::MainWindow(const char *exepath, const char *f)
                      PageNbFullGrp=new Fl_Group(MainDisplayGrp->x()+MainDisplayGrp->w()-110, MainDisplayGrp->y()+MainDisplayGrp->h()-30, 100, 20);
                      PageNbFullGrp->begin();
                      PageNbFullProgress = new Fl_Progress(PageNbFullGrp->x(), PageNbFullGrp->y(), PageNbFullGrp->w(), PageNbFullGrp->h(), "1/1");
-                         PageNbFullProgress->color(FL_WHITE, FL_DARK_RED);
+                         PageNbFullProgress->color(FL_BACKGROUND_COLOR, FL_SELECTION_COLOR);
                          PageNbFullProgress->tooltip("Page");
                      PageNbFullGrp->end();
                      PageNbFullGrp->resizable(NULL);
@@ -1604,23 +1640,16 @@ MainWindow::MainWindow(const char *exepath, const char *f)
 
 
          //Status bar
-             StatusBarGrp = new Fl_Group(0, window->h()-20, window->w(), 20);
-                StatusBar = new Fl_Box(0, window->h()-20, window->w(), 20);
+             int status_bar_height=MenuBar->h();
+             StatusBarGrp = new Fl_Group(0, window->h()-status_bar_height, window->w(), status_bar_height);
+                StatusBar = new Fl_Box(0, window->h()-status_bar_height, window->w(), status_bar_height);
                 StatusBar->align(FL_ALIGN_RIGHT|FL_ALIGN_INSIDE);
                 StatusBar->box(FL_UP_BOX);
-                StatusBarZoom = new Fl_Box(0, window->h()-20, window->w()/2., 20);
+                StatusBarZoom = new Fl_Box(0, window->h()-status_bar_height, window->w()/2., status_bar_height);
                 StatusBarZoom->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
             StatusBarGrp->end();
 
-             /*TODO: A terminer et ameliorer
-             Fl_Counter* StatusCounter = new Fl_Counter(StatusBar->x()+StatusBar->w()/2.0-100, StatusBar->y(), 200, 20);
-             StatusCounter->box(FL_PLASTIC_ROUND_UP_BOX);
-             StatusCounter->labeltype(FL_NO_LABEL);
-             StatusCounter->labelcolor(FL_DARK_RED);
-             StatusCounter->minimum(1);
-             StatusCounter->maximum(10);
-             StatusCounter->step(1);*/
-             //StatusBar->
+
 
          //Events callbacks
              //Closing callback
@@ -1655,6 +1684,12 @@ MainWindow::MainWindow(const char *exepath, const char *f)
     //Initialize help window
     HelpDlg=NULL;
 
+    //A library view
+    //Library = new Fl_Books_Library(1000, 600, "BD library", Pref->GetLibraryFolder(), ExePath, 180, 180*1.53, 10); //For a standalone library window
+    printf("L: %s\n", Pref->GetLibraryFolder());
+    Library = new Fl_Books_Library(DisplayGrp->w(), DisplayGrp->h(), "BD library", Pref->GetLibraryFolder(), ExePath, 180, 180*1.53, 10);
+    Library->resize(0, MenuBar->h(), DisplayGrp->w(), DisplayGrp->h());
+    Library->callback(Library_cb, (void*)this);
 
     //Initialize the window and Document
     UpdateWidgets(this);
@@ -1735,6 +1770,9 @@ void MainWindow::Init(char *filename)
         //Check if the document has been opened
         if(extOk && new_doc->GetNbOfPages()>0)
         {
+            //Close library
+            Library->hide();
+
             //Delete old doc if one (using an intermediate pointer to avoid access)
             if(Doc)
             {
@@ -1814,8 +1852,18 @@ void MainWindow::Init(char *filename)
                 window->label(title);
                 //and status bar
                 StatusUpdate(this);
+
+                //Reactivate library
+                Library->activate();
             }
         }
+    }
+    else
+    {
+        DisplayGrp->add(Library);
+        Library->clear_modal_states(); //was originally modal since not attached to a parent
+        ActivateNavigationWidgets(this, false);
+        Library->show();
     }
 }
 
@@ -1826,6 +1874,9 @@ void MainWindow::SavePref()
     //Current doc preferences (if there are some)
      if(PrefDoc)
      {
+         //The Library path
+         PrefDoc->SetLibraryFolder(Library->get_absolute_dir());
+
          //The thumbnails view
          PrefDoc->SetThumbnails(ThumbDisplayGrp->visible());
          //Write to pref file
@@ -1844,6 +1895,10 @@ void MainWindow::SavePref()
         Pref->SetWinX(window->x());
         Pref->SetWinY(window->y());
      }
+
+     //The Library path
+     Pref->SetLibraryFolder(Library->get_absolute_dir());
+
      //The preferences preferences
      Pref->SetSavePref(((Fl_Menu_Item*)MenuBar->find_item("&Preferences/Save preferences\t"))->value());
      Pref->SetLocalPref(((Fl_Menu_Item*)MenuBar->find_item("&Preferences/Use documents preferences\t"))->value());

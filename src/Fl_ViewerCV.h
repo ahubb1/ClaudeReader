@@ -1,6 +1,6 @@
 //--------------------------------------------------------------------------
 //
-//    Copyright (C) 2014  Vincent Crocher
+//    Copyright (C) 2014-2016  Vincent Crocher
 //
 //	  This file is part of BDReader.
 //
@@ -15,7 +15,7 @@
 //    GNU General Public License for more details.
 //
 //    You should have received a copy of the GNU General Public License
-//    along with BDReader.  If not, see <http://www.gnu.org/licenses/>.
+//    along with BDReader. If not, see <http://www.gnu.org/licenses/>.
 //
 //---------------------------------------------------------------------------
 /*
@@ -26,8 +26,8 @@ http://derindelimavi.blogspot.com/ bluekid70@gmail.com
  * \file Fl_ViewerCV.h
  * \brief Declaration file of the Fl_ViewerCV class
  * \author Vincent Crocher
- * \version 0.1
- * \date Sept 2014
+ * \version 0.3
+ * \date February 2016
  *
  *
  */
@@ -125,6 +125,10 @@ class FL_EXPORT Fl_ViewerCV : public Fl_Widget
         float Scale;
         float MaxZoom;
         float CustomZoom;
+        bool RmbInContext;
+        float RmbCustomZoom;
+        bool ShowPreview;
+        bool Magnifier;
 
         //Callbacks
         bool HandleKeys;
@@ -136,6 +140,7 @@ class FL_EXPORT Fl_ViewerCV : public Fl_Widget
         void *OnRelease_cb_param;
         CvMouseCallback mouse_cb;
         void *CVcb_param;
+        bool Resizing;
 
         Rect DisplayRect;
         Mat *image, fimage;

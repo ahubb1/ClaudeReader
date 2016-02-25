@@ -1,6 +1,6 @@
 //--------------------------------------------------------------------------
 //
-//    Copyright (C) 2014  Vincent Crocher
+//    Copyright (C) 2014-2016  Vincent Crocher
 //
 //	  This file is part of BDReader.
 //
@@ -15,20 +15,29 @@
 //    GNU General Public License for more details.
 //
 //    You should have received a copy of the GNU General Public License
-//    along with BDReader.  If not, see <http://www.gnu.org/licenses/>.
+//    along with BDReader. If not, see <http://www.gnu.org/licenses/>.
 //
 //---------------------------------------------------------------------------
 /**
  * \file Preferences.h
  * \brief Declaration file of the Preferences class
  * \author Vincent Crocher
- * \version 0.3
- * \date November 2014
+ * \version 0.4
+ * \date February 2016
  *
  *
  */
 #ifndef PREFERENCES_H
 #define PREFERENCES_H
+
+#include <FL/filename.H>
+#include <FL/Fl_Preferences.H>
+//To get default user documents path:
+#ifdef __WINDOWS__
+    #include <windows.h>
+    #include <shlobj.h>
+#endif
+
 
 #include "Document.h"
 
@@ -54,7 +63,7 @@ class Preferences
         Preferences();
         ~Preferences();
 
-        int Load(const char prefFile[255], const char windir[2048]);
+        int Load(const char prefFile[255], const char windir[FL_PATH_MAX]);
         int Apply(Document *doc);
         void Save(Document *doc);
 
@@ -89,6 +98,8 @@ class Preferences
         void SetWinY(int val) { WinY = val; }
         int GetBkgColor() { return BkgColor; }
         void SetBkgColor(int val) { BkgColor = val; }
+        char *GetLibraryFolder() { return LibraryFolder; }
+        void SetLibraryFolder(char *lib_folder) { snprintf(LibraryFolder, FL_PATH_MAX, "%s", lib_folder); }
         char *GetLastDoc() { return LastDoc; }
         int GetLastDocPageNb() { return LastDocPageNb; }
         void SetLastDocPageNb(int val) { LastDocPageNb = val; }
@@ -102,6 +113,7 @@ class Preferences
 
     protected:
     private:
+        char LibraryFolder[FL_PATH_MAX];
         char Filename[255];
         READINGMODE ReadingMode;
         bool PagePreview;
@@ -112,10 +124,10 @@ class Preferences
         int WinW, WinH;
         int WinX, WinY;
         int BkgColor;
-        char LastDoc[2048];
+        char LastDoc[FL_PATH_MAX];
         int LastDocPageNb;
         int NbRecentDocs;
-        char RecentDocs[MAX_NB_RECENT][2048];
+        char RecentDocs[MAX_NB_RECENT][FL_PATH_MAX];
         int MaxZoomIdx;
         int AdditionnalZoomIdx;
         ZoomOption MaxZoomOptionsList[5];

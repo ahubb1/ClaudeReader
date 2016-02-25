@@ -1,6 +1,6 @@
 //--------------------------------------------------------------------------
 //
-//    Copyright (C) 2014 Vincent Crocher
+//    Copyright (C) 2014-2016 Vincent Crocher
 //
 //	  This file is part of BDReader.
 //
@@ -131,6 +131,9 @@ int Document::LoadPage(int p)
             //If the new current page is not ready to be displayed, just wait
             while(!currentPage->IsLoaded() && !currentPage->HasLoadingFailed())
             {
+                #ifdef DEBUG
+                    printf("waiting...\n");
+                #endif
                 Fl::wait(1);
             }
         }
@@ -168,6 +171,9 @@ int Document::LoadPage(int p)
                 //If the new current page is not ready to be displayed, just wait
                 while(!currentPage->IsLoaded() && !currentPage->HasLoadingFailed())
                 {
+                    #ifdef DEBUG
+                        printf("waiting...\n");
+                    #endif
                     Fl::wait(1);
                 }
             }

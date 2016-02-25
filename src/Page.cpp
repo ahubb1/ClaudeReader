@@ -1,6 +1,6 @@
 //--------------------------------------------------------------------------
 //
-//    Copyright (C) 2014  Vincent Crocher
+//    Copyright (C) 2014-2016  Vincent Crocher
 //
 //	  This file is part of BDReader.
 //
@@ -38,14 +38,14 @@ bool isIn(Rect A, Rect B)
     IntersectR = min(A.x+A.width, B.x+B.width);
     IntersectB = min(A.y+A.height, B.y+B.height);
 
-   //printf("%d %d\t", (A.width*A.height), (B.width*B.height));
+    /*Give time to FLTK
+    Fl::check();*/
 
     //Is an intersection ?
     if(IntersectR > IntersectL && IntersectB > IntersectT)
     {
         //Determine the size of the intersection
         int IntersectArea=(IntersectR-IntersectL)*(IntersectB-IntersectT);
-        //printf("%d\n", (int)(IntersectArea/((float)A.width*A.height)*100.));
 
         //If more than 20% of the "inside" rectangle, return true
         if(IntersectArea>0.2*(A.width*A.height))
@@ -59,7 +59,6 @@ bool isIn(Rect A, Rect B)
     }
     else
     {
-        //printf("0\n");
         return false;
     }
 }
@@ -128,6 +127,9 @@ void SortAndMerge(vector<Rect> *CasesTmp, int counter)
         int currentIdx=0;
         while(current>=CasesTmp->begin())
         {
+            /*Give time to FLTK
+            Fl::check();*/
+
             current=CasesTmp->end()-currentIdx;
             std::vector<Rect>::iterator i=current-1;
             while(i>=CasesTmp->begin())
@@ -249,19 +251,27 @@ void Page::DetectCases()
             //To binary
             inRange(srcG, 0, 210+nbdetections, src);
             #ifdef DEBUG
-            printf("%d:\n", nbdetections);
+            printf("Detection %d:\n", nbdetections);
             #endif
             /*-----------------------------------------------------------------------------------------------------------*/
+            /*Give time to FLTK
+            Fl::check();*/
 
             /*--------------------------------------------DETECT---------------------------------------------------------*/
             DetectionDetect(&CasesTmp, &src);
             /*-----------------------------------------------------------------------------------------------------------*/
+
+            /*Give time to FLTK
+            Fl::check();*/
 
             /*-------------------------------------------CHECK-----------------------------------------------------------*/
             detectionFailed=DetectionCheck(&CasesTmp, &src, nbdetections);
             /*-----------------------------------------------------------------------------------------------------------*/
 
             nbdetections+=3;
+
+            /*Give time to FLTK
+            Fl::check();*/
         }
 
         //All the detections have failed ?
@@ -428,8 +438,7 @@ bool Page::DetectionCheck(vector<Rect> *CasesTmp, Mat* src, int nbdetections)
         #ifdef DEBUG
         printf("Less than 65\% (%d) of page covered\n", (int)((float)withinRect.width*withinRect.height/(float)(src->rows*src->cols)*100.));
         #endif
-        //TODO: et verifier que pas de contour dedans (apres avoir passe un Canny): s'il y a des contours, c'est qu'on a bouffer une bulle ou un texte...
-        //il faudrait aussi faire la meme chose pour les cases...
+
         //Check if not covered area (outside the within Rect) is almost white
         if(mean(testCoveredArea).val[0]<250)
         {
@@ -449,7 +458,7 @@ bool Page::DetectionCheck(vector<Rect> *CasesTmp, Mat* src, int nbdetections)
     rectangle(testCoveredArea, Rect(0, withinRect.y+withinRect.height, src->cols, src->rows-(withinRect.y+withinRect.height)), cvScalar(255), -1);//bottom band
 
     //compare the two values: if two large difference, it means that there are some internal part not covered by a case
-    if(coveredArea<0.95*withinRect.width*withinRect.height) //ATTENTION 1.95 !!!!!!!!!!!!!!!!!!!!!
+    if(coveredArea<0.95*withinRect.width*withinRect.height)
     {
         //Inspect the not covered area: if not 255 means that not fully blank or if Canny>1.5 means some information (edges) missing
         float colorTest=mean(testCoveredArea).val[0];
@@ -485,7 +494,7 @@ bool Page::DetectionCheck(vector<Rect> *CasesTmp, Mat* src, int nbdetections)
 
 //! Order the page cases in a comics style (TopLeft to Bottom Right)
 /** \param CasesTmp: A vector of Rect (filled with the currently detected cases)
-\param src: An OpenCv Mat containing the binarized image*/
+\param src: An OpenCv Mat containing the binarized image (only image size is used)*/
 bool Page::DetectionOrganize(vector<Rect> *CasesTmp, Mat *src)
 {
     //Initialize some variables
@@ -659,17 +668,31 @@ void Page::Transform()
             Mat equalized, white_mask;
             PageRenderCv.copyTo(equalized);
             vector<Mat> channels;
-            cvtColor(equalized, equalized, CV_BGR2Lab); //change the color image from BGR to CIE-Lab format
+            /*cvtColor(equalized, equalized, CV_BGR2Lab); //change the color image from BGR to CIE-Lab format
             split(equalized,channels); //split the image into channels
             equalizeHist(channels[0], channels[0]); //equalize histogram on the L channel
             merge(channels,equalized); //merge back the 3 channels
-            cvtColor(equalized, equalized, CV_Lab2BGR); //change back the image from CIE Lab to BGR
+            cvtColor(equalized, equalized, CV_Lab2BGR); //change back the image from CIE Lab to BGR*/
+
+            /*cvtColor(equalized, equalized, CV_BGR2HSV); //change the color image from BGR to CIE-Lab format
+            split(equalized,channels); //split the image into channels
+            equalizeHist(channels[2], channels[2]); //equalize histogram on the L channel
+            merge(channels,equalized); //merge back the 3 channels
+            cvtColor(equalized, equalized, CV_HSV2BGR); //change back the image from CIE Lab to BGR*/
+
+            cvtColor(equalized, equalized, CV_BGR2YCrCb);
+            split(equalized,channels); //split the image into channels
+            equalizeHist(channels[0], channels[0]); //equalize histogram on the L channel
+            merge(channels,equalized); //merge back the 3 channels
+            cvtColor(equalized, equalized, CV_YCrCb2BGR);
+
             //Apply only on not white areas
             cvtColor(PageRenderCv, white_mask, CV_BGR2GRAY);
             threshold(white_mask, white_mask, whiteThreshold, 255, CV_THRESH_BINARY_INV);
             cvtColor(white_mask, white_mask, CV_GRAY2BGR);
             PageRenderCv=Mat::ones(PageRenderCv.cols, PageRenderCv.rows, PageRenderCv.type())+Scalar(255,255,255,255);
             equalized.copyTo(PageRenderCv, white_mask);
+            //equalized.copyTo(PageRenderCv);
         }
     }
 }

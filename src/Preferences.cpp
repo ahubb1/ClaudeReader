@@ -1,6 +1,6 @@
 //--------------------------------------------------------------------------
 //
-//    Copyright (C) 2014  Vincent Crocher
+//    Copyright (C) 2014-2016  Vincent Crocher
 //
 //	  This file is part of BDReader.
 //
@@ -15,7 +15,7 @@
 //    GNU General Public License for more details.
 //
 //    You should have received a copy of the GNU General Public License
-//    along with BDReader.  If not, see <http://www.gnu.org/licenses/>.
+//    along with BDReader. If not, see <http://www.gnu.org/licenses/>.
 //
 //---------------------------------------------------------------------------
 #include "Preferences.h"
@@ -89,7 +89,7 @@ Preferences::~Preferences()
 //! \return 0 if the preferences file has been successfully loaded
 //! \return -1 if the preferences file was not found
 //! \return -2 if the preferences file had a wrong format
-int Preferences::Load(const char prefFilename[255], const char windir[2048])
+int Preferences::Load(const char prefFilename[255], const char windir[FL_PATH_MAX])
 {
     //First remember the preferences file filename
     #ifdef __WINDOWS__
@@ -106,6 +106,25 @@ int Preferences::Load(const char prefFilename[255], const char windir[2048])
     FILE *prefFile=fopen(Filename, "r");
     if(prefFile)
     {
+        //The library folder
+        if(fscanf(prefFile, "lib %s ", &LibraryFolder)!=1)
+        {
+            //Error but dont't return for back compat, use default instead
+            printf("Using default library folder: ");
+            #ifdef __WINDOWS__
+                HRESULT hres = SHGetFolderPath(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, LibraryFolder);
+                if(hres!=S_OK)
+                {
+                    printf("Error retrieving path. Using: ");
+                    snprintf(LibraryFolder, FL_PATH_MAX, "%s", getenv("HOME"));
+                }
+            #else
+                snprintf(LibraryFolder, FL_PATH_MAX, "%s", getenv("HOME"));
+            #endif
+            printf("%s .\n", LibraryFolder);
+        }
+        printf("%s\n", LibraryFolder);
+
         //The reading mode, thumbnails option and preview page option
         int thumb_int, preview_int;
         if(fscanf(prefFile, "%d %d %d ", &ReadingMode, &thumb_int, &preview_int)!=3)
@@ -226,6 +245,9 @@ void Preferences::Save(Document *doc)
         FILE *prefFile=fopen(Filename, "w");
         if(prefFile)
         {
+            //The library folder
+            fprintf(prefFile, "lib %s\n", LibraryFolder);
+
             //The reading mode, background color and preview page option
             fprintf(prefFile, "%d\n%d\n%d\n", doc->GetReadingMode(), Thumbnails, doc->IsPagePreview());
 

@@ -1,6 +1,6 @@
 //--------------------------------------------------------------------------
 //
-//    Copyright (C) 2014  Vincent Crocher
+//    Copyright (C) 2014-2016  Vincent Crocher
 //
 //	  This file is part of BDReader.
 //
@@ -15,15 +15,15 @@
 //    GNU General Public License for more details.
 //
 //    You should have received a copy of the GNU General Public License
-//    along with BDReader.  If not, see <http://www.gnu.org/licenses/>.
+//    along with BDReader. If not, see <http://www.gnu.org/licenses/>.
 //
 //---------------------------------------------------------------------------
 /**
  * \file main.cpp
  * \brief Main file of the program containing the main function and creating a MainWindow object.
  * \author Vincent Crocher
- * \version 0.3
- * \date Oct 2014
+ * \version 0.5
+ * \date Feb 2016
  *
  *
  */
@@ -61,23 +61,23 @@ int main(int argc, char **argv)
 
          switch (OptionChar)
          {
-         case 0:
-            break;
+             case 0:
+                break;
 
-         //Display version (and license) and quit
-         case 'v':
-            printf("%s\n", VERSION_STRING);
-            return 0;
-            break;
-         //Display help and quit
-         case '?':
-         case 'h':
-            printf("%s\n", HELPCMD_STRING);
-            return 0;
-            break;
+             //Display version (and license) and quit
+             case 'v':
+                printf("%s\n", VERSION_STRING);
+                return 0;
+                break;
+             //Display help and quit
+             case '?':
+             case 'h':
+                printf("%s\n", HELPCMD_STRING);
+                return 0;
+                break;
 
-         default:
-           abort ();
+             default:
+               abort ();
          }
     }
 

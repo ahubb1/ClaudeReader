@@ -1,6 +1,6 @@
 //--------------------------------------------------------------------------
 //
-//    Copyright (C) 2014  Vincent Crocher
+//    Copyright (C) 2014-2016  Vincent Crocher
 //
 //	  This file is part of BDReader.
 //
@@ -15,15 +15,15 @@
 //    GNU General Public License for more details.
 //
 //    You should have received a copy of the GNU General Public License
-//    along with BDReader.  If not, see <http://www.gnu.org/licenses/>.
+//    along with BDReader. If not, see <http://www.gnu.org/licenses/>.
 //
 //---------------------------------------------------------------------------
 /**
  * \file MainWindow.h
  * \brief Declaration file of the MainWindow class (managing the windows and widgets).
  * \author Vincent Crocher
- * \version 0.9
- * \date February 2015
+ * \version 0.95
+ * \date February 2016
  *
  *
  */
@@ -44,6 +44,7 @@
 #include <FL/Fl_Counter.H>
 
 
+#include "Fl_Books_Library.h"
 #include "Fl_Help_Window.h"
 #include "Fl_ViewerCV.h"
 #include "Fl_Overlay_Arrow_Button.h"
@@ -84,6 +85,7 @@ class MainWindow
         friend void ResizingEvents(Fl_Widget* widget, void*);
 
         //File menu
+        friend void Library_cb(Fl_Widget* widget, void * param);
         friend void Open_cb(Fl_Widget* widget, void * param);
         friend void Quit_cb(Fl_Widget* widget, void * param);
 
@@ -137,7 +139,8 @@ class MainWindow
             Fl_Button *PrevCloseButton;
             Fl_Overlay_Arrow_Button *NextButton, *PreviousButton, *NextPageButton, *PreviousPageButton;
             Fl_Group *PageNbFullGrp;
-            Fl_Progress * PageNbFullProgress;               //!< The fullscreen page number indicator
+            Fl_Progress *PageNbFullProgress;               //!< The fullscreen page number indicator
+            Fl_Books_Library *Library;
 
          #ifndef __WINDOWS__
             Pixmap icon_pix;

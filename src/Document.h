@@ -1,6 +1,6 @@
 //--------------------------------------------------------------------------
 //
-//    Copyright (C) 2014  Vincent Crocher
+//    Copyright (C) 2014-2016  Vincent Crocher
 //
 //	  This file is part of BDReader.
 //
@@ -22,8 +22,8 @@
  * \file Document.h
  * \brief Declaration file of the Document class
  * \author Vincent Crocher
- * \version 0.2
- * \date June 2014
+ * \version 0.5
+ * \date June 2015
  *
  *
  */

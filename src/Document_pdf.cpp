@@ -1,6 +1,6 @@
 //--------------------------------------------------------------------------
 //
-//    Copyright (C) 2014 Vincent Crocher
+//    Copyright (C) 2014-2016 Vincent Crocher
 //
 //	  This file is part of BDReader.
 //
@@ -65,6 +65,7 @@ void Document_pdf::Close()
 {
     //Close the doc and free the context
     if(FzDoc)
+        //TODO: add a try catch to avoid double closing ????
         fz_close_document(FzDoc);
     if(FzCtx)
         fz_free_context(FzCtx);
