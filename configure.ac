@@ -40,15 +40,9 @@ AC_CHECK_LIB([Xinerama], [XineramaQueryScreens], [], [
   AC_MSG_ERROR([unable to find Xinerama library.])
 ])
 #mupdf
-#AC_SEARCH_LIBS([fz_free], [mupdf], [], [
-#  AC_MSG_ERROR([unable to find fz_free() function (mupdf library).])
-#])
 AC_CHECK_LIB([mupdf], [fz_free], [], [
   AC_MSG_ERROR([unable to find fz_free() function (mupdf library).])
 ])
-#AC_SEARCH_LIBS([pdf_new_js], [mupdf-js-none], [], [
-#  AC_MSG_ERROR([unable to find pdf_new_js() function (mupdf-js-none library).])
-#])
 AC_CHECK_LIB([mupdf-js-none], [pdf_new_js], [], [
   AC_MSG_ERROR([unable to find pdf_new_js() function (mupdf-js-none library).])
 ])
@@ -75,6 +69,10 @@ AC_CHECK_LIB([opencv_highgui], [main], [], [
 AC_CHECK_LIB([archive], [main], [], [
   AC_MSG_ERROR([unable to find libarchive library.])
 ])
+#glib
+PKG_CHECK_MODULES([GLIB], [glib-2.0], [have_libglib=yes], [have_libglib=no])
+AM_CONDITIONAL([GLIB],  [test "$have_libglib" = "yes"])
+
 
 #Compiler check
 AC_PROG_CXX

@@ -462,6 +462,19 @@ void Open_cb(Fl_Widget* widget, void * param)
     Fl::check();
 }
 
+//! Close openned document and load library
+void Close_cb(Fl_Widget* widget, void * param)
+{
+    MainWindow *mw=(MainWindow*)param;
+
+    //Close document
+    mw->Init("");
+
+    //Make library availabe
+    mw->Library->activate();
+    Fl::check();
+}
+
 //! Export cancel button callback
 void ExportCancel_cb(Fl_Widget* widget, void* param)
 {
@@ -1059,6 +1072,40 @@ void NextPage_cb(Fl_Widget* widget, void * param)
     //wait some time
     Fl::check();
     Fl::wait(.10);
+
+    //If last page, suggest to open next one
+    if(p==-2)
+    {
+        //Get suggested next comics
+        char suggestion_filename[2048], suggestion_short_filename[2048];
+        int ret = mw->Library->GetSuggestionNext(mw->Filename, suggestion_filename, suggestion_short_filename);
+
+
+        //Is there a suggestion?
+        fl_message_title("BDReader - What do we do ?");
+        if(ret<0)
+            ret=fl_choice("Open the comics library ?", "Cancel", "Library", NULL);
+        else
+            ret=fl_choice("Open %s ?", "Cancel", "Library", "Open", suggestion_short_filename);
+
+        switch(ret)
+        {
+            //Cancel: do nothing
+            case 0:
+                break;
+
+            //Open library: close current one
+            case 1:
+                Close_cb(widget, param);
+                break;
+
+            //Open suggested file:
+            case 2:
+                mw->Init(suggestion_filename);
+                break;
+        }
+    }
+
     //If still the same page asked, load it, otherwise do nothing
     if(p==mw->Doc->GetCurrentPageNb())
     {
@@ -1078,7 +1125,6 @@ void PreviousCase_cb(Fl_Widget* widget, void * param)
 
     int ret = mw->Doc->PreviousCase();
     StatusUpdate(mw);
-    //mw->Display->SetImage(mw->Doc->Render());
     mw->Display->SetDisplayRect(*mw->Doc->Render());
     StatusUpdate(mw);
 
@@ -1096,7 +1142,6 @@ void NextCase_cb(Fl_Widget* widget, void * param)
 
     int ret = mw->Doc->NextCase();
     StatusUpdate(mw);
-    //mw->Display->SetImage(mw->Doc->Render());
     mw->Display->SetDisplayRect(*mw->Doc->Render());
     StatusUpdate(mw);
 
@@ -1177,6 +1222,7 @@ void ActivateNavigationWidgets(void *param, bool val)
         //Check if they are navigation ones
         if(items[i].label()!=NULL &&
           (
+           strcmp(items[i].label(), "Close\t")==0 ||
            strcmp(items[i].label(), "&View")==0 ||
            strcmp(items[i].label(), "&Navigation")==0 ||
            strcmp(items[i].label(), "Export (as images)\t")==0
@@ -1244,7 +1290,7 @@ void Help_cb(Fl_Widget* widget, void * param)
     //Initialize help window if not already
     if(!mw->HelpDlg)
     {
-        mw->HelpDlg=new Fl_Help_Window(600, 400, "Help");
+        mw->HelpDlg=new Fl_Help_Window(max(mw->window->w()/2, 600), 400, "Help");
         mw->HelpDlg->value(HELP_STRING_HTML);
     }
     //Show it
@@ -1400,6 +1446,11 @@ void Window_cb(Fl_Widget* widget, void * param)
 {
      MainWindow *mw=(MainWindow*)param;
 
+
+     //Ignore Escape key
+     if (Fl::event()==FL_SHORTCUT && Fl::event_key()==FL_Escape)
+        return;
+
      //Save the preferences in files
      mw->SavePref();
 
@@ -1438,14 +1489,12 @@ MainWindow::MainWindow(const char *exepath, const char *f)
 
     //Main window creation
         //Use saved window size and position (will be 0, 0, 600, 600 if nothing saved, and always lower than the available space on the screen)
-        window=new Fl_Double_Window(Pref->GetWinX(), Pref->GetWinY(), min(Fl::w()-2,Pref->GetWinW()) , min(Fl::h()-2,Pref->GetWinH()), "BDReader");
+        window=new Fl_Double_Window(Pref->GetWinX(), Pref->GetWinY(), min(Fl::w()-2,Pref->GetWinW()), min(Fl::h()-2,Pref->GetWinH()), "BDReader");
         window->color(fl_rgb_color(242,241,240));
 
     //Set an icon
     //Problem with windows compile (Pixmap not declared)
     #ifndef __WINDOWS__
-        /*Apparently not needed
-        fl_open_display();*/
         Pixmap mask;
         XpmCreatePixmapFromData(fl_display, DefaultRootWindow(fl_display), (char **)Icon2_48_xpm, &icon_pix, &mask, 0);
         window->icon((char *)icon_pix);
@@ -1467,8 +1516,9 @@ MainWindow::MainWindow(const char *exepath, const char *f)
                 { "&File",              0, 0, 0, FL_SUBMENU },
                     { "Open file\t", FL_COMMAND + 'o', (Fl_Callback *)Open_cb, this },
                     { "Open folder\t", FL_COMMAND + FL_SHIFT + 'o', (Fl_Callback *)Open_cb, this },
-                    { "Recent files", 0, 0, 0, FL_SUBMENU | FL_MENU_DIVIDER },
+                    { "Recent files", 0, 0, 0, FL_SUBMENU },
                         { 0 },
+                    { "Close\t", FL_COMMAND + 'w', (Fl_Callback *)Close_cb, this, FL_MENU_DIVIDER },
                     { "Export (as images)\t", FL_COMMAND + 'e', (Fl_Callback *)ExportDoc_cb, this, FL_MENU_INACTIVE | FL_MENU_DIVIDER },
                     { "Quit\t", FL_COMMAND + 'q', (Fl_Callback *)Quit_cb, this },
                     { 0 },
@@ -1505,7 +1555,7 @@ MainWindow::MainWindow(const char *exepath, const char *f)
                         { Pref->GetRotationOption(2).caption, 0, (Fl_Callback *)Rotate_cb, this, FL_MENU_RADIO },
                         { Pref->GetRotationOption(3).caption, 0, (Fl_Callback *)Rotate_cb, this, FL_MENU_RADIO },
                         { 0 },
-                    { "Enhance contrast\t", FL_COMMAND + 'c', (Fl_Callback *)Contrast_cb, this, FL_MENU_TOGGLE},
+                    //{ "Enhance contrast\t", FL_COMMAND + 'c', (Fl_Callback *)Contrast_cb, this, FL_MENU_TOGGLE},
                     { 0 },
                 { "&Navigation",              0, 0, 0, FL_SUBMENU | FL_MENU_INACTIVE},
                     { "Panel mode\t", 'c', (Fl_Callback *)CaseMode_cb, this, FL_MENU_RADIO },
@@ -1686,7 +1736,6 @@ MainWindow::MainWindow(const char *exepath, const char *f)
 
     //A library view
     //Library = new Fl_Books_Library(1000, 600, "BD library", Pref->GetLibraryFolder(), ExePath, 180, 180*1.53, 10); //For a standalone library window
-    printf("L: %s\n", Pref->GetLibraryFolder());
     Library = new Fl_Books_Library(DisplayGrp->w(), DisplayGrp->h(), "BD library", Pref->GetLibraryFolder(), ExePath, 180, 180*1.53, 10);
     Library->resize(0, MenuBar->h(), DisplayGrp->w(), DisplayGrp->h());
     Library->callback(Library_cb, (void*)this);

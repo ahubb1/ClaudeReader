@@ -123,17 +123,7 @@ void Fl_ViewerCV::UpdateView()
         //Display in context or not
         if(!InContext && localDisplayRect.width!=image->cols)
         {
-            /*if(ShowSuroundings)
-            {
-                int x0=fmax(0, x_center-w()/2.);
-                int y0=fmax(0, y_center-h()/2.);
-                int x1=fmin(100000, x_center+w()/2.);
-                int y1=fmin(100000, y_center+h()/2.);
-                image_roi(Rect(x0, y0, x1-x0, y1-y0)).copyTo(image_roi);
-                imwrite("truc.tiff", image_roi);
-            }
-            else*/
-                image_roi(Rect(localDisplayRect.x/Scale, localDisplayRect.y/Scale, localDisplayRect.width/Scale, localDisplayRect.height/Scale)).copyTo(image_roi);
+            image_roi(Rect(localDisplayRect.x/Scale, localDisplayRect.y/Scale, localDisplayRect.width/Scale, localDisplayRect.height/Scale)).copyTo(image_roi);
         }
 
 
@@ -153,7 +143,6 @@ void Fl_ViewerCV::UpdateView()
             y1=fmin(floor(y_center-(float)h()/2.)+(float)h()-floor(y_center-(float)h()/2.), image_roi.rows);
         else
             y1=fmin(floor(y_center-(float)h()/2.)+(float)h(), image_roi.rows);
-
 
         //same check if not enough on the bottom/right (except if already adjusted on the top/left)
         if(x1==image_roi.cols && x0!=0)
@@ -207,7 +196,7 @@ void Fl_ViewerCV::UpdateView()
     }
 
 
-    //Check the image type for: converting from Opencv BGR (or BGRA if 4 channels) to RGB AND to make sure the image is encoded in unsigned chars
+    //Check the image type to: convert from Opencv BGR (or BGRA if 4 channels) to RGB AND to make sure the image is encoded in unsigned chars
     switch(image->channels())
     {
         //1 channel (GRAY):

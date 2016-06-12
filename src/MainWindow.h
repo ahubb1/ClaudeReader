@@ -87,6 +87,7 @@ class MainWindow
         //File menu
         friend void Library_cb(Fl_Widget* widget, void * param);
         friend void Open_cb(Fl_Widget* widget, void * param);
+        friend void Close_cb(Fl_Widget* widget, void * param);
         friend void Quit_cb(Fl_Widget* widget, void * param);
 
         //View menu

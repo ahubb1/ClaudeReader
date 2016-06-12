@@ -22,8 +22,8 @@
  * \file Fl_Books_Library.h
  * \brief Declaration file of the Fl_Books_Library and Fl_Library_Element classes.
  * \author Vincent Crocher
- * \version 0.1
- * \date February 2016
+ * \version 0.2
+ * \date June 2016
  *
  *
  */
@@ -62,6 +62,7 @@
 #endif
 
 
+
 class Fl_Library_Element: public Fl_Button
 {
 	#define LENGTH_SHORT 24
@@ -73,6 +74,7 @@ class Fl_Library_Element: public Fl_Button
 		bool HasPrefFile(){if(LastTime>0)return true;else return false;}
 		long int GetLastTime(){return LastTime;}
 		long int GetCreationTime(){return CreationTime;}
+		long int GetAccessTime(){return AccessTime;}
 		int GetAlphaNumPosition(){return AlphaNumPosition;}
 		void SetAlphaNumPosition(int val){AlphaNumPosition=val;}
 		const char * GetFilename(){return Filename;}
@@ -89,7 +91,7 @@ class Fl_Library_Element: public Fl_Button
 		unsigned char FileURI[FL_PATH_MAX+7];
 		char ThumbnailName[FL_PATH_MAX];
 		char PrefFilename[FL_PATH_MAX];
-		unsigned long int LastTime, CreationTime;
+		unsigned long int LastTime, CreationTime, AccessTime;
 		int AlphaNumPosition; //Keep track of the position of elements in the original alphanum sorting (made by fltk function)
 };
 
@@ -170,6 +172,8 @@ class Fl_Books_Library: public Fl_Double_Window
 
         char *get_absolute_dir() {return abs_lib_dir;}
 
+        int GetSuggestionNext(char current_filename[2048], char suggestion_filename[2048], char suggestion_short_filename[2048]);
+
         //TO IMPROVE
         void resize(int xx, int yy, int ww, int hh)
         {
@@ -179,14 +183,15 @@ class Fl_Books_Library: public Fl_Double_Window
             if(ww!=old_w || hh!=old_h)
             {
                 MenuBar->resize(0, 0, w(), 25);
-                if((MenuBar->child(MenuBar->children()))->w()<100)//the space children
+                if((MenuBar->child(MenuBar->children()))->w()<10)//the space children
                 {
-                    MenuBar->resizable(MenuBar);
+                    Main_Group->size(3./5.*w()-5, Main_Group->h());
+                    Search_Group->size(2./5.*w()-5, Search_Group->h());
+                    Search_Group->position(Sort_Choice->x()+Sort_Choice->w()+10, Search_Group->y());
                 }
                 else
                 {
-                    printf("ok\n");
-                    MenuBar->resizable((MenuBar->child(MenuBar->children()-1)));
+                    MenuBar->resizable(MenuBar);
                 }
                 emptyboxtop->resize(Main_Scroll->x(), Main_Scroll->y(), Main_Scroll->w()-20, 10);
                 Main_Table->resize(Main_Scroll->x(), Main_Scroll->y()+emptyboxtop->h(), Main_Scroll->w()-20, Main_Scroll->h()-emptyboxtop->h());
@@ -206,9 +211,11 @@ class Fl_Books_Library: public Fl_Double_Window
 		unsigned int child_w, child_h, _spacing, _cols;
 
 		Fl_Group *MenuBar;
+		Fl_Group * Main_Group;
 		Fl_Input *LibFolder_Input;
 		Fl_Choice *Filter_Choice;
 		Fl_Choice *Sort_Choice;
+		Fl_Group * Search_Group;
 		Fl_Input *Search_Input;
 		Fl_Box *Search_Label;
 		Fl_Scroll *Main_Scroll;

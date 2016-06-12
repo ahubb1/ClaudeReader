@@ -74,6 +74,8 @@ std::string UriEncode(const std::string & sSrc)
 }
 
 
+
+//-------------------------Sort comparison functions--------------------------
 bool ElementsNameSort(Fl_Library_Element* a, Fl_Library_Element* b)
 {
     if(a->GetAlphaNumPosition()<b->GetAlphaNumPosition())
@@ -106,6 +108,15 @@ bool ElementsCreationTimeSort(Fl_Library_Element* a, Fl_Library_Element* b)
     else
         return false;
 }
+
+bool ElementsAccessTimeSort(Fl_Library_Element* a, Fl_Library_Element* b)
+{
+    if(a->GetAccessTime()>b->GetAccessTime())
+        return true;
+    else
+        return false;
+}
+//----------------------------------------------------------------------------
 
 
 
@@ -267,6 +278,8 @@ Fl_Library_Element::Fl_Library_Element(int xx, int yy, int ww, int hh, const cha
         struct tm * time_info;
         time_info=localtime(&(info_file.st_mtime));
         CreationTime = ((((((time_info->tm_year-80)*365)+time_info->tm_yday)*24+time_info->tm_hour)*60)+time_info->tm_min)*60+time_info->tm_sec; //Time in minutes since 1st january 1900...
+        time_info=localtime(&(info_file.st_atime));
+        AccessTime = ((((((time_info->tm_year-80)*365)+time_info->tm_yday)*24+time_info->tm_hour)*60)+time_info->tm_min)*60+time_info->tm_sec; //Time in minutes since 1st january 1900...
 }
 
 
@@ -283,55 +296,55 @@ Fl_Books_Library::Fl_Books_Library(int ww, int hh, const char *l, const char * l
     MenuBar = new Fl_Group(0, 0, w(), 25);
         //Space
         Fl_Box emptyspace(0,0,10,30);
-        //Lib folder
-        Fl_Group * grp = new Fl_Group(10, 3, 110+w()/6., 20);
-            Fl_Box * label = new Fl_Box(grp->x(), grp->y(), 110, 20, "Library folder:");label->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
-            LibFolder_Input = new Fl_Input(label->x()+label->w(), grp->y(), w()/6., 20, "");
-            LibFolder_Input->value("");
-            LibFolder_Input->callback(Fl_Books_Library::LibFolder_cb, this);
-        grp->end();
-        grp->resizable(LibFolder_Input);
-        //Filter
-        Fl_Group * grpp2 = new Fl_Group(grp->x()+grp->w()+5, grp->y(), 50+80, 20);
-            Fl_Box * label2 = new Fl_Box(grpp2->x(), grpp2->y(), 50, 20, "Filter:");label2->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
-            Filter_Choice = new Fl_Choice(label2->x()+label2->w(), grpp2->y(), 80, 20, "");
-            Filter_Choice->add("All");
-            Filter_Choice->add("Unread");
-            Filter_Choice->add("Read");
-            Filter_Choice->value(0);
-            Filter_Choice->callback(Fl_Books_Library::Filter_cb, this);
-        grpp2->end();
-        grpp2->resizable(NULL);
-        //Sort
-        Fl_Group * grpp3 = new Fl_Group(grpp2->x()+grpp2->w()+5, grp->y(), 40+80, 20);
-            Fl_Box * label3 = new Fl_Box(grpp3->x(), grpp3->y(), 40, 20, "Sort:");label3->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
-            Sort_Choice = new Fl_Choice(label3->x()+label3->w(), grpp3->y(), 80, 20, "");
-            Sort_Choice->add("Name");
-            Sort_Choice->add("Type");
-            Sort_Choice->add("Date");
-            Sort_Choice->add("Read");
-            Sort_Choice->value(3);
-            Sort_Choice->callback(Fl_Books_Library::Sort_cb, this);
-        grpp3->end();
-        grpp3->resizable(NULL);
+        Main_Group = new Fl_Group(10, 3, 110+w()/6.+50+80+40+80, 20);
+            //Lib folder
+            Fl_Group * grp = new Fl_Group(10, 3, 110+w()/6., 20);
+                Fl_Box * label = new Fl_Box(grp->x(), grp->y(), 110, 20, "Library folder:");label->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
+                LibFolder_Input = new Fl_Input(label->x()+label->w(), grp->y(), w()/6., 20, "");
+                LibFolder_Input->value("");
+                LibFolder_Input->callback(Fl_Books_Library::LibFolder_cb, this);
+            grp->end();
+            grp->resizable(LibFolder_Input);
+            //Filter
+            Fl_Group * grpp2 = new Fl_Group(grp->x()+grp->w()+5, grp->y(), 50+80, 20);
+                Fl_Box * label2 = new Fl_Box(grpp2->x(), grpp2->y(), 50, 20, "Filter:");label2->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
+                Filter_Choice = new Fl_Choice(label2->x()+label2->w(), grpp2->y(), 80, 20, "");
+                Filter_Choice->add("All");
+                Filter_Choice->add("Unread");
+                Filter_Choice->add("Read");
+                Filter_Choice->value(0);
+                Filter_Choice->callback(Fl_Books_Library::Filter_cb, this);
+            grpp2->end();
+            grpp2->resizable(NULL);
+            //Sort
+            Fl_Group * grpp3 = new Fl_Group(grpp2->x()+grpp2->w()+5, grp->y(), 40+80, 20);
+                Fl_Box * label3 = new Fl_Box(grpp3->x(), grpp3->y(), 40, 20, "Sort:");label3->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
+                Sort_Choice = new Fl_Choice(label3->x()+label3->w(), grpp3->y(), 80, 20, "");
+                Sort_Choice->add("Name");
+                Sort_Choice->add("Type");
+                Sort_Choice->add("Date");
+                Sort_Choice->add("Read");
+                Sort_Choice->value(3);
+                Sort_Choice->callback(Fl_Books_Library::Sort_cb, this);
+            grpp3->end();
+            grpp3->resizable(NULL);
+        Main_Group->end();
+        Main_Group->resizable(grp);
         //Search
-        //Fl_Group * grpp5 = new Fl_Group(grpp3->x()+grpp3->w(), grp->y(), w()-(grpp3->x()+grpp3->w()), 20);
-        Fl_Group * grpp4 = new Fl_Group(w()-(60+w()/6.+100), grp->y(), 60+w()/6.+100, 20);
-            Fl_Box * label4 = new Fl_Box(grpp4->x(), grpp4->y(), 60, 20, "Search:");label4->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
-            Search_Input = new Fl_Input(w()-grpp4->w()+label4->w(), grpp4->y(), w()/6., 20, "");
+        Search_Group = new Fl_Group(w()-(60+w()/6.+100), grp->y(), 60+w()/6.+100, 20);
+            Fl_Box * label4 = new Fl_Box(Search_Group->x(), Search_Group->y(), 60, 20, "Search:");label4->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
+            Search_Input = new Fl_Input(w()-Search_Group->w()+label4->w(), Search_Group->y(), w()/6., 20, "");
             Search_Input->value("");
             Search_Input->callback(Fl_Books_Library::Search_cb, this);
             Search_Input->when(FL_WHEN_CHANGED);
             Search_Label = new Fl_Box(Search_Input->x()+Search_Input->w()-100, 3, 100, 20, "0 results");
             Search_Label->align(FL_ALIGN_RIGHT);
-        grpp4->end();
-        grpp4->resizable(Search_Input);
+        Search_Group->end();
+        Search_Group->resizable(Search_Input);
         //Space
-        Fl_Box * space = new Fl_Box(grpp3->x()+grpp3->w(), grp->y(), grpp4->x()-(grpp3->x()+grpp3->w()), 20, "");
-        //grpp5->end();
+        Fl_Box * space = new Fl_Box(grpp3->x()+grpp3->w(), grp->y(), Search_Group->x()-(grpp3->x()+grpp3->w()), 20, "");
     MenuBar->end();
     MenuBar->resizable(space);
-    //MenuBar->resizable(grpp5);
 
     Main_Scroll = new Fl_Scroll(0, MenuBar->y()+MenuBar->h(), w(), h()-(MenuBar->y()+MenuBar->h()));
         emptyboxtop = new Fl_Box(Main_Scroll->x(), Main_Scroll->y(), Main_Scroll->w()-20, 10); //Margin at the top of the main scroll
@@ -454,6 +467,21 @@ void Fl_Books_Library::refresh()
     sub_packs.clear();//delete references from vector
 
 
+    //If the filter is 'Unread', sort can't be 'read':
+    if(Filter_Choice->value()==1)
+    {
+        if(Sort_Choice->value()==3)
+        {
+            Sort_Choice->value(0);
+        }
+        ((Fl_Menu_Item*)Sort_Choice->find_item("Read"))->deactivate();
+    }
+    else
+    {
+        ((Fl_Menu_Item*)Sort_Choice->find_item("Read"))->activate();
+    }
+
+
     //Apply elements sorting
     switch(Sort_Choice->value())
     {
@@ -565,25 +593,28 @@ void Fl_Books_Library::reload()
     int nb_files=fl_filename_list(abs_lib_dir, &dir_listing, fl_casenumericsort);
 
     //For each file/folder in library
-    for (int i = 2; i <nb_files; i++)
+    for (int i=0; i<nb_files; i++)
     {
+        char full_filename[FL_PATH_MAX];
+        sprintf(full_filename, "%s%s", abs_lib_dir, dir_listing[i]->d_name);
         //If it'a dir, then do it again
-        if(fl_filename_isdir(dir_listing[i]->d_name)==0)
+        if(dir_listing[i]->d_name[0]!='.' && fl_filename_isdir(full_filename)!=0)
         {
             dirent **sub_dir_listing;
             char abs_sub_dir[FL_PATH_MAX];
             sprintf(abs_sub_dir, "%s%s", abs_lib_dir, dir_listing[i]->d_name);
             int nb_files2=fl_filename_list(abs_sub_dir, &sub_dir_listing, fl_casenumericsort);
-            for (int j = 0; j < nb_files2; j++)
+            for (int j=2; j<nb_files2; j++)
             {
                 //If it'a dir again, then do it again
-                if(fl_filename_isdir(sub_dir_listing[j]->d_name)==0)
+                sprintf(full_filename, "%s%s", abs_sub_dir, sub_dir_listing[j]->d_name);
+                if(sub_dir_listing[j]->d_name[0]!='.' &&  fl_filename_isdir(sub_dir_listing[j]->d_name)!=0)
                 {
                     dirent **sub_sub_dir_listing;
                     char abs_sub_dir[FL_PATH_MAX];
                     snprintf(abs_sub_dir, FL_PATH_MAX, "%s%s%s", abs_lib_dir, dir_listing[i]->d_name, sub_dir_listing[j]->d_name);
                     int nb_files3=fl_filename_list(abs_sub_dir, &sub_sub_dir_listing, fl_casenumericsort);
-                    for (int k = 0; k < nb_files3; k++)
+                    for (int k=0; k<nb_files3; k++)
                     {
                         char relativepath[FL_PATH_MAX];
                         snprintf(relativepath, FL_PATH_MAX, "%s%s", dir_listing[i]->d_name, sub_dir_listing[j]->d_name);
@@ -669,4 +700,49 @@ void Fl_Books_Library::apply_dir(const char * lib_dir, const char *wind)
     //Reload only when directory is valid
     if(new_valid_dir)
         reload();
+}
+
+
+//! Get the filename of the file listed after the one in parameter if similar name (i.e. same series)
+/** \param current_filename: the full (absolute) filename of the current file
+    \param suggestion_filename: the full (absolute) filename of the suggested file to open
+    \param suggestion_short_filename: the short (file only) filename of the suggested file to open
+    \return -1 if no suggestion found, the index of the suggestion otherwise */
+int Fl_Books_Library::GetSuggestionNext(char current_filename[2048], char suggestion_filename[2048], char suggestion_short_filename[2048])
+{
+    //Sort elements by name
+    std::sort(elements.begin(), elements.end(), ElementsNameSort);
+
+    //Find current file in the element list
+    unsigned int i=0;
+    for(i=0; i<elements.size(); i++)
+    {
+        if(strcmp(elements[i]->GetAbsoluteFilename(), current_filename)==0)
+            break;
+    }
+
+    //Not found or last one
+    if(i>=elements.size()-1)
+    {
+        return -1;
+    }
+    else
+    {
+        //Copy suggestion name
+        strncpy(suggestion_filename, elements[i+1]->GetAbsoluteFilename(), 2048);
+        strncpy(suggestion_short_filename, elements[i+1]->GetFilename(), 2048);
+
+        //Check if looks like to be in the same series: no more than 5 characters of difference
+        int l=std::min(strlen(elements[i]->GetFilename()), strlen(suggestion_short_filename));
+        int diff=0;
+        for(int n=0; n<l; n++)
+        {
+            if(elements[i]->GetFilename()[n]!=suggestion_short_filename[n])
+                diff++;
+        }
+        if(diff>5)
+            return -1;
+        else
+            return i+1;
+    }
 }

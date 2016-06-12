@@ -28,8 +28,9 @@ Fl_Help_Window::Fl_Help_Window(int W, int H, const char *L):Fl_Double_Window(W, 
     end();
     HelpView->textsize(14);
     resizable(HelpView);
-    HelpView->color(FL_BACKGROUND2_COLOR, FL_BACKGROUND2_COLOR);
+    HelpView->color(FL_BACKGROUND_COLOR, FL_BACKGROUND2_COLOR);
     HelpView->box(FL_FLAT_BOX);
+    HelpView->textsize(14);
     show();
 }
 
