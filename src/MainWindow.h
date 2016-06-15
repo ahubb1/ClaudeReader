@@ -63,6 +63,8 @@
 #endif
 
 
+void Fullscreen_cb(Fl_Widget* widget, void * param);
+
 
 
 //! The main window and all its widgets (buttons, sliders...). Also the main "document" of the program.

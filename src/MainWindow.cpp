@@ -467,6 +467,12 @@ void Close_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
 
+    //Come back from fullscreen if needed
+    if(mw->window->fullscreen_active()!= 0)
+    {
+        Fullscreen_cb(widget, param);
+    }
+
     //Close document
     mw->Init("");
 
@@ -713,7 +719,7 @@ void Fullscreen_cb(Fl_Widget* widget, void * param)
         mw->StatusBarGrp->resize(mw->StatusBar->x(), mw->StatusBar->y(), 0, mw->StatusBar->h());
 
         //Adapt the displayGrp size (no more menu and status bar shown=>screen size)
-        while(mw->window->w()<Fl::w() && mw->window->h()<Fl::h())
+        while(mw->window->w()<Fl::w() || mw->window->h()<Fl::h())
             Fl::wait(.10);
         mw->DisplayGrp->resize(0, 0, mw->window->w(), mw->window->h());
         mw->PageNbFullGrp->resize((int)(mw->window->w()-(mw->window->w()/15.)), (int)(mw->window->h()-(mw->window->w()/40.)), mw->window->w()/20., mw->window->w()/80.);
@@ -919,7 +925,9 @@ void InContext_cb(Fl_Widget* widget, void * param)
         ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Panel mode view\t/Additional zoom\t\t+\\-"))->deactivate();
     }
 
-
+    //Update the preferences accordingly
+    mw->Pref->SetInContext(mw->Display->IsInContext());
+    mw->PrefDoc->SetInContext(mw->Display->IsInContext());
 }
 //! Show or hide the panel border when in panel mode
 void PanelBorder_cb(Fl_Widget* widget, void * param)
@@ -930,6 +938,10 @@ void PanelBorder_cb(Fl_Widget* widget, void * param)
     mw->Display->SetBorder(!mw->Display->IsBorder());
     mw->Doc->ReloadPages();
     mw->Display->UpdateView();
+
+    //Update the preferences accordingly
+    mw->Pref->SetBorder(mw->Display->IsBorder());
+    mw->PrefDoc->SetBorder(mw->Display->IsBorder());
 }
 
 //! Page rotation callback
@@ -971,6 +983,10 @@ void Rotate_cb(Fl_Widget* widget, void * param)
     //Turn cursor back to normal
     mw->window->cursor(FL_CURSOR_DEFAULT);
     Fl::check();
+
+    //Update the preferences accordingly
+    mw->Pref->SetRotationIdx(mw->Doc->GetRotation());
+    mw->PrefDoc->SetRotationIdx(mw->Doc->GetRotation());
 }
 //! Contrast enhancement callback
 void Contrast_cb(Fl_Widget* widget, void * param)
@@ -1479,12 +1495,14 @@ MainWindow::MainWindow(const char *exepath, const char *f)
     PrefDoc=NULL;
 
     //Load user preferences
-        Pref = new Preferences();
+    //TODOPREF
+        Pref = new Preferences(exepath);
         //Use the program name (first argument) to get its full path (path used to store preferences on Windows)
             char tmp[FL_PATH_MAX];
             fl_filename_absolute(tmp, sizeof(tmp), exepath);
             strncpy(ExePath, tmp, strlen(tmp)-strlen(fl_filename_name(tmp)));
-        Pref->Load("preferences", ExePath);
+        //Pref->LoadCompat("preferences", ExePath);
+        Pref->Load("");
 
 
     //Main window creation
@@ -1838,7 +1856,9 @@ void MainWindow::Init(char *filename)
 
             //Apply the preferences to the document and the window widgets
                 //Apply global preferences first
-                Pref->Load("preferences", ExePath);
+                //TODOPREF
+                //Pref->LoadCompat("preferences", ExePath);
+                Pref->Load("");
                 Pref->Apply(Doc);
 
                 //Then deal with possible document preferences
@@ -1846,22 +1866,25 @@ void MainWindow::Init(char *filename)
                 if(PrefDoc)
                     delete PrefDoc;
                 //Create a document preference
-                PrefDoc = new Preferences();
+                PrefDoc = new Preferences(ExePath);
                 //Then load these preferences if the document exists, or keep using the global ones if not
                 char buff[2048];
                 sprintf(buff, "%s", fl_filename_name(Doc->GetFilename()));
                 const char *filenameshort=fl_filename_setext(buff, sizeof(buff), ".pref"); //(preferences file as same name as the document file)
-                if(PrefDoc->Load(filenameshort, ExePath)>=0 && Pref->GetLocalPref())
+                if(PrefDoc->LoadCompat(filenameshort, ExePath)>=0 && Pref->GetLocalPref())
                 {
                     PrefDoc->Apply(Doc);
                 }
                 //Otherwise apply the gloabl pref to the newly created doc pref
                 else
                 {
+                    //TODOPREF
                     Pref->CopyLocalTo(PrefDoc);
+                    PrefDoc->SaveCompat(Doc);
                     PrefDoc->Save(Doc);
                     //and reload
-                    PrefDoc->Load(filenameshort, ExePath);
+                    //PrefDoc->LoadCompat(filenameshort, ExePath);
+                    Pref->Load(Filename);
                 }
 
             //Set the display ratio
@@ -1923,12 +1946,15 @@ void MainWindow::SavePref()
     //Current doc preferences (if there are some)
      if(PrefDoc)
      {
+         //TODOPREF
+
          //The Library path
          PrefDoc->SetLibraryFolder(Library->get_absolute_dir());
 
          //The thumbnails view
          PrefDoc->SetThumbnails(ThumbDisplayGrp->visible());
          //Write to pref file
+         PrefDoc->SaveCompat(Doc);
          PrefDoc->Save(Doc);
 
          //Copy current doc pref to global ones
@@ -1945,6 +1971,8 @@ void MainWindow::SavePref()
         Pref->SetWinY(window->y());
      }
 
+    //TODOPREF
+
      //The Library path
      Pref->SetLibraryFolder(Library->get_absolute_dir());
 
@@ -1953,5 +1981,6 @@ void MainWindow::SavePref()
      Pref->SetLocalPref(((Fl_Menu_Item*)MenuBar->find_item("&Preferences/Use documents preferences\t"))->value());
 
      //Write to global pref file
+     Pref->SaveCompat(Doc);
      Pref->Save(Doc);
 }

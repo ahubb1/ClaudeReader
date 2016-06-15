@@ -174,7 +174,6 @@ class Fl_Books_Library: public Fl_Double_Window
 
         int GetSuggestionNext(char current_filename[2048], char suggestion_filename[2048], char suggestion_short_filename[2048]);
 
-        //TO IMPROVE
         void resize(int xx, int yy, int ww, int hh)
         {
             int old_w=w(), old_h=h();

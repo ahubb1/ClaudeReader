@@ -267,8 +267,8 @@ Fl_Library_Element::Fl_Library_Element(int xx, int yy, int ww, int hh, const cha
             //Last "reading" time: assumed to be last modif of the pref file
             struct tm * time_info;
             time_info=localtime(&(info_pref.st_mtime));
-            //WARNING: VAlis untill ~2040 !!
-            LastTime = ((((((time_info->tm_year-80)*365)+time_info->tm_yday)*24+time_info->tm_hour)*60)+time_info->tm_min)*60+time_info->tm_sec; //Time in minutes since 1st january 1980...
+            //WARNING: Valid untill ~2040 !!
+            LastTime = ((((((time_info->tm_year-80)*365)+time_info->tm_yday)*24+time_info->tm_hour)*60)+time_info->tm_min)*60+time_info->tm_sec; //Time in seconds since 1st january 1980...
         }
 
     //File info
@@ -277,9 +277,9 @@ Fl_Library_Element::Fl_Library_Element(int xx, int yy, int ww, int hh, const cha
         stat(fileURI_s.c_str(), &info_file);
         struct tm * time_info;
         time_info=localtime(&(info_file.st_mtime));
-        CreationTime = ((((((time_info->tm_year-80)*365)+time_info->tm_yday)*24+time_info->tm_hour)*60)+time_info->tm_min)*60+time_info->tm_sec; //Time in minutes since 1st january 1900...
+        CreationTime = ((((((time_info->tm_year-80)*365)+time_info->tm_yday)*24+time_info->tm_hour)*60)+time_info->tm_min)*60+time_info->tm_sec; //Time in seconds since 1st january 1900...
         time_info=localtime(&(info_file.st_atime));
-        AccessTime = ((((((time_info->tm_year-80)*365)+time_info->tm_yday)*24+time_info->tm_hour)*60)+time_info->tm_min)*60+time_info->tm_sec; //Time in minutes since 1st january 1900...
+        AccessTime = ((((((time_info->tm_year-80)*365)+time_info->tm_yday)*24+time_info->tm_hour)*60)+time_info->tm_min)*60+time_info->tm_sec; //Time in seconds since 1st january 1900...
 }
 
 

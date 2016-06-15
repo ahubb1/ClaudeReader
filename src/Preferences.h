@@ -60,12 +60,14 @@ struct IntOption
 class Preferences
 {
     public:
-        Preferences();
+        Preferences(const char windir[FL_PATH_MAX]);
         ~Preferences();
 
-        int Load(const char prefFile[255], const char windir[FL_PATH_MAX]);
+        int Load(const char filename[FL_PATH_MAX]);
+        int LoadCompat(const char prefFile[255], const char windir[FL_PATH_MAX]);
         int Apply(Document *doc);
         void Save(Document *doc);
+        void SaveCompat(Document *doc);
 
         void CopyLocalTo(Preferences *pref);
 
@@ -80,6 +82,8 @@ class Preferences
         void SetMaxZoomIdx(int i) { MaxZoomIdx = i; }
         int GetAdditionnalZoomIdx() { return AdditionnalZoomIdx; }
         void SetAdditionnalZoomIdx(int i) {AdditionnalZoomIdx = i; }
+        int GetRotationIdx() { return RotationIdx; }
+        void SetRotationIdx(int i) { RotationIdx = i; }
         bool GetInContext() { return InContext; }
         void SetInContext(bool val) { Border = val; }
         bool GetBorder() { return Border; }
@@ -101,8 +105,8 @@ class Preferences
         char *GetLibraryFolder() { return LibraryFolder; }
         void SetLibraryFolder(char *lib_folder) { snprintf(LibraryFolder, FL_PATH_MAX, "%s", lib_folder); }
         char *GetLastDoc() { return LastDoc; }
-        int GetLastDocPageNb() { return LastDocPageNb; }
-        void SetLastDocPageNb(int val) { LastDocPageNb = val; }
+        int GetLastPageNb() { return LastPageNb; }
+        void SetLastPageNb(int val) { LastPageNb = val; }
         int GetNbRecentDocs() { return NbRecentDocs; }
         char *GetRecentDocs(int i) { return RecentDocs[i]; }
 
@@ -113,8 +117,11 @@ class Preferences
 
     protected:
     private:
+        Fl_Preferences *GlobalPrefs;
+        Fl_Preferences *DocPrefs;
         char LibraryFolder[FL_PATH_MAX];
         char Filename[255];
+        char PrefDir[FL_PATH_MAX];
         READINGMODE ReadingMode;
         bool PagePreview;
         bool Thumbnails;
@@ -125,11 +132,14 @@ class Preferences
         int WinX, WinY;
         int BkgColor;
         char LastDoc[FL_PATH_MAX];
-        int LastDocPageNb;
+        int LastPageNb;
+        int NbPages;
         int NbRecentDocs;
         char RecentDocs[MAX_NB_RECENT][FL_PATH_MAX];
         int MaxZoomIdx;
         int AdditionnalZoomIdx;
+        int RotationIdx;
+        struct tm LastDate;
         ZoomOption MaxZoomOptionsList[5];
         ZoomOption AdditionnalZoomOptionsList[8];
         IntOption RotationOptionsList[4];
