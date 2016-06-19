@@ -22,8 +22,8 @@
  * \file Preferences.h
  * \brief Declaration file of the Preferences class
  * \author Vincent Crocher
- * \version 0.4
- * \date February 2016
+ * \version 0.6
+ * \date June 2016
  *
  *
  */
@@ -36,6 +36,7 @@
 #ifdef __WINDOWS__
     #include <windows.h>
     #include <shlobj.h>
+    #include <time.h>
 #endif
 
 
@@ -71,7 +72,6 @@ class Preferences
 
         void CopyLocalTo(Preferences *pref);
 
-
         READINGMODE GetReadingMode() { return ReadingMode; }
         void SetReadingMode(READINGMODE val) { ReadingMode = val; }
         bool GetPagePreview() { return PagePreview; }
@@ -102,11 +102,16 @@ class Preferences
         void SetWinY(int val) { WinY = val; }
         int GetBkgColor() { return BkgColor; }
         void SetBkgColor(int val) { BkgColor = val; }
+        char *GetShortFilename() { return ShortFilename; }
         char *GetLibraryFolder() { return LibraryFolder; }
         void SetLibraryFolder(char *lib_folder) { snprintf(LibraryFolder, FL_PATH_MAX, "%s", lib_folder); }
         char *GetLastDoc() { return LastDoc; }
         int GetLastPageNb() { return LastPageNb; }
         void SetLastPageNb(int val) { LastPageNb = val; }
+        int GetNbPages() { return NbPages; }
+        void SetNbPages(int val) { NbPages = val; }
+        struct tm *GetLastDate() { return (&LastDate); }
+        void SetLastDate(struct tm d) { LastDate=d; }
         int GetNbRecentDocs() { return NbRecentDocs; }
         char *GetRecentDocs(int i) { return RecentDocs[i]; }
 
@@ -115,12 +120,14 @@ class Preferences
 
         IntOption GetRotationOption(int i) { return RotationOptionsList[i]; }
 
-    protected:
     private:
+        void ConvertPreferences();
+
         Fl_Preferences *GlobalPrefs;
         Fl_Preferences *DocPrefs;
         char LibraryFolder[FL_PATH_MAX];
-        char Filename[255];
+        char Filename[FL_PATH_MAX];
+        char ShortFilename[FL_PATH_MAX];
         char PrefDir[FL_PATH_MAX];
         READINGMODE ReadingMode;
         bool PagePreview;

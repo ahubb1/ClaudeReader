@@ -28,7 +28,7 @@
 Document::Document(char *filename)
 {
     //Init
-    sprintf(Filename, "%s", filename);
+    snprintf(Filename, 2048, "%s", filename);
     ActivePage=1;
     ReadingMode=PAGE;
     currentPage=NULL;

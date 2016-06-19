@@ -1434,7 +1434,7 @@ void UpdateWidgets(void * param)
     }*/
 
 
-    //The preferences preferences (!): use the global ones for these
+    /*The preferences preferences (!): use the global ones for these
     if(mw->Pref->GetSavePref())
     {
         ((Fl_Menu_Item*)mw->MenuBar->find_item("&Preferences/Save preferences\t"))->set();
@@ -1450,7 +1450,7 @@ void UpdateWidgets(void * param)
     else
     {
         ((Fl_Menu_Item*)mw->MenuBar->find_item("&Preferences/Use global preferences\t"))->setonly();
-    }
+    }*/
 
     //Recent docs: will only add real new ones (no duplicates) if some
     AddRecentDocsItems(mw);
@@ -1501,7 +1501,6 @@ MainWindow::MainWindow(const char *exepath, const char *f)
             char tmp[FL_PATH_MAX];
             fl_filename_absolute(tmp, sizeof(tmp), exepath);
             strncpy(ExePath, tmp, strlen(tmp)-strlen(fl_filename_name(tmp)));
-        //Pref->LoadCompat("preferences", ExePath);
         Pref->Load("");
 
 
@@ -1588,11 +1587,11 @@ MainWindow::MainWindow(const char *exepath, const char *f)
                     { "Last page\t", FL_End , (Fl_Callback *)LastPage_cb, this },
                     { "Go to page\t", FL_COMMAND + 'g' , (Fl_Callback *)GoToPage_cb, this },
                     { 0 },
-                { "&Preferences",              0, 0, 0, FL_SUBMENU },
+               /*{ "&Preferences",              0, 0, 0, FL_SUBMENU },
                     { "Save preferences\t", 0, (Fl_Callback *)0, this, FL_MENU_TOGGLE |  FL_MENU_DIVIDER | FL_MENU_INVISIBLE },
                     { "Use global preferences\t", 0, (Fl_Callback *)0, this, FL_MENU_RADIO },
                     { "Use documents preferences\t", 0, (Fl_Callback *)0, this, FL_MENU_RADIO },
-                    { 0 },
+                    { 0 },*/
                 { "&Help",              0, 0, 0, FL_SUBMENU },
                     { "Help\t", FL_COMMAND + 'h', (Fl_Callback *)Help_cb, this },
                     { "About\t", 0, (Fl_Callback *)About_cb, this },
@@ -1856,8 +1855,6 @@ void MainWindow::Init(char *filename)
 
             //Apply the preferences to the document and the window widgets
                 //Apply global preferences first
-                //TODOPREF
-                //Pref->LoadCompat("preferences", ExePath);
                 Pref->Load("");
                 Pref->Apply(Doc);
 
@@ -1871,20 +1868,17 @@ void MainWindow::Init(char *filename)
                 char buff[2048];
                 sprintf(buff, "%s", fl_filename_name(Doc->GetFilename()));
                 const char *filenameshort=fl_filename_setext(buff, sizeof(buff), ".pref"); //(preferences file as same name as the document file)
-                if(PrefDoc->LoadCompat(filenameshort, ExePath)>=0 && Pref->GetLocalPref())
+                if(PrefDoc->Load(Doc->GetFilename())>=0 && Pref->GetLocalPref())
                 {
                     PrefDoc->Apply(Doc);
                 }
                 //Otherwise apply the gloabl pref to the newly created doc pref
                 else
                 {
-                    //TODOPREF
                     Pref->CopyLocalTo(PrefDoc);
-                    PrefDoc->SaveCompat(Doc);
                     PrefDoc->Save(Doc);
                     //and reload
-                    //PrefDoc->LoadCompat(filenameshort, ExePath);
-                    Pref->Load(Filename);
+                    Pref->Load(Doc->GetFilename());
                 }
 
             //Set the display ratio
@@ -1932,6 +1926,7 @@ void MainWindow::Init(char *filename)
     }
     else
     {
+        window->label("BDReader");
         DisplayGrp->add(Library);
         Library->clear_modal_states(); //was originally modal since not attached to a parent
         ActivateNavigationWidgets(this, false);
@@ -1946,15 +1941,9 @@ void MainWindow::SavePref()
     //Current doc preferences (if there are some)
      if(PrefDoc)
      {
-         //TODOPREF
-
-         //The Library path
-         PrefDoc->SetLibraryFolder(Library->get_absolute_dir());
-
          //The thumbnails view
          PrefDoc->SetThumbnails(ThumbDisplayGrp->visible());
          //Write to pref file
-         PrefDoc->SaveCompat(Doc);
          PrefDoc->Save(Doc);
 
          //Copy current doc pref to global ones
@@ -1970,17 +1959,13 @@ void MainWindow::SavePref()
         Pref->SetWinX(window->x());
         Pref->SetWinY(window->y());
      }
-
-    //TODOPREF
-
      //The Library path
      Pref->SetLibraryFolder(Library->get_absolute_dir());
 
-     //The preferences preferences
+     /*The preferences preferences
      Pref->SetSavePref(((Fl_Menu_Item*)MenuBar->find_item("&Preferences/Save preferences\t"))->value());
-     Pref->SetLocalPref(((Fl_Menu_Item*)MenuBar->find_item("&Preferences/Use documents preferences\t"))->value());
+     Pref->SetLocalPref(((Fl_Menu_Item*)MenuBar->find_item("&Preferences/Use documents preferences\t"))->value());*/
 
      //Write to global pref file
-     Pref->SaveCompat(Doc);
      Pref->Save(Doc);
 }

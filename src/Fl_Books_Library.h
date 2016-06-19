@@ -47,6 +47,7 @@
 #include <FL/Fl_Button.H>
 #include <FL/Fl_PNG_Image.H>
 #include <FL/Fl_JPEG_Image.H>
+#include <FL/Fl_Progress.H>
 
 #ifdef __WINDOWS__
     #include <windows.h>
@@ -61,7 +62,7 @@
     #include <glib.h>
 #endif
 
-
+#include "Preferences.h"
 
 class Fl_Library_Element: public Fl_Button
 {
@@ -72,9 +73,10 @@ class Fl_Library_Element: public Fl_Button
 
 		bool HasThumbnail(){if(Img->w()>0)return true;else return false;}
 		bool HasPrefFile(){if(LastTime>0)return true;else return false;}
+		int GetLastPage(){return LastPage;}
 		long int GetLastTime(){return LastTime;}
-		long int GetCreationTime(){return CreationTime;}
-		long int GetAccessTime(){return AccessTime;}
+		unsigned long int GetCreationTime(){return CreationTime;}
+		unsigned long int GetAccessTime(){return AccessTime;}
 		int GetAlphaNumPosition(){return AlphaNumPosition;}
 		void SetAlphaNumPosition(int val){AlphaNumPosition=val;}
 		const char * GetFilename(){return Filename;}
@@ -91,7 +93,9 @@ class Fl_Library_Element: public Fl_Button
 		unsigned char FileURI[FL_PATH_MAX+7];
 		char ThumbnailName[FL_PATH_MAX];
 		char PrefFilename[FL_PATH_MAX];
-		unsigned long int LastTime, CreationTime, AccessTime;
+		long int LastTime;
+		unsigned long int CreationTime, AccessTime;
+		int LastPage, NbPages;
 		int AlphaNumPosition; //Keep track of the position of elements in the original alphanum sorting (made by fltk function)
 };
 

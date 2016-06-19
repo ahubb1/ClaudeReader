@@ -20,26 +20,61 @@
 //---------------------------------------------------------------------------
 #include "Preferences.h"
 
+
+#ifdef __WINDOWS__
+    int strptime(const char * lastdate_s, const char *format, struct tm *date)
+    {
+        //Minimalist version accepting only one given format...
+        if(strcmp(format, "%d/%m/%Y-%H:%M:%S")!=0)
+        {
+            return -1;
+        }
+        else
+        {
+            int d, m, Y, H, M, S;
+            if(sscanf(lastdate_s, "%2d/%2d/%4d-%2d:%2d:%2d", &d, &m, &Y, &H, &M, &S)==6)
+            {
+                date->tm_isdst=-1; //no dayligth saving thingy
+                date->tm_year=Y-1900;
+                date->tm_mon=m-1;
+                date->tm_mday=d;
+                date->tm_hour=H;
+                date->tm_min=M;
+                date->tm_sec=S;
+                mktime (date); //Fill other fields of date
+                return 0;
+            }
+            else
+            {
+                return -2;
+            }
+        }
+    }
+#endif
+
+
+
 //! Constructor.
-Preferences::Preferences(const char windir[FL_PATH_MAX])
+Preferences::Preferences(const char windir[FL_PATH_MAX]):
+    NbRecentDocs(0),
+    LastPageNb(0),
+    NbPages(0),
+    PagePreview(true),
+    Thumbnails(true),
+    MaxZoomIdx(0),
+    AdditionnalZoomIdx(4),
+    RotationIdx(0),
+    ReadingMode(CASE),
+    InContext(true),
+    Border(true),
+    SavePref(true),
+    LocalPref(true),
+    WinW(1000),
+    WinH(600)
 {
     //Init to nothing
-    NbRecentDocs=0;
     LastDoc[0]='\0';
-    LastPageNb=0;
-    NbPages=0;
     LibraryFolder[0]='\0';
-    PagePreview=true;
-    Thumbnails=true;
-    MaxZoomIdx=0;
-    AdditionnalZoomIdx=4;
-    RotationIdx=0;
-    InContext=true;
-    Border=true;
-    SavePref=true;
-    LocalPref=true;
-    WinW=600;
-    WinH=600;
 
     //Max zoom possible values
     MaxZoomOptionsList[0].caption="None (Default)\t";
@@ -102,12 +137,69 @@ Preferences::Preferences(const char windir[FL_PATH_MAX])
         snprintf(PrefDir, FL_PATH_MAX, "%s/.bdreader", getenv("HOME"));
         mkdir(PrefDir, 755);
     #endif
-
 }
 
 //! Destructor (nothing).
 Preferences::~Preferences()
 {
+}
+
+
+//! Back compatibility function: open all old preferences files
+//!and convert them to the new preference system (single fltk preference file)
+void Preferences::ConvertPreferences()
+{
+    printf("Converting preferences to new format...\n");
+    Preferences tmpPref(PrefDir);
+
+    //Get all previous preferences files: *.pref in PrefDir
+    dirent **dir_listing;
+    int nb_files=fl_filename_list(PrefDir, &dir_listing, fl_casenumericsort);
+
+    //For each file
+    for (int i=0; i<nb_files; i++)
+    {
+        //Check extension
+        if(strcmp(fl_filename_ext(dir_listing[i]->d_name), ".pref")==0)
+        {
+            //Open it
+            printf("%s\n", dir_listing[i]->d_name);
+            char fullfilename[FL_PATH_MAX];
+            snprintf(fullfilename, FL_PATH_MAX, "%s/%s", PrefDir, dir_listing[i]->d_name);
+            tmpPref.LoadCompat(dir_listing[i]->d_name, PrefDir);
+
+            //And create an instance in new preference system from it
+                char short_filename[FL_PATH_MAX];//new pref system does not use file extension (nor path)
+                snprintf(short_filename, FL_PATH_MAX, "%s", fl_filename_name(dir_listing[i]->d_name));fl_filename_setext(short_filename, FL_PATH_MAX, "");
+                DocPrefs = new Fl_Preferences(GlobalPrefs, short_filename);
+                    DocPrefs->set("ReadingMode", tmpPref.GetReadingMode());
+                    DocPrefs->set("Thumbnails", tmpPref.GetThumbnails());
+                    DocPrefs->set("PagePreview", tmpPref.GetPagePreview());
+                    DocPrefs->set("MaxZoomIdx", tmpPref.GetMaxZoomIdx());
+                    DocPrefs->set("AdditionnalZoomIdx", tmpPref.GetAdditionnalZoomIdx());
+                    DocPrefs->set("InContext", tmpPref.GetInContext());
+                    DocPrefs->set("Border", tmpPref.GetBorder());
+                    DocPrefs->set("RotationIdx", tmpPref.GetRotationIdx());
+                    //Use last modified time of pref file as the last read time:
+                        struct stat info_pref;
+                        stat(fullfilename, &info_pref);
+                        struct tm * time_info=localtime(&(info_pref.st_mtime));
+                        char time_s[20];
+                        strftime(time_s, 150, "%d/%m/%Y-%H:%M:%S", time_info);
+                    DocPrefs->set("LastDate", time_s);
+                    DocPrefs->set("LastPageNb", tmpPref.GetLastPageNb());
+                    DocPrefs->set("NbPages", -1); //We don't know that
+                delete DocPrefs;
+
+            //Delete the old pref file
+            remove(fullfilename);
+        }
+        //Delete the old general pref file
+        char fullfilename[FL_PATH_MAX];
+        snprintf(fullfilename, FL_PATH_MAX, "%s/preferences", PrefDir);
+        remove(fullfilename);
+    }
+    printf("Done.\n");
 }
 
 //! Load preferences from the given file
@@ -236,18 +328,25 @@ int Preferences::LoadCompat(const char prefFilename[255], const char windir[FL_P
 }
 
 
+//! Load preferences for the given files from the FLTK style preference file
+//! \param filename: the short comics filename (without path nor extension) or empty for general preferences
+//! \return 0 if the preferences file has been successfully loaded
+//! \return -1 if the preferences file was not found
+//! \return -2 if the preferences file had a wrong format
 int Preferences::Load(const char filename[FL_PATH_MAX])
 {
     int ret=-1;
+    snprintf(ShortFilename, FL_PATH_MAX, "%s", fl_filename_name(filename));fl_filename_setext(ShortFilename, FL_PATH_MAX, "");
     GlobalPrefs = new Fl_Preferences(PrefDir, "bdreader", "bdreader");
 
     //For back compatibility: check if new preferences exists
-    if(GlobalPrefs->groupExists("./")==0)
+    char new_pref_file[FL_PATH_MAX];
+    snprintf(new_pref_file, FL_PATH_MAX, "%s/bdreader.prefs", PrefDir);
+    struct stat info_pref;
+    if(stat(new_pref_file, &info_pref)!=0)
     {
-        printf("NO NEW PREF\n");exit(-1);
-        //ConvertPref();
+        ConvertPreferences();
     }
-
 
     //Load global param first
     if(GlobalPrefs->groupExists(".")!=0)
@@ -268,27 +367,27 @@ int Preferences::Load(const char filename[FL_PATH_MAX])
         NbRecentDocs=i;
 
         //And doc specific: global ones used as default
-            GlobalPrefs->get("ReadingMode", (int&)ReadingMode, ReadingMode);
-            GlobalPrefs->get("Thumbnails", (int&)(Thumbnails), Thumbnails);
-            GlobalPrefs->get("PagePreview", (int&)(PagePreview), PagePreview);
+            int r=(int)ReadingMode;GlobalPrefs->get("ReadingMode", r, r);ReadingMode=(READINGMODE)r;
+            int t=(int)Thumbnails;GlobalPrefs->get("Thumbnails", t, t);Thumbnails=(bool)t;
+            int p=(int)PagePreview;GlobalPrefs->get("PagePreview", p, p);PagePreview=(bool)p;
             GlobalPrefs->get("MaxZoomIdx", MaxZoomIdx, MaxZoomIdx);
             GlobalPrefs->get("AdditionnalZoomIdx", AdditionnalZoomIdx, AdditionnalZoomIdx);
-            GlobalPrefs->get("InContext", (int&)(InContext), InContext);
-            GlobalPrefs->get("Border", (int&)(Border), Border);
+            int n=(int)InContext;GlobalPrefs->get("InContext", n, n);InContext=(bool)n;
+            int b=(int)Border;GlobalPrefs->get("Border", b, b);Border=(bool)b;
             GlobalPrefs->get("RotationIdx", RotationIdx, RotationIdx);
     }
 
     //Get doc specific pref if any (and overwrite global ones if needed)
-    if(GlobalPrefs->groupExists(filename)!=0)
+    if(GlobalPrefs->groupExists(ShortFilename)!=0)
     {
-        DocPrefs = new Fl_Preferences(GlobalPrefs, filename);
-            DocPrefs->get("ReadingMode", (int&)ReadingMode, ReadingMode);
-            DocPrefs->get("Thumbnails", (int&)(Thumbnails), Thumbnails);
-            DocPrefs->get("PagePreview", (int&)(PagePreview), PagePreview);
+        DocPrefs = new Fl_Preferences(GlobalPrefs, ShortFilename);
+            int r=(int)ReadingMode;DocPrefs->get("ReadingMode", r, r);ReadingMode=(READINGMODE)r;
+            int t=(int)Thumbnails;DocPrefs->get("Thumbnails", t, t);Thumbnails=(bool)t;
+            int p=(int)PagePreview;DocPrefs->get("PagePreview", p, p);PagePreview=(bool)p;
             DocPrefs->get("MaxZoomIdx", MaxZoomIdx, MaxZoomIdx);
             DocPrefs->get("AdditionnalZoomIdx", AdditionnalZoomIdx, AdditionnalZoomIdx);
-            DocPrefs->get("InContext", (int&)(InContext), InContext);
-            DocPrefs->get("Border", (int&)(Border), Border);
+            int n=(int)InContext;DocPrefs->get("InContext", n, n);InContext=(bool)n;
+            int b=(int)Border;DocPrefs->get("Border", b, b);Border=(bool)b;
             DocPrefs->get("RotationIdx", RotationIdx, RotationIdx);
             char lastdate_s[20];
             DocPrefs->get("LastDate", lastdate_s, "01/01/1980-00:00:00", 20);
@@ -296,7 +395,6 @@ int Preferences::Load(const char filename[FL_PATH_MAX])
             DocPrefs->get("LastPageNb", LastPageNb, LastPageNb);
             DocPrefs->get("NbPages", NbPages, NbPages);
         delete DocPrefs;
-
         ret=0;
     }
     else
@@ -319,13 +417,9 @@ int Preferences::Apply(Document *doc)
     //The preview/not preview
     doc->SetPagePreview(PagePreview);
 
-    //Check if it was previously open
-    if(strcmp(LastDoc, doc->GetFilename())==0)
-    {
-        //if yes, load the last page
-        doc->LoadPage(LastPageNb);
-        loaded=1;
-    }
+    //Load previously openned page
+    doc->LoadPage(LastPageNb);
+    loaded=1;
 
     return loaded;
 }
@@ -398,14 +492,17 @@ void Preferences::Save(Document *doc)
         GlobalPrefs->set("LastDoc", LastDoc);
         //The recent docs
             //first the current one (if not already)
-            if(strcmp(doc->GetFilename(), RecentDocs[0])!=0)
+            if(doc)
             {
-                GlobalPrefs->set(Fl_Preferences::Name("RecentDocs%d", 0), doc->GetFilename());
+                if(strcmp(doc->GetFilename(), RecentDocs[0])!=0)
+                {
+                    GlobalPrefs->set(Fl_Preferences::Name("RecentDocs%d", 0), fl_filename_name(doc->GetFilename()));
+                }
             }
             //then the loaded ones
             for(int i=0; i<NbRecentDocs; i++)
             {
-                GlobalPrefs->set(Fl_Preferences::Name("RecentDocs%d", i), RecentDocs[i]);
+                GlobalPrefs->set(Fl_Preferences::Name("RecentDocs%d", i), fl_filename_name(RecentDocs[i]));
             }
         GlobalPrefs->set("ReadingMode", ReadingMode);
         GlobalPrefs->set("Thumbnails", Thumbnails);
@@ -420,7 +517,7 @@ void Preferences::Save(Document *doc)
     //If a doc exists write specific prefs
     if(doc)
     {
-        DocPrefs = new Fl_Preferences(GlobalPrefs, doc->GetFilename());
+        DocPrefs = new Fl_Preferences(GlobalPrefs, ShortFilename);
             DocPrefs->set("ReadingMode", ReadingMode);
             DocPrefs->set("Thumbnails", Thumbnails);
             DocPrefs->set("PagePreview", PagePreview);

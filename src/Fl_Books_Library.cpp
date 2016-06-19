@@ -143,9 +143,6 @@ Fl_Library_Element::Fl_Library_Element(int xx, int yy, int ww, int hh, const cha
     Fl_Button::box(FL_EMBOSSED_BOX);
     Fl_Button::align(FL_ALIGN_CENTER | FL_ALIGN_TOP | FL_ALIGN_INSIDE | FL_ALIGN_CLIP );
     Fl_Button::color(FL_BACKGROUND_COLOR, FL_BACKGROUND2_COLOR);
-    char tmp[FL_PATH_MAX];
-    sprintf(tmp, "%s%s", relative_path, Filename);
-    Fl_Button::copy_tooltip(tmp);
 
     //Thumbnail:
         //Get md5sum and retrieve thumbnail if exists in .cache/thumbnails/large or .cache/thumbnails/normal
@@ -243,43 +240,62 @@ Fl_Library_Element::Fl_Library_Element(int xx, int yy, int ww, int hh, const cha
         image(Img);
 
     //Preference file:
-        char tmp_pref[FL_PATH_MAX];
-        strncpy(tmp_pref, Filename, FL_PATH_MAX);
-        fl_filename_setext(tmp_pref, sizeof(tmp_pref), ".pref"); //(preferences file as same name as the document file)
-        #ifdef __WINDOWS__
-            sprintf(Filename, "%s/%s", windir, tmp_pref);
-        #else
-            sprintf(PrefFilename, "%s/.bdreader/%s", getenv("HOME"), tmp_pref);
-            //if the file (and the folder .bdreader) doesn't exist yet, create it
-            char dir[2048];
-            sprintf(dir, "%s/.bdreader", getenv("HOME"));
-            mkdir(dir, 755);
-        #endif
-        //Check if file exist and get last modified date
-        struct stat info_pref;
-        if(stat(PrefFilename, &info_pref)!= 0)
+        Preferences pref(windir);
+        if(pref.Load(Filename)<0)
         {
             PrefFilename[0]='\0';
             LastTime=0;
         }
-        else
-        {
-            //Last "reading" time: assumed to be last modif of the pref file
-            struct tm * time_info;
-            time_info=localtime(&(info_pref.st_mtime));
-            //WARNING: Valid untill ~2040 !!
-            LastTime = ((((((time_info->tm_year-80)*365)+time_info->tm_yday)*24+time_info->tm_hour)*60)+time_info->tm_min)*60+time_info->tm_sec; //Time in seconds since 1st january 1980...
-        }
+        struct tm *time_info=pref.GetLastDate();
+        LastTime = ((((((time_info->tm_year-80)*365)+time_info->tm_yday)*24+time_info->tm_hour)*60)+time_info->tm_min)*60+time_info->tm_sec; //Time in seconds since 1st january 1980...
+        LastPage=pref.GetLastPageNb();
+        NbPages=pref.GetNbPages();//Can be -1 if unknown
+
 
     //File info
         //Creation date (actually last modif but...)
         struct stat info_file;
         stat(fileURI_s.c_str(), &info_file);
-        struct tm * time_info;
         time_info=localtime(&(info_file.st_mtime));
         CreationTime = ((((((time_info->tm_year-80)*365)+time_info->tm_yday)*24+time_info->tm_hour)*60)+time_info->tm_min)*60+time_info->tm_sec; //Time in seconds since 1st january 1900...
+        //Last access time: closer to the actual creation date on this filesystem
         time_info=localtime(&(info_file.st_atime));
         AccessTime = ((((((time_info->tm_year-80)*365)+time_info->tm_yday)*24+time_info->tm_hour)*60)+time_info->tm_min)*60+time_info->tm_sec; //Time in seconds since 1st january 1900...
+
+    //Tooltip contains full filename and some infos
+        char tmp[FL_PATH_MAX];
+        sprintf(tmp, "%s%s\n", relative_path, Filename);
+        time_t now = time(0);
+        struct tm *nowt=localtime(&now);
+        long int NowDay = round((((nowt->tm_year-80)*365)+nowt->tm_yday)+(nowt->tm_hour+nowt->tm_min/60.)/24.);
+        int d=NowDay-round(LastTime/3600./24.);
+        if(LastTime!=0)
+        {
+            if(d>0)
+            {
+                sprintf(tmp, "%sLast read %d days ago", tmp, d);
+            }
+            else
+            {
+                if(d==0)
+                    sprintf(tmp, "%sLast read today", tmp, d);
+                else
+                {
+                    sprintf(tmp, "%sNot read yet", tmp);
+                    LastTime=-1;
+                }
+            }
+
+            if(NbPages>0)
+                sprintf(tmp, "%s (Page %d/%d).", tmp, LastPage, NbPages);
+            else
+                sprintf(tmp, "%s (Page %d/??).", tmp, LastPage);
+        }
+        else
+        {
+            sprintf(tmp, "%sNot read yet", tmp);
+        }
+        Fl_Button::copy_tooltip(tmp);
 }
 
 
@@ -419,16 +435,13 @@ void Fl_Books_Library::add_subpack()
 //! return true if element has been added, false otherwise
 bool Fl_Books_Library::add_element(const char *relative_path, const char *filename, const char *windir)
 {
+    //List only 'true' comics files (not archives or folders)
     if( strstr(fl_filename_ext(filename), ".pdf")!=NULL ||
         strstr(fl_filename_ext(filename), ".cbz")!=NULL ||
         strstr(fl_filename_ext(filename), ".cbr")!=NULL ||
         strstr(fl_filename_ext(filename), ".cbt")!=NULL ||
         strstr(fl_filename_ext(filename), ".cb7")!=NULL ||
-        strstr(fl_filename_ext(filename), ".epub")!=NULL ||
-        strstr(fl_filename_ext(filename), ".rar")!=NULL ||
-        strstr(fl_filename_ext(filename), ".zip")!=NULL ||
-        strstr(fl_filename_ext(filename), ".tar")!=NULL ||
-        strstr(fl_filename_ext(filename), ".7z")!=NULL)
+        strstr(fl_filename_ext(filename), ".epub")!=NULL)
     {
         //Create a new element
         nb_visible_elem++;//visible by default
@@ -522,8 +535,8 @@ void Fl_Books_Library::refresh()
     {
         if((strstr(elements[i]->GetShortFilenameLC(), searchtermlc)!=NULL || strlen(searchtermlc)==0) && //search filter
            ( Filter_Choice->value()==0 || //Filter by: All
-            (Filter_Choice->value()==1 && !elements[i]->HasPrefFile()) || //Filter by Unread (only)
-            (Filter_Choice->value()==2 && elements[i]->HasPrefFile()) //Filter by Read (only)
+            (Filter_Choice->value()==1 && elements[i]->GetLastPage()==0)|| //Filter by Unread (only)
+            (Filter_Choice->value()==2 && elements[i]->GetLastPage()>0) //Filter by Read (only)
            )
           )
         {
@@ -572,6 +585,15 @@ void Fl_Books_Library::refresh()
 void Fl_Books_Library::reload()
 {
     //Be patient...
+    Fl_Window waiting_window(300, 80, "BDReader");
+    waiting_window.set_modal();
+    waiting_window.callback((void (*) (Fl_Widget*))NULL);//no callback to prevent closing
+    Fl_Box label(20, 10, 150, 20, "Loading comics library...");
+    Fl_Progress *progress_bar = new Fl_Progress(10, 35, 280, 30);
+    progress_bar->minimum(0);progress_bar->maximum(1);
+    progress_bar->selection_color(FL_SELECTION_COLOR);
+    waiting_window.end();
+    waiting_window.show();
     cursor(FL_CURSOR_WAIT);
     deactivate();
     redraw();
@@ -629,7 +651,10 @@ void Fl_Books_Library::reload()
         else
         {
             add_element("", dir_listing[i]->d_name, windir);
+
         }
+        Fl::check();
+        progress_bar->value(i/(float)nb_files);
     }
     fl_filename_free_list(&dir_listing, nb_files);
     Fl::check();
