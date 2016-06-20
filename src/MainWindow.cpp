@@ -42,11 +42,13 @@ void UpdatePage(MainWindow *mw)
 {
     //Turn cursor to wait
     fl_cursor(FL_CURSOR_WAIT);
-    //mw->window->cursor(FL_CURSOR_WAIT);
     Fl::check();
 
+    //Wait for the page to be ready to be displayed
+    while(!mw->Doc->currentPage->IsLoaded())
+        Fl::wait(0.01);
+
     //Update the main display
-    //mw->Display->SetImage(mw->Doc->Render());
     mw->Display->SetImage(mw->Doc->RenderPage(), *mw->Doc->Render());
 
     //Update the status bar
@@ -54,7 +56,7 @@ void UpdatePage(MainWindow *mw)
     Fl::check();
 
     //Turn cursor back to normal
-    mw->window->cursor(FL_CURSOR_DEFAULT);
+    fl_cursor(FL_CURSOR_DEFAULT);
     Fl::check();
 
     //Preload the surrounding pages
@@ -472,6 +474,9 @@ void Close_cb(Fl_Widget* widget, void * param)
     {
         Fullscreen_cb(widget, param);
     }
+
+    //Save the preferences in files
+    mw->SavePref();
 
     //Close document
     mw->Init("");
@@ -1089,7 +1094,7 @@ void NextPage_cb(Fl_Widget* widget, void * param)
     Fl::check();
     Fl::wait(.10);
 
-    //If last page, suggest to open next one
+    //If last page, suggest to open next file
     if(p==-2)
     {
         //Get suggested next comics
@@ -1433,25 +1438,6 @@ void UpdateWidgets(void * param)
         ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Enhance contrast\t"))->clear();
     }*/
 
-
-    /*The preferences preferences (!): use the global ones for these
-    if(mw->Pref->GetSavePref())
-    {
-        ((Fl_Menu_Item*)mw->MenuBar->find_item("&Preferences/Save preferences\t"))->set();
-    }
-    else
-    {
-        ((Fl_Menu_Item*)mw->MenuBar->find_item("&Preferences/Save preferences\t"))->clear();
-    }
-    if(mw->Pref->GetLocalPref())
-    {
-        ((Fl_Menu_Item*)mw->MenuBar->find_item("&Preferences/Use documents preferences\t"))->setonly();
-    }
-    else
-    {
-        ((Fl_Menu_Item*)mw->MenuBar->find_item("&Preferences/Use global preferences\t"))->setonly();
-    }*/
-
     //Recent docs: will only add real new ones (no duplicates) if some
     AddRecentDocsItems(mw);
 }
@@ -1495,7 +1481,6 @@ MainWindow::MainWindow(const char *exepath, const char *f)
     PrefDoc=NULL;
 
     //Load user preferences
-    //TODOPREF
         Pref = new Preferences(exepath);
         //Use the program name (first argument) to get its full path (path used to store preferences on Windows)
             char tmp[FL_PATH_MAX];
@@ -1503,8 +1488,7 @@ MainWindow::MainWindow(const char *exepath, const char *f)
             strncpy(ExePath, tmp, strlen(tmp)-strlen(fl_filename_name(tmp)));
         Pref->Load("");
 
-
-    //Main window creation
+    //Main vwindow creation
         //Use saved window size and position (will be 0, 0, 600, 600 if nothing saved, and always lower than the available space on the screen)
         window=new Fl_Double_Window(Pref->GetWinX(), Pref->GetWinY(), min(Fl::w()-2,Pref->GetWinW()), min(Fl::h()-2,Pref->GetWinH()), "BDReader");
         window->color(fl_rgb_color(242,241,240));
@@ -1587,11 +1571,6 @@ MainWindow::MainWindow(const char *exepath, const char *f)
                     { "Last page\t", FL_End , (Fl_Callback *)LastPage_cb, this },
                     { "Go to page\t", FL_COMMAND + 'g' , (Fl_Callback *)GoToPage_cb, this },
                     { 0 },
-               /*{ "&Preferences",              0, 0, 0, FL_SUBMENU },
-                    { "Save preferences\t", 0, (Fl_Callback *)0, this, FL_MENU_TOGGLE |  FL_MENU_DIVIDER | FL_MENU_INVISIBLE },
-                    { "Use global preferences\t", 0, (Fl_Callback *)0, this, FL_MENU_RADIO },
-                    { "Use documents preferences\t", 0, (Fl_Callback *)0, this, FL_MENU_RADIO },
-                    { 0 },*/
                 { "&Help",              0, 0, 0, FL_SUBMENU },
                     { "Help\t", FL_COMMAND + 'h', (Fl_Callback *)Help_cb, this },
                     { "About\t", 0, (Fl_Callback *)About_cb, this },
@@ -1717,7 +1696,6 @@ MainWindow::MainWindow(const char *exepath, const char *f)
             StatusBarGrp->end();
 
 
-
          //Events callbacks
              //Closing callback
              window->callback(Window_cb, (void*)this);
@@ -1752,7 +1730,6 @@ MainWindow::MainWindow(const char *exepath, const char *f)
     HelpDlg=NULL;
 
     //A library view
-    //Library = new Fl_Books_Library(1000, 600, "BD library", Pref->GetLibraryFolder(), ExePath, 180, 180*1.53, 10); //For a standalone library window
     Library = new Fl_Books_Library(DisplayGrp->w(), DisplayGrp->h(), "BD library", Pref->GetLibraryFolder(), ExePath, 180, 180*1.53, 10);
     Library->resize(0, MenuBar->h(), DisplayGrp->w(), DisplayGrp->h());
     Library->callback(Library_cb, (void*)this);

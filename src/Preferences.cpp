@@ -502,7 +502,7 @@ void Preferences::Save(Document *doc)
             //then the loaded ones
             for(int i=0; i<NbRecentDocs; i++)
             {
-                GlobalPrefs->set(Fl_Preferences::Name("RecentDocs%d", i), fl_filename_name(RecentDocs[i]));
+                GlobalPrefs->set(Fl_Preferences::Name("RecentDocs%d", i+1), fl_filename_name(RecentDocs[i]));
             }
         GlobalPrefs->set("ReadingMode", ReadingMode);
         GlobalPrefs->set("Thumbnails", Thumbnails);

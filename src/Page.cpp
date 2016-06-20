@@ -38,9 +38,6 @@ bool isIn(Rect A, Rect B)
     IntersectR = min(A.x+A.width, B.x+B.width);
     IntersectB = min(A.y+A.height, B.y+B.height);
 
-    /*Give time to FLTK
-    Fl::check();*/
-
     //Is an intersection ?
     if(IntersectR > IntersectL && IntersectB > IntersectT)
     {
@@ -250,6 +247,7 @@ void Page::DetectCases()
             /*--------------------------------------------BINARIZE---------------------------------------------------------*/
             //To binary
             inRange(srcG, 0, 210+nbdetections, src);
+
             #ifdef DEBUG
             printf("Detection %d:\n", nbdetections);
             #endif
@@ -268,7 +266,7 @@ void Page::DetectCases()
             detectionFailed=DetectionCheck(&CasesTmp, &src, nbdetections);
             /*-----------------------------------------------------------------------------------------------------------*/
 
-            nbdetections+=3;
+            nbdetections+=5;
 
             /*Give time to FLTK
             Fl::check();*/
@@ -327,7 +325,7 @@ void Page::DetectionDetect(vector<Rect> *CasesTmp, Mat* src)
     //Contours detection
     vector<vector <Point> > contours;
     vector<Vec4i> hierarchy;
-    findContours( *src, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE );
+    findContours(*src, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE );
 
     //Rectangle bounding box for each contour found
     for( int i = contours.size()-1; i >-1; i-- )

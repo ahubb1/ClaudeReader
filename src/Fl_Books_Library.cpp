@@ -240,23 +240,30 @@ Fl_Library_Element::Fl_Library_Element(int xx, int yy, int ww, int hh, const cha
         image(Img);
 
     //Preference file:
-        Preferences pref(windir);
-        if(pref.Load(Filename)<0)
-        {
+        #ifndef DEBUG2
+            Preferences pref(windir);
+            if(pref.Load(Filename)<0)
+            {
+                PrefFilename[0]='\0';
+                LastTime=0;
+            }
+            else
+            {
+                struct tm *time_info=pref.GetLastDate();
+                LastTime = ((((((time_info->tm_year-80)*365)+time_info->tm_yday)*24+time_info->tm_hour)*60)+time_info->tm_min)*60+time_info->tm_sec; //Time in seconds since 1st january 1980...
+                LastPage=pref.GetLastPageNb();
+                NbPages=pref.GetNbPages();//Can be -1 if unknown
+            }
+        #else
             PrefFilename[0]='\0';
             LastTime=0;
-        }
-        struct tm *time_info=pref.GetLastDate();
-        LastTime = ((((((time_info->tm_year-80)*365)+time_info->tm_yday)*24+time_info->tm_hour)*60)+time_info->tm_min)*60+time_info->tm_sec; //Time in seconds since 1st january 1980...
-        LastPage=pref.GetLastPageNb();
-        NbPages=pref.GetNbPages();//Can be -1 if unknown
-
+        #endif
 
     //File info
         //Creation date (actually last modif but...)
         struct stat info_file;
         stat(fileURI_s.c_str(), &info_file);
-        time_info=localtime(&(info_file.st_mtime));
+        struct tm *time_info=localtime(&(info_file.st_mtime));
         CreationTime = ((((((time_info->tm_year-80)*365)+time_info->tm_yday)*24+time_info->tm_hour)*60)+time_info->tm_min)*60+time_info->tm_sec; //Time in seconds since 1st january 1900...
         //Last access time: closer to the actual creation date on this filesystem
         time_info=localtime(&(info_file.st_atime));
@@ -273,7 +280,10 @@ Fl_Library_Element::Fl_Library_Element(int xx, int yy, int ww, int hh, const cha
         {
             if(d>0)
             {
-                sprintf(tmp, "%sLast read %d days ago", tmp, d);
+                if(d==1)
+                    sprintf(tmp, "%sLast read yesterday", tmp);
+                else
+                    sprintf(tmp, "%sLast read %d days ago", tmp, d);
             }
             else
             {
@@ -535,8 +545,8 @@ void Fl_Books_Library::refresh()
     {
         if((strstr(elements[i]->GetShortFilenameLC(), searchtermlc)!=NULL || strlen(searchtermlc)==0) && //search filter
            ( Filter_Choice->value()==0 || //Filter by: All
-            (Filter_Choice->value()==1 && elements[i]->GetLastPage()==0)|| //Filter by Unread (only)
-            (Filter_Choice->value()==2 && elements[i]->GetLastPage()>0) //Filter by Read (only)
+            (Filter_Choice->value()==1 && elements[i]->GetLastTime()==0)|| //Filter by Unread (only)
+            (Filter_Choice->value()==2 && elements[i]->GetLastTime()>0) //Filter by Read (only)
            )
           )
         {
@@ -559,13 +569,7 @@ void Fl_Books_Library::refresh()
         /*redraw();
         Fl::check(); Rigolo mais lent*/
     }
-    //Add a box at bottom to make a margin
-    /*if(sub_packs.size()>0)
-    {
-        Main_Table->remove(emptyboxbottom);
-        Main_Table->add(emptyboxbottom);
-        emptyboxbottom->resize(Main_Table->x(), sub_packs[sub_packs.size()-1]->y()+sub_packs[sub_packs.size()-1]->h(), Main_Table->w()-20, 5); //Margin at the top of the main scroll
-    }*/
+
     //Show nb of results
     char nb_txt[50];
     sprintf(nb_txt, "%d results", nb_visible_elem);
@@ -651,10 +655,9 @@ void Fl_Books_Library::reload()
         else
         {
             add_element("", dir_listing[i]->d_name, windir);
-
         }
-        Fl::check();
         progress_bar->value(i/(float)nb_files);
+        Fl::check();
     }
     fl_filename_free_list(&dir_listing, nb_files);
     Fl::check();
@@ -674,27 +677,35 @@ bool Fl_Books_Library::set_dir(const char * lib_dir, const char *wind)
 {
     if(fl_filename_isdir(lib_dir)!=0)
     {
+        char trailing_char;
+        #ifdef __WINDOWS__
+            trailing_char='\\';
+        #else
+            trailing_char='/';
+        #endif // __WINDOWS__
+
         //Copy lib dir as absolute path
         char tmp_abs_lib_dir[FL_PATH_MAX];
         fl_filename_absolute(tmp_abs_lib_dir, FL_PATH_MAX, lib_dir);
-        snprintf(abs_lib_dir, FL_PATH_MAX, "%s/", tmp_abs_lib_dir);
+        snprintf(abs_lib_dir, FL_PATH_MAX, "%s%c", tmp_abs_lib_dir, trailing_char);
         //Windir if needed
         snprintf(windir, FL_PATH_MAX, "%s", wind);
 
-        //Make sure we have the trailing /
-        if(abs_lib_dir[strlen(abs_lib_dir)-1]!='/')
+        //Make sure we have the trailing / or '\'
+        if(abs_lib_dir[strlen(abs_lib_dir)-1]!=trailing_char)
         {
-            abs_lib_dir[strlen(abs_lib_dir)]='/';
+            abs_lib_dir[strlen(abs_lib_dir)]=trailing_char;
             abs_lib_dir[strlen(abs_lib_dir)+1]='\0';
         }
         //and that we have only one
         else
         {
-            if(abs_lib_dir[strlen(abs_lib_dir)-2]=='/')
+            if(abs_lib_dir[strlen(abs_lib_dir)-2]==trailing_char)
             {
                 abs_lib_dir[strlen(abs_lib_dir)-1]='\0';
             }
         }
+        printf("%s\n", abs_lib_dir);
         LibFolder_Input->value(abs_lib_dir);
         LibFolder_Input->redraw();
         Search_Input->value("");

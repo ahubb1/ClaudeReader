@@ -1,6 +1,11 @@
 BDReader changes
-Vincent Crocher 22/02/2015
-
+Vincent Crocher 20/06/2016
+v1.1
+	-Comics library
+	-New prefrences system
+	-Magnifier (left click)
+	-Quick zoom out (right click or spacebar)
+	-Several bug fixed
 v1.04
 	-Border transparency when In Context
 	-Pages rotation option (+90,-90,180)
