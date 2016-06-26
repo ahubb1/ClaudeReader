@@ -392,28 +392,43 @@ Mat *Document::ThumbnailsRenderNext()
 
 //! Go to the next case of the page, or to next page if no more case.
 //! \return 0 if a next case exists
-//! \return -1 otherwise (a new page has been loaded)
+//! \return -1 if a new page has been loaded
+//! \return -2 if no new page is loaded (last page)
 int Document::NextCase()
 {
     if(currentPage->NextCase()<0 || ReadingMode==PAGE)
     {
         if(NextPage()>0)
+        {
             LoadPage();
-        return -1;
+            return -1;
+        }
+        else
+        {
+            return -2;
+        }
     }
     return 0;
 }
 
 //! Go to the previous case of the page, or to previous page if no more case.
 //! \return 0 if a previous case exists
-//! \return -1 otherwise (a new page has been loaded)
+//! \return -1 if a new page has been loaded
+//! \return -2 if no new page is loaded (last page)
 int Document::PreviousCase()
 {
     if(currentPage->PreviousCase()<0 || ReadingMode==PAGE)
     {
         if(PreviousPage()>0)
+        {
             LoadPage();
-        return -1;
+            return -1;
+        }
+        else
+        {
+            return -2;
+        }
+
     }
     return 0;
 }

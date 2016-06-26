@@ -249,6 +249,7 @@ Fl_Library_Element::Fl_Library_Element(int xx, int yy, int ww, int hh, const cha
             }
             else
             {
+                //pref.ForceSave();
                 struct tm *time_info=pref.GetLastDate();
                 LastTime = ((((((time_info->tm_year-80)*365)+time_info->tm_yday)*24+time_info->tm_hour)*60)+time_info->tm_min)*60+time_info->tm_sec; //Time in seconds since 1st january 1980...
                 LastPage=pref.GetLastPageNb();
@@ -274,21 +275,21 @@ Fl_Library_Element::Fl_Library_Element(int xx, int yy, int ww, int hh, const cha
         sprintf(tmp, "%s%s\n", relative_path, Filename);
         time_t now = time(0);
         struct tm *nowt=localtime(&now);
-        long int NowDay = round((((nowt->tm_year-80)*365)+nowt->tm_yday)+(nowt->tm_hour+nowt->tm_min/60.)/24.);
-        int d=NowDay-round(LastTime/3600./24.);
+        long int NowHour = round((((nowt->tm_year-80)*365)+nowt->tm_yday)*24+nowt->tm_hour+nowt->tm_min/60.);
+        int h=NowHour-round(LastTime/3600.);
+        int d=round((NowHour-LastTime/3600.)/24.);
         if(LastTime!=0)
         {
             if(d>0)
             {
-                if(d==1)
-                    sprintf(tmp, "%sLast read yesterday", tmp);
-                else
-                    sprintf(tmp, "%sLast read %d days ago", tmp, d);
+                sprintf(tmp, "%sLast read %d days ago", tmp, d);
             }
             else
             {
                 if(d==0)
-                    sprintf(tmp, "%sLast read today", tmp, d);
+                {
+                    sprintf(tmp, "%sLast read %dh ago", tmp, h);
+                }
                 else
                 {
                     sprintf(tmp, "%sNot read yet", tmp);

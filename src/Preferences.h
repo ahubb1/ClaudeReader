@@ -68,6 +68,7 @@ class Preferences
         int LoadCompat(const char prefFile[255], const char windir[FL_PATH_MAX]);
         int Apply(Document *doc);
         void Save(Document *doc);
+        void ForceSave();
         void SaveCompat(Document *doc);
 
         void CopyLocalTo(Preferences *pref);

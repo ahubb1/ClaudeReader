@@ -163,7 +163,6 @@ void Preferences::ConvertPreferences()
         if(strcmp(fl_filename_ext(dir_listing[i]->d_name), ".pref")==0)
         {
             //Open it
-            printf("%s\n", dir_listing[i]->d_name);
             char fullfilename[FL_PATH_MAX];
             snprintf(fullfilename, FL_PATH_MAX, "%s/%s", PrefDir, dir_listing[i]->d_name);
             tmpPref.LoadCompat(dir_listing[i]->d_name, PrefDir);
@@ -171,7 +170,9 @@ void Preferences::ConvertPreferences()
             //And create an instance in new preference system from it
                 char short_filename[FL_PATH_MAX];//new pref system does not use file extension (nor path)
                 snprintf(short_filename, FL_PATH_MAX, "%s", fl_filename_name(dir_listing[i]->d_name));fl_filename_setext(short_filename, FL_PATH_MAX, "");
-                DocPrefs = new Fl_Preferences(GlobalPrefs, short_filename);
+                char firstletters[2];strncpy(firstletters, ShortFilename, 1);firstletters[1]='\0';
+                Fl_Preferences *LetterGroupPrefs = new Fl_Preferences(GlobalPrefs, firstletters);
+                DocPrefs = new Fl_Preferences(LetterGroupPrefs, ShortFilename);
                     DocPrefs->set("ReadingMode", tmpPref.GetReadingMode());
                     DocPrefs->set("Thumbnails", tmpPref.GetThumbnails());
                     DocPrefs->set("PagePreview", tmpPref.GetPagePreview());
@@ -190,6 +191,7 @@ void Preferences::ConvertPreferences()
                     DocPrefs->set("LastPageNb", tmpPref.GetLastPageNb());
                     DocPrefs->set("NbPages", -1); //We don't know that
                 delete DocPrefs;
+                delete LetterGroupPrefs;
 
             //Delete the old pref file
             remove(fullfilename);
@@ -201,6 +203,7 @@ void Preferences::ConvertPreferences()
     }
     printf("Done.\n");
 }
+
 
 //! Load preferences from the given file
 //! \return 0 if the preferences file has been successfully loaded
@@ -378,27 +381,41 @@ int Preferences::Load(const char filename[FL_PATH_MAX])
     }
 
     //Get doc specific pref if any (and overwrite global ones if needed)
-    if(GlobalPrefs->groupExists(ShortFilename)!=0)
+    char firstletters[2];strncpy(firstletters, ShortFilename, 1);firstletters[1]='\0';
+    if(GlobalPrefs->groupExists(firstletters)!=0)
     {
-        DocPrefs = new Fl_Preferences(GlobalPrefs, ShortFilename);
-            int r=(int)ReadingMode;DocPrefs->get("ReadingMode", r, r);ReadingMode=(READINGMODE)r;
-            int t=(int)Thumbnails;DocPrefs->get("Thumbnails", t, t);Thumbnails=(bool)t;
-            int p=(int)PagePreview;DocPrefs->get("PagePreview", p, p);PagePreview=(bool)p;
-            DocPrefs->get("MaxZoomIdx", MaxZoomIdx, MaxZoomIdx);
-            DocPrefs->get("AdditionnalZoomIdx", AdditionnalZoomIdx, AdditionnalZoomIdx);
-            int n=(int)InContext;DocPrefs->get("InContext", n, n);InContext=(bool)n;
-            int b=(int)Border;DocPrefs->get("Border", b, b);Border=(bool)b;
-            DocPrefs->get("RotationIdx", RotationIdx, RotationIdx);
-            char lastdate_s[20];
-            DocPrefs->get("LastDate", lastdate_s, "01/01/1980-00:00:00", 20);
-            strptime(lastdate_s, "%d/%m/%Y-%H:%M:%S", &LastDate);
-            DocPrefs->get("LastPageNb", LastPageNb, LastPageNb);
-            DocPrefs->get("NbPages", NbPages, NbPages);
-        delete DocPrefs;
-        ret=0;
+        Fl_Preferences *LetterGroupPrefs = new Fl_Preferences(GlobalPrefs, firstletters);
+
+        if(LetterGroupPrefs->groupExists(ShortFilename)!=0)
+        {
+            DocPrefs = new Fl_Preferences(LetterGroupPrefs, ShortFilename);
+                int r=(int)ReadingMode;DocPrefs->get("ReadingMode", r, r);ReadingMode=(READINGMODE)r;
+                int t=(int)Thumbnails;DocPrefs->get("Thumbnails", t, t);Thumbnails=(bool)t;
+                int p=(int)PagePreview;DocPrefs->get("PagePreview", p, p);PagePreview=(bool)p;
+                DocPrefs->get("MaxZoomIdx", MaxZoomIdx, MaxZoomIdx);
+                DocPrefs->get("AdditionnalZoomIdx", AdditionnalZoomIdx, AdditionnalZoomIdx);
+                int n=(int)InContext;DocPrefs->get("InContext", n, n);InContext=(bool)n;
+                int b=(int)Border;DocPrefs->get("Border", b, b);Border=(bool)b;
+                DocPrefs->get("RotationIdx", RotationIdx, RotationIdx);
+                char lastdate_s[20];
+                DocPrefs->get("LastDate", lastdate_s, "01/01/1980-00:00:00", 20);
+                strptime(lastdate_s, "%d/%m/%Y-%H:%M:%S", &LastDate);
+                DocPrefs->get("LastPageNb", LastPageNb, LastPageNb);
+                DocPrefs->get("NbPages", NbPages, NbPages);
+            delete DocPrefs;
+            ret=0;
+        }
+        else
+        {
+            ret=-1;
+        }
+
+        delete LetterGroupPrefs;
     }
     else
+    {
         ret=-1;
+    }
 
     delete GlobalPrefs;
     return ret;
@@ -517,7 +534,9 @@ void Preferences::Save(Document *doc)
     //If a doc exists write specific prefs
     if(doc)
     {
-        DocPrefs = new Fl_Preferences(GlobalPrefs, ShortFilename);
+        char firstletters[2];strncpy(firstletters, ShortFilename, 1);firstletters[1]='\0';
+        Fl_Preferences *LetterGroupPrefs = new Fl_Preferences(GlobalPrefs, firstletters);
+        DocPrefs = new Fl_Preferences(LetterGroupPrefs, ShortFilename);
             DocPrefs->set("ReadingMode", ReadingMode);
             DocPrefs->set("Thumbnails", Thumbnails);
             DocPrefs->set("PagePreview", PagePreview);
@@ -531,8 +550,35 @@ void Preferences::Save(Document *doc)
             DocPrefs->set("LastPageNb", doc->GetCurrentPageNb());
             DocPrefs->set("NbPages", doc->GetNbOfPages());
         delete DocPrefs;
+        delete LetterGroupPrefs;
     }
 
+    delete GlobalPrefs;
+}
+
+
+void Preferences::ForceSave()
+{
+    //Global pref first
+    GlobalPrefs = new Fl_Preferences(PrefDir, "bdreader", "bdreaderTest");
+
+        char firstletters[2];strncpy(firstletters, ShortFilename, 1);firstletters[1]='\0';
+        Fl_Preferences *LetterGroupPrefs = new Fl_Preferences(GlobalPrefs, firstletters);
+        DocPrefs = new Fl_Preferences(LetterGroupPrefs, ShortFilename);
+            DocPrefs->set("ReadingMode", ReadingMode);
+            DocPrefs->set("Thumbnails", Thumbnails);
+            DocPrefs->set("PagePreview", PagePreview);
+            DocPrefs->set("MaxZoomIdx", MaxZoomIdx);
+            DocPrefs->set("AdditionnalZoomIdx", AdditionnalZoomIdx);
+            DocPrefs->set("InContext", InContext);
+            DocPrefs->set("Border", Border);
+            DocPrefs->set("RotationIdx", RotationIdx);
+            char time_s[150];strftime(time_s, 150, "%d/%m/%Y-%H:%M:%S", &LastDate);
+            DocPrefs->set("LastDate", time_s);
+            DocPrefs->set("LastPageNb", LastPageNb);
+            DocPrefs->set("NbPages", NbPages);
+        delete DocPrefs;
+        delete LetterGroupPrefs;
     delete GlobalPrefs;
 }
 

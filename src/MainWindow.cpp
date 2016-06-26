@@ -701,6 +701,41 @@ void AddRecentDocsItems(void *param)
         recentitem->deactivate();
     }
 }
+
+//! Suggest next file to open (based on filename and library)
+void SuggestNextFile(void *param)
+{
+    MainWindow *mw=(MainWindow*)param;
+
+    //Get suggested next comics
+    char suggestion_filename[2048], suggestion_short_filename[2048];
+    int ret = mw->Library->GetSuggestionNext(mw->Filename, suggestion_filename, suggestion_short_filename);
+
+
+    //Is there a suggestion?
+    fl_message_title("BDReader - What do we do ?");
+    if(ret<0)
+        ret=fl_choice("Open the comics library ?", "Cancel", "Library", NULL);
+    else
+        ret=fl_choice("Open %s ?", "Cancel", "Library", "Open", suggestion_short_filename);
+
+    switch(ret)
+    {
+        //Cancel: do nothing
+        case 0:
+            break;
+
+        //Open library: close current one
+        case 1:
+            Close_cb(NULL, param);
+            break;
+
+        //Open suggested file:
+        case 2:
+            mw->Init(suggestion_filename);
+            break;
+    }
+}
 //-----------------------------------------------------------------------------
 
 
@@ -1097,34 +1132,7 @@ void NextPage_cb(Fl_Widget* widget, void * param)
     //If last page, suggest to open next file
     if(p==-2)
     {
-        //Get suggested next comics
-        char suggestion_filename[2048], suggestion_short_filename[2048];
-        int ret = mw->Library->GetSuggestionNext(mw->Filename, suggestion_filename, suggestion_short_filename);
-
-
-        //Is there a suggestion?
-        fl_message_title("BDReader - What do we do ?");
-        if(ret<0)
-            ret=fl_choice("Open the comics library ?", "Cancel", "Library", NULL);
-        else
-            ret=fl_choice("Open %s ?", "Cancel", "Library", "Open", suggestion_short_filename);
-
-        switch(ret)
-        {
-            //Cancel: do nothing
-            case 0:
-                break;
-
-            //Open library: close current one
-            case 1:
-                Close_cb(widget, param);
-                break;
-
-            //Open suggested file:
-            case 2:
-                mw->Init(suggestion_filename);
-                break;
-        }
+        SuggestNextFile(param);
     }
 
     //If still the same page asked, load it, otherwise do nothing
@@ -1166,11 +1174,19 @@ void NextCase_cb(Fl_Widget* widget, void * param)
     mw->Display->SetDisplayRect(*mw->Doc->Render());
     StatusUpdate(mw);
 
-    //If a new page has been loaded, preload
-    if(ret<0)
+    //If new page requested (was on last panel) but on last page
+    if(ret==-2)
     {
-        //Update everything
-        UpdatePage(mw);
+        SuggestNextFile(param);
+    }
+    else
+    {
+        //If a new page has been loaded, preload
+        if(ret<0)
+        {
+            //Update everything
+            UpdatePage(mw);
+        }
     }
 }
 //! Go to first page (through Doc)

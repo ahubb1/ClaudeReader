@@ -91,6 +91,7 @@ class MainWindow
         friend void Open_cb(Fl_Widget* widget, void * param);
         friend void Close_cb(Fl_Widget* widget, void * param);
         friend void Quit_cb(Fl_Widget* widget, void * param);
+        friend void SuggestNextFile(void *param);
 
         //View menu
         friend void Fullscreen_cb(Fl_Widget* widget, void * param);
