@@ -45,6 +45,7 @@
 #include <FL/Fl_Choice.H>
 #include <FL/Fl_File_Input.H>
 #include <FL/Fl_Button.H>
+#include <FL/Fl_Check_Button.H>
 #include <FL/Fl_PNG_Image.H>
 #include <FL/Fl_JPEG_Image.H>
 #include <FL/Fl_Progress.H>
@@ -190,7 +191,7 @@ class Fl_Books_Library: public Fl_Double_Window
                 {
                     Main_Group->size(3./5.*w()-5, Main_Group->h());
                     Search_Group->size(2./5.*w()-5, Search_Group->h());
-                    Search_Group->position(Sort_Choice->x()+Sort_Choice->w()+10, Search_Group->y());
+                    Search_Group->position(Sort_Invert_Button->x()+Sort_Invert_Button->w()+10, Search_Group->y());
                 }
                 else
                 {
@@ -218,6 +219,7 @@ class Fl_Books_Library: public Fl_Double_Window
 		Fl_Input *LibFolder_Input;
 		Fl_Choice *Filter_Choice;
 		Fl_Choice *Sort_Choice;
+		Fl_Check_Button *Sort_Invert_Button;
 		Fl_Group * Search_Group;
 		Fl_Input *Search_Input;
 		Fl_Box *Search_Label;

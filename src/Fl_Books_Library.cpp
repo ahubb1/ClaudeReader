@@ -323,7 +323,7 @@ Fl_Books_Library::Fl_Books_Library(int ww, int hh, const char *l, const char * l
     MenuBar = new Fl_Group(0, 0, w(), 25);
         //Space
         Fl_Box emptyspace(0,0,10,30);
-        Main_Group = new Fl_Group(10, 3, 110+w()/6.+50+80+40+80, 20);
+        Main_Group = new Fl_Group(10, 3, 110+w()/6.+50+80+40+70+15+60, 20);
             //Lib folder
             Fl_Group * grp = new Fl_Group(10, 3, 110+w()/6., 20);
                 Fl_Box * label = new Fl_Box(grp->x(), grp->y(), 110, 20, "Library folder:");label->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
@@ -344,15 +344,19 @@ Fl_Books_Library::Fl_Books_Library(int ww, int hh, const char *l, const char * l
             grpp2->end();
             grpp2->resizable(NULL);
             //Sort
-            Fl_Group * grpp3 = new Fl_Group(grpp2->x()+grpp2->w()+5, grp->y(), 40+80, 20);
+            Fl_Group * grpp3 = new Fl_Group(grpp2->x()+grpp2->w()+5, grp->y(), 40+70+5+60, 20);
                 Fl_Box * label3 = new Fl_Box(grpp3->x(), grpp3->y(), 40, 20, "Sort:");label3->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
-                Sort_Choice = new Fl_Choice(label3->x()+label3->w(), grpp3->y(), 80, 20, "");
+                Sort_Choice = new Fl_Choice(label3->x()+label3->w(), grpp3->y(), 70, 20, "");
                 Sort_Choice->add("Name");
                 Sort_Choice->add("Type");
                 Sort_Choice->add("Date");
                 Sort_Choice->add("Read");
                 Sort_Choice->value(3);
                 Sort_Choice->callback(Fl_Books_Library::Sort_cb, this);
+                Sort_Invert_Button = new Fl_Check_Button(Sort_Choice->x()+Sort_Choice->w()+5, grpp3->y(), 60, 20, "Invert");
+                Sort_Invert_Button->value(0);
+                Sort_Invert_Button->tooltip("Inverse sorting order");
+                Sort_Invert_Button->callback(Fl_Books_Library::Sort_cb, this);
             grpp3->end();
             grpp3->resizable(NULL);
         Main_Group->end();
@@ -469,7 +473,7 @@ bool Fl_Books_Library::add_element(const char *relative_path, const char *filena
 }
 
 
-//!Determine wich widget to show/hid based on filters and sorts
+//!Determine wich widget to show/hide based on filters and sorts
 void Fl_Books_Library::refresh()
 {
     //Be patient
@@ -532,6 +536,9 @@ void Fl_Books_Library::refresh()
         default:
             break;
     }
+    //Reverse sort if needed
+    if(Sort_Invert_Button->value())
+        std::reverse(elements.begin(), elements.end());
 
 
     //Lower case before searching to be case insensitive
