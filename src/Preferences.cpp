@@ -149,7 +149,9 @@ Preferences::~Preferences()
 //!and convert them to the new preference system (single fltk preference file)
 void Preferences::ConvertPreferences()
 {
-    printf("Converting preferences to new format...\n");
+    #ifdef DEBUG
+        printf("Converting preferences to new format...\n");
+    #endif
     Preferences tmpPref(PrefDir);
 
     //Get all previous preferences files: *.pref in PrefDir
@@ -157,7 +159,7 @@ void Preferences::ConvertPreferences()
     int nb_files=fl_filename_list(PrefDir, &dir_listing, fl_casenumericsort);
 
     //For each file
-    for (int i=0; i<nb_files; i++)
+    for(int i=0; i<nb_files; i++)
     {
         //Check extension
         if(strcmp(fl_filename_ext(dir_listing[i]->d_name), ".pref")==0)
@@ -201,7 +203,9 @@ void Preferences::ConvertPreferences()
         snprintf(fullfilename, FL_PATH_MAX, "%s/preferences", PrefDir);
         remove(fullfilename);
     }
-    printf("Done.\n");
+    #ifdef DEBUG
+        printf("Done.\n");
+    #endif
 }
 
 

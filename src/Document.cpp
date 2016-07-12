@@ -25,22 +25,22 @@
 //!The constructor will initialize the object and try to open file. This can be
 //!tested further using the NbPages variable. A value greater than zero means the document
 //!has been successfully openned.
-Document::Document(char *filename)
+Document::Document(char *filename):
+     ActivePage(1),
+     ReadingMode(PAGE),
+     currentPage(NULL),
+     nextPage(NULL),
+     previousPage(NULL),
+     ImgRender(NULL),
+     RectRender(NULL),
+     NbPages(0),
+     PagePreview(true),
+     DisplayRatio(1.2),
+     Rotation(0),
+     ContrastEnhancement(false)
 {
     //Init
     snprintf(Filename, 2048, "%s", filename);
-    ActivePage=1;
-    ReadingMode=PAGE;
-    currentPage=NULL;
-    nextPage=NULL;
-    previousPage=NULL;
-    ImgRender=NULL;
-    RectRender=NULL;
-    NbPages=0;
-    PagePreview=true;
-    DisplayRatio=1.2;
-    Rotation=0;
-    ContrastEnhancement=false;
 }
 
 //! Main destructor.
@@ -359,6 +359,31 @@ void Document::ReloadPages()
 
     //Close the document, free the context..
     Close();
+}
+
+//! Create and write a preview thumbnail of the file
+//! \param name: the file name of the thumbnail to write
+//! \param width: the width of the image to create in px (aspect ratio is preserved)
+int Document::WriteDocumentThumbnail(const char *name, int width)
+{
+    //Load first page
+    if(LoadPage(1)==0)
+    {
+        //Resize
+        Mat * page_large = ThumbnailsRenderCurrent();
+        Mat page_small;
+        int height=cvFloor(page_large->rows*width/(float)page_large->cols);
+        resize(*page_large, page_small, Size(width, height), 0, 0, INTER_CUBIC);
+
+        //Write
+        imwrite(name, page_small);
+
+        return 0;
+    }
+    else
+    {
+        return -1;
+    }
 }
 
 //! Return the current Page thumnails view: the whole page view.

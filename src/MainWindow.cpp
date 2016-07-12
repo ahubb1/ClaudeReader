@@ -90,50 +90,64 @@ void StatusBarUpdate(void * param)
 {
       MainWindow *mw=(MainWindow*)param;
 
-      //Get number of pages... blabla
       char text[1024];
       char textZoom[1024];
       char textMaxZoom[10];
-      if(mw->Display->GetMaxZoom()>=100)
-      {
-          sprintf(textMaxZoom, " - ");
-      }
-      else
-      {
-          sprintf(textMaxZoom, "%d%%", (int)(mw->Display->GetMaxZoom()*100.));
-      }
 
-      if(mw->Doc)
+      //If document
+      if(mw->DisplayGrp->visible())
       {
-          if(mw->Doc->GetReadingMode()==CASE)
+          //Get number of pages... blabla
+          if(mw->Display->GetMaxZoom()>=100)
           {
-                sprintf(text, "PANEL\t\tPage %d/%d (Panel %d/%d)", mw->Doc->GetCurrentPageNb(), mw->Doc->GetNbOfPages(), mw->Doc->currentPage->GetActiveCase()+1, mw->Doc->currentPage->GetNbCases());
-
-                sprintf(textZoom, "Zoom: %d%% (Max:%s / Additionnal:x%0.1f)", (int)(mw->Display->GetCurrentZoom()*100.), textMaxZoom, mw->Display->GetCustomZoom());
+              sprintf(textMaxZoom, " - ");
           }
           else
           {
-                if(mw->Doc->GetReadingMode()==STRIP)
-                {
-                     sprintf(text, "STRIP\t\t\t");
-                }
-                else
-                {
-                     sprintf(text, "PAGE\t\t");
-
-                }
-
-                sprintf(text, "%sPage %d/%d", text , mw->Doc->GetCurrentPageNb(), mw->Doc->GetNbOfPages());
-                sprintf(textZoom, "Zoom: %d%% (Max:%s)", (int)(mw->Display->GetCurrentZoom()*100.), textMaxZoom);
+              sprintf(textMaxZoom, "%d%%", (int)(mw->Display->GetMaxZoom()*100.));
           }
+
+          if(mw->Doc)
+          {
+              if(mw->Doc->GetReadingMode()==CASE)
+              {
+                    sprintf(text, "PANEL\t\tPage %d/%d (Panel %d/%d)", mw->Doc->GetCurrentPageNb(), mw->Doc->GetNbOfPages(), mw->Doc->currentPage->GetActiveCase()+1, mw->Doc->currentPage->GetNbCases());
+
+                    sprintf(textZoom, "Zoom: %d%% (Max:%s / Additionnal:x%0.1f)", (int)(mw->Display->GetCurrentZoom()*100.), textMaxZoom, mw->Display->GetCustomZoom());
+              }
+              else
+              {
+                    if(mw->Doc->GetReadingMode()==STRIP)
+                    {
+                         sprintf(text, "STRIP\t\t\t");
+                    }
+                    else
+                    {
+                         sprintf(text, "PAGE\t\t");
+
+                    }
+
+                    sprintf(text, "%sPage %d/%d", text , mw->Doc->GetCurrentPageNb(), mw->Doc->GetNbOfPages());
+                    sprintf(textZoom, "Zoom: %d%% (Max:%s)", (int)(mw->Display->GetCurrentZoom()*100.), textMaxZoom);
+              }
+          }
+          else
+          {
+              sprintf(text, "%s", "\0");
+          }
+          mw->StatusBar->copy_label(text);
+          mw->StatusBar->redraw();
+          mw->StatusBarZoom->copy_label(textZoom);
       }
       else
       {
-          sprintf(text, "%s", "\0");
+          //No document open but library
+          sprintf(text, "Library folder: ", mw->Library->get_absolute_dir());
+          mw->StatusBar->copy_label("");
+          mw->StatusBar->redraw();
+          mw->StatusBarZoom->copy_label(text);
       }
-      mw->StatusBar->copy_label(text);
-      mw->StatusBar->redraw();
-      mw->StatusBarZoom->copy_label(textZoom);
+
       mw->StatusBarZoom->redraw();
 }
 //! Update the fullscreen status
@@ -484,6 +498,7 @@ void Close_cb(Fl_Widget* widget, void * param)
     //Make library availabe
     mw->Library->activate();
     Fl::check();
+    StatusBarUpdate(mw);
 }
 
 //! Export cancel button callback
@@ -1496,36 +1511,37 @@ MainWindow::MainWindow(const char *exepath, const char *f)
     Doc=NULL;
     PrefDoc=NULL;
 
+    //Use the program name (first argument) to get its full path (path used to store preferences on Windows)
+    char tmp[FL_PATH_MAX];
+    fl_filename_absolute(tmp, sizeof(tmp), exepath);
+    strncpy(ExePath, tmp, strlen(tmp)-strlen(fl_filename_name(tmp)));
+
     //Load user preferences
         Pref = new Preferences(exepath);
-        //Use the program name (first argument) to get its full path (path used to store preferences on Windows)
-            char tmp[FL_PATH_MAX];
-            fl_filename_absolute(tmp, sizeof(tmp), exepath);
-            strncpy(ExePath, tmp, strlen(tmp)-strlen(fl_filename_name(tmp)));
         Pref->Load("");
 
-    //Main vwindow creation
+    //Main window creation
         //Use saved window size and position (will be 0, 0, 600, 600 if nothing saved, and always lower than the available space on the screen)
         window=new Fl_Double_Window(Pref->GetWinX(), Pref->GetWinY(), min(Fl::w()-2,Pref->GetWinW()), min(Fl::h()-2,Pref->GetWinH()), "BDReader");
         window->color(fl_rgb_color(242,241,240));
 
-    //Set an icon
-    //Problem with windows compile (Pixmap not declared)
-    #ifndef __WINDOWS__
-        Pixmap mask;
-        XpmCreatePixmapFromData(fl_display, DefaultRootWindow(fl_display), (char **)Icon2_48_xpm, &icon_pix, &mask, 0);
-        window->icon((char *)icon_pix);
-    #else
-        window->icon((char *)LoadIcon(fl_display, MAKEINTRESOURCE(MAIN_ICON)));
-    #endif
-
-    //Widgets creation
-    window->begin();
+        //Set an icon
+        //Problem with windows compile (Pixmap not declared)
+        #ifndef __WINDOWS__
+            Pixmap mask;
+            XpmCreatePixmapFromData(fl_display, DefaultRootWindow(fl_display), (char **)Icon2_48_xpm, &icon_pix, &mask, 0);
+            window->icon((char *)icon_pix);
+        #else
+            window->icon((char *)LoadIcon(fl_display, MAKEINTRESOURCE(MAIN_ICON)));
+        #endif
 
         //Change predefined colors
         Fl::set_color(FL_BACKGROUND_COLOR, 242,241,240);
         Fl::set_color(FL_BACKGROUND2_COLOR, 229,229,228);
         Fl::set_color(FL_SELECTION_COLOR, 120, 0, 0);
+
+
+        //Widgets creation:
 
         //Main menu
             Fl_Menu_Item menuitems[] =
@@ -1746,8 +1762,9 @@ MainWindow::MainWindow(const char *exepath, const char *f)
     HelpDlg=NULL;
 
     //A library view
-    Library = new Fl_Books_Library(DisplayGrp->w(), DisplayGrp->h(), "BD library", Pref->GetLibraryFolder(), ExePath, 180, 180*1.53, 10);
-    Library->resize(0, MenuBar->h(), DisplayGrp->w(), DisplayGrp->h());
+    Library = new Fl_Books_Library(0, MenuBar->y()+MenuBar->h(), DisplayGrp->w(), DisplayGrp->h(), "", Pref->GetLibraryFolder(), ExePath, 180, 180*1.53, 10);
+    //Library->resize(0, MenuBar->h(), DisplayGrp->w(), DisplayGrp->h());
+    window->add(Library);
     Library->callback(Library_cb, (void*)this);
 
     //Initialize the window and Document
@@ -1831,6 +1848,7 @@ void MainWindow::Init(char *filename)
         {
             //Close library
             Library->hide();
+            DisplayGrp->show();
 
             //Delete old doc if one (using an intermediate pointer to avoid access)
             if(Doc)
@@ -1920,10 +1938,11 @@ void MainWindow::Init(char *filename)
     else
     {
         window->label("BDReader");
-        DisplayGrp->add(Library);
-        Library->clear_modal_states(); //was originally modal since not attached to a parent
+        //Library->clear_modal_states(); //was originally modal since not attached to a parent
         ActivateNavigationWidgets(this, false);
+        DisplayGrp->hide();
         Library->show();
+        Library->redraw();
     }
 }
 

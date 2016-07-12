@@ -159,29 +159,26 @@ void SortAndMerge(vector<Rect> *CasesTmp, int counter)
 
 //! Virtual constructor of the page
 /**Initialize values common to all page types.*/
-Page::Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, float display_ratio, int rotation, bool contrast)
+Page::Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, float display_ratio, int rotation, bool contrast):
+    Failed(false), //Not failed yet...
+    Loaded(false),
+    DetectionFailed(false),
+    ReadingMode(rd_mode),
+    PreviewPage(page_p),
+    DisplayRatio(display_ratio),
+    NbCases(0),
+    PageNb(page_nb),
+    NbPages(nb_pages),
+    Rotation(rotation),
+    ContrastEnhancement(contrast)
 {
-    //Init values common to all type of pages
-    Failed=false; //Not failed yet...
-    Loaded=false;
-    DetectionFailed=false;
-    ReadingMode=rd_mode;
-    PreviewPage=page_p;
-    DisplayRatio=display_ratio;
+    //Init
     if(ReadingMode!=PAGE && !PreviewPage)
-    {
         ActiveCase=0;
-    }
     else
-    {
         ActiveCase=-1;
-    }
-    NbCases=0;
+
     Cases.clear();
-    PageNb=page_nb;
-    NbPages=nb_pages;
-    Rotation=rotation;
-    ContrastEnhancement=contrast;
 
     #ifdef DEBUG
         printf("create %d\n", PageNb);

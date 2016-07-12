@@ -51,6 +51,8 @@ class Document
         void UpdatePreloadedPages();
         void ReloadPages();
 
+        int WriteDocumentThumbnail(const char *name, int width=128);
+
         int NextCase();
         int PreviousCase();
         int NextPage();

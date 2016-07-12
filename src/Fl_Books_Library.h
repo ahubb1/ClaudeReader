@@ -35,6 +35,7 @@
 #include <vector>
 #include <sys/stat.h>
 #include <FL/Fl.H>
+#include <FL/fl_draw.H>
 #include <FL/fl_ask.H>
 #include <FL/filename.H>
 #include <FL/Fl_Double_Window.H>
@@ -59,11 +60,15 @@
     #include <commctrl.h>
     #include <commoncontrols.h>
     #include <time.h>
-#else
-    #include <glib.h>
 #endif
 
+#include "md5.h"
+
 #include "Preferences.h"
+#include "Document.h"
+#include "Document_pdf.h"
+#include "Document_archive.h"
+#include "Document_folder.h"
 
 class Fl_Library_Element: public Fl_Button
 {
@@ -103,10 +108,10 @@ class Fl_Library_Element: public Fl_Button
 
 
 
-class Fl_Books_Library: public Fl_Double_Window
+class Fl_Books_Library: public Fl_Group//public Fl_Double_Window
 {
 	public:
-		Fl_Books_Library(int ww, int hh, const char *l, const char * lib_dir, const char *wind, unsigned int child_ww, unsigned int child_hh, unsigned int sp);
+		Fl_Books_Library(int xx, int yy, int ww, int hh, const char *l, const char * lib_dir, const char *wind, unsigned int child_ww, unsigned int child_hh, unsigned int sp);
 		~Fl_Books_Library();
 
 
@@ -182,11 +187,12 @@ class Fl_Books_Library: public Fl_Double_Window
         void resize(int xx, int yy, int ww, int hh)
         {
             int old_w=w(), old_h=h();
-            Fl_Double_Window::resize(xx, yy, ww, hh);
+            //Fl_Double_Window::resize(xx, yy, ww, hh);
+            Fl_Group::resize(xx, yy, ww, hh);
 
             if(ww!=old_w || hh!=old_h)
             {
-                MenuBar->resize(0, 0, w(), 25);
+                MenuBar->resize(xx, yy, w(), 25);
                 if((MenuBar->child(MenuBar->children()))->w()<10)//the space children
                 {
                     Main_Group->size(3./5.*w()-5, Main_Group->h());

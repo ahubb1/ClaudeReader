@@ -147,96 +147,67 @@ Fl_Library_Element::Fl_Library_Element(int xx, int yy, int ww, int hh, const cha
     //Thumbnail:
         //Get md5sum and retrieve thumbnail if exists in .cache/thumbnails/large or .cache/thumbnails/normal
         std::string fileURI_s=UriEncode(std::string(AbsoluteFilename));fileURI_s="file://"+fileURI_s;
+        string md5_hash = MD5(fileURI_s).hexdigest();
         #ifndef __WINDOWS__
-        gchar *md5_hash=g_compute_checksum_for_string(G_CHECKSUM_MD5, fileURI_s.c_str(), fileURI_s.length());
-        sprintf(ThumbnailName, "%s/.cache/thumbnails/large/%s.png", getenv("HOME"), md5_hash); //AND TEST ALSO: "%s/.cache/thumbnails/normal/%s.png"
+            sprintf(ThumbnailName, "%s/.cache/thumbnails/large/%s.png", getenv("HOME"), md5_hash.c_str());
+        #else
+            //Own thumbnails in pref directory
+            HRESULT hres = SHGetFolderPath(NULL, CSIDL_COMMON_APPDATA, NULL, SHGFP_TYPE_CURRENT, ThumbnailName);
+            if(hres!=S_OK)
+            {
+                printf("Error retrieving path. Using: ");
+                snprintf(ThumbnailName, FL_PATH_MAX, "%s", getenv("HOME"));
+            }
+            sprintf(ThumbnailName, "%s\\BDReader\\thumbnails\\%s.png", ThumbnailName, md5_hash.c_str());
+        #endif
+
         //apply it to box
         Img = new Fl_PNG_Image(ThumbnailName);
-        //Id doesn't exist try folder one
-        //TODO: create one:
-        //open document using bdreader (other instance and command line ?)
-        //reopen...
-        //and on Windows: check in exe folder (as preferences) and create one with hash if not already...
+        //If does not exist
         if(Img->w()==0)
         {
             //Fallback to folder.jpg
             delete Img;
             sprintf(ThumbnailName, "%s%sfolder.jpg", abs_lib_dir, relative_path);
             Img = new Fl_JPEG_Image(ThumbnailName);
+
+            //Or create one
+            if(Img->w()==0)
+            {
+                delete Img;
+                Document *doc;
+                if(strstr(Filename, ".pdf" )!=NULL)
+                {
+                    doc = new Document_pdf(AbsoluteFilename);
+                }
+                else if( (strstr(Filename, ".cbr" )!=NULL) || (strstr(Filename, ".cbz" )!=NULL) || (strstr(Filename, ".cbt" )!=NULL) || (strstr(Filename, ".cb7" )!=NULL) || (strstr(Filename, ".epub" )!=NULL))
+                {
+                    doc = new Document_archive(AbsoluteFilename);
+                }
+                #ifndef __WINDOWS__
+                    sprintf(ThumbnailName, "%s/.cache/thumbnails/large/%s.png", getenv("HOME"), md5_hash.c_str());
+                #else
+                    //Own thumbnails in pref directory
+                    HRESULT hres = SHGetFolderPath(NULL, CSIDL_COMMON_APPDATA, NULL, SHGFP_TYPE_CURRENT, ThumbnailName);
+                    if(hres!=S_OK)
+                    {
+                        printf("Error retrieving path. Using: ");
+                        snprintf(ThumbnailName, FL_PATH_MAX, "%s", getenv("HOME"));
+                    }
+                    sprintf(ThumbnailName, "%s\\BDReader", ThumbnailName);
+                    mkdir(ThumbnailName);
+                    sprintf(ThumbnailName, "%s\\thumbnails", ThumbnailName);
+                    mkdir(ThumbnailName);
+                    sprintf(ThumbnailName, "%s\\%s.png", ThumbnailName, md5_hash.c_str());
+                    printf("Creating %s\n", ThumbnailName);
+                #endif
+                if(doc->WriteDocumentThumbnail(ThumbnailName, 180)>=0)
+                {
+                    Img = new Fl_PNG_Image(ThumbnailName);
+                }
+                delete doc;
+            }
         }
-        #else
-            /*std::wstring wc(strlen(AbsoluteFilename), L'#');
-            mbstowcs(&wc[0], AbsoluteFilename, strlen(AbsoluteFilename));
-            wchar_t *pwstr = (wchar_t*)wc.c_str();
-            LPOLESTR lpDesc(pwstr);
-            HGLOBAL hglobal=OleGetIconOfFile(lpDesc, FALSE);
-
-            LPVOID WINAPI memPtr = GlobalLock(hglobal);
-
-            METAFILEPICT mfp;
-            memcpy((void*)&mfp, (void*)memPtr, sizeof(mfp));
-            HMETAFILE hMF;
-            hMF = mfp.hMF;
-            GlobalUnlock(hglobal);
-
-            int n = GetMetaFileBitsEx(hMF, 0, 0); //just get nb
-            void* mfdata;
-            if(n>0)
-            {
-                mfdata=(void*)malloc(n-1);
-                GetMetaFileBitsEx(hMF, n, mfdata);
-                Img = new Fl_RGB_Image ((uchar *)mfdata, mfp.xExt, mfp.yExt);
-            }
-            else
-            {
-                Img = new Fl_PNG_Image("");
-            }
-            GlobalFree(hglobal);
-            Img = new Fl_RGB_Image ((uchar *)mfdata, mfp.xExt, mfp.yExt);*/
-
-            /*C#:
-            ShellFile shellFile = ShellFile.FromFilePath(pathToYourFile);
-            Bitmap shellThumb = shellFile.Thumbnail.ExtraLargeBitmap;*/
-
-
-//            // Get the image list index of the icon
-//            SHFILEINFO sfi;
-//            std::string wc(AbsoluteFilename);
-//            LPCTSTR pszPath((LPCTSTR)AbsoluteFilename);
-//            if (!SHGetFileInfo(pszPath, 0, &sfi, sizeof(sfi), SHGFI_SYSICONINDEX))
-//            {
-//                //error
-//            }
-//
-//            // Get the jumbo image list
-//            HIMAGELIST* piml;
-//            if (FAILED(SHGetImageList(2, IID_IImageList, (void**)&piml))) //2 is for extra-large icons, use 4 for even large (jumbos)
-//            {
-//                //error
-//            }
-//            /*//OR
-//            IImageList *piml;
-//            if ( FAILED(SHGetImageList(2, IID_PPV_ARGS(&piml))) )//2 is for extra-large icons, use 4 for even large (jumbos)
-//            {
-//                //error
-//            }*/
-//
-//
-//            // Extract an icon
-//            HICON hico;
-//            ((IImageList*)piml)->GetIcon(sfi.iIcon, ILD_TRANSPARENT, &hico);
-//
-//            // Clean up
-//            ((IImageList*)piml)->Release();
-//
-//            //hico is the ICON...
-//            //HBITMAP bmp = hico->hbmColor; //HICON not HICONINFO....
-//            ICONINFO iconinfo;
-//            GetIconInfo(hico, &iconinfo);
-//            HBITMAP hBitmap = iconinfo.hbmColor;
-
-            Img = new Fl_PNG_Image("");
-        #endif
         image(Img);
 
     //Preference file:
@@ -311,8 +282,13 @@ Fl_Library_Element::Fl_Library_Element(int xx, int yy, int ww, int hh, const cha
 
 
 
+void reload_cb(void * library)
+{
+    ((Fl_Books_Library*)library)->reload();
+}
 
-Fl_Books_Library::Fl_Books_Library(int ww, int hh, const char *l, const char * lib_dir, const char *wind, unsigned int child_ww, unsigned int child_hh, unsigned int sp=0):Fl_Double_Window(ww, hh, l)
+
+Fl_Books_Library::Fl_Books_Library(int xx, int yy, int ww, int hh, const char *l, const char * lib_dir, const char *wind, unsigned int child_ww, unsigned int child_hh, unsigned int sp=0):Fl_Group(xx, yy, ww, hh, l)//Fl_Double_Window(ww, hh, l)
 {
     nb_visible_elem=0;
     child_w=child_ww;
@@ -320,12 +296,12 @@ Fl_Books_Library::Fl_Books_Library(int ww, int hh, const char *l, const char * l
     _spacing=sp;
 
     //Top bar
-    MenuBar = new Fl_Group(0, 0, w(), 25);
+    MenuBar = new Fl_Group(x(), y(), w(), 25);
         //Space
-        Fl_Box emptyspace(0,0,10,30);
-        Main_Group = new Fl_Group(10, 3, 110+w()/6.+50+80+40+70+15+60, 20);
+        Fl_Box emptyspace(x(), y(), 10, 30);
+        Main_Group = new Fl_Group(x()+10, y()+3, 110+w()/6.+50+80+40+70+15+60, 20);
             //Lib folder
-            Fl_Group * grp = new Fl_Group(10, 3, 110+w()/6., 20);
+            Fl_Group * grp = new Fl_Group(x()+10, y()+3, 110+w()/6., 20);
                 Fl_Box * label = new Fl_Box(grp->x(), grp->y(), 110, 20, "Library folder:");label->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
                 LibFolder_Input = new Fl_Input(label->x()+label->w(), grp->y(), w()/6., 20, "");
                 LibFolder_Input->value("");
@@ -368,7 +344,7 @@ Fl_Books_Library::Fl_Books_Library(int ww, int hh, const char *l, const char * l
             Search_Input->value("");
             Search_Input->callback(Fl_Books_Library::Search_cb, this);
             Search_Input->when(FL_WHEN_CHANGED);
-            Search_Label = new Fl_Box(Search_Input->x()+Search_Input->w()-100, 3, 100, 20, "0 results");
+            Search_Label = new Fl_Box(Search_Input->x()+Search_Input->w()-100, grp->y(), 100, 20, "0 results");
             Search_Label->align(FL_ALIGN_RIGHT);
         Search_Group->end();
         Search_Group->resizable(Search_Input);
@@ -377,7 +353,7 @@ Fl_Books_Library::Fl_Books_Library(int ww, int hh, const char *l, const char * l
     MenuBar->end();
     MenuBar->resizable(space);
 
-    Main_Scroll = new Fl_Scroll(0, MenuBar->y()+MenuBar->h(), w(), h()-(MenuBar->y()+MenuBar->h()));
+    Main_Scroll = new Fl_Scroll(xx, MenuBar->y()+MenuBar->h(), w(), h()-MenuBar->h());
         emptyboxtop = new Fl_Box(Main_Scroll->x(), Main_Scroll->y(), Main_Scroll->w()-20, 10); //Margin at the top of the main scroll
         emptyboxtop->box(FL_NO_BOX);
         int box_w=180;
@@ -401,11 +377,11 @@ Fl_Books_Library::Fl_Books_Library(int ww, int hh, const char *l, const char * l
     resizable(Main_Scroll);
     //size_range(800, 300, 0, 0, 5, 5, 0);
     color(FL_BACKGROUND_COLOR);
-    //Set modal if independant window
+    /*Set modal if independant window
     if(Fl_Double_Window::parent()==NULL)
         set_modal();
     else
-        clear_modal_states();
+        clear_modal_states();*/
 
     //Assign library directory
     set_dir(lib_dir, wind);
@@ -413,8 +389,9 @@ Fl_Books_Library::Fl_Books_Library(int ww, int hh, const char *l, const char * l
     elem_callback=NULL;
     elem_callback_param=NULL;
 
-    //Go through directory
-    reload();
+    //Go through directory but allow time to show windows...
+    Fl::add_timeout(0.2, reload_cb, (void*)this);
+    Fl::check();
 }
 
 
@@ -477,7 +454,7 @@ bool Fl_Books_Library::add_element(const char *relative_path, const char *filena
 void Fl_Books_Library::refresh()
 {
     //Be patient
-    cursor(FL_CURSOR_WAIT);
+    fl_cursor(FL_CURSOR_WAIT);
 
     //Just refresh what should be visible or not and re-organize (columns...)
 
@@ -575,7 +552,7 @@ void Fl_Books_Library::refresh()
             elements[i]->hide();
         }
         /*redraw();
-        Fl::check(); Rigolo mais lent*/
+        Fl::wait(0.01); //Rigolo mais lent*/
     }
 
     //Show nb of results
@@ -589,7 +566,7 @@ void Fl_Books_Library::refresh()
     //Redraw everything !
     redraw();
 
-    cursor(FL_CURSOR_DEFAULT);
+    fl_cursor(FL_CURSOR_DEFAULT);
 }
 
 
@@ -606,7 +583,7 @@ void Fl_Books_Library::reload()
     progress_bar->selection_color(FL_SELECTION_COLOR);
     waiting_window.end();
     waiting_window.show();
-    cursor(FL_CURSOR_WAIT);
+    fl_cursor(FL_CURSOR_WAIT);
     deactivate();
     redraw();
 
@@ -669,11 +646,13 @@ void Fl_Books_Library::reload()
     }
     fl_filename_free_list(&dir_listing, nb_files);
     Fl::check();
-    printf("%d comics found.\n", elements.size());
+    #ifdef DEBUG
+        printf("%d comics found.\n", elements.size());
+    #endif
 
 
     refresh();
-    cursor(FL_CURSOR_DEFAULT);
+    fl_cursor(FL_CURSOR_DEFAULT);
     activate();
     redraw();
 }

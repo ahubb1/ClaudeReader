@@ -6,7 +6,6 @@ AC_LANG_PUSH([C++])
 
 #Check headers
 AC_CHECK_HEADERS([FL/Fl.H Fl.H Fl.h], [break;])
-#AC_CHECK_HEADERS([opencv2/opencv.hpp opencv.hpp], [break;])
 AC_CHECK_HEADERS([opencv2/core/core.hpp core/core.hpp], [break;])
 AC_CHECK_HEADERS([opencv2/imgproc/imgproc.hpp imgproc/imgproc.hpp], [break;])
 AC_CHECK_HEADERS([opencv2/highgui/highgui.hpp highgui/highgui.hpp], [break;])
@@ -69,9 +68,6 @@ AC_CHECK_LIB([opencv_highgui], [main], [], [
 AC_CHECK_LIB([archive], [main], [], [
   AC_MSG_ERROR([unable to find libarchive library.])
 ])
-#glib
-PKG_CHECK_MODULES([GLIB], [glib-2.0], [have_libglib=yes], [have_libglib=no])
-AM_CONDITIONAL([GLIB],  [test "$have_libglib" = "yes"])
 
 
 #Compiler check
