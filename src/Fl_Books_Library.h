@@ -50,6 +50,7 @@
 #include <FL/Fl_PNG_Image.H>
 #include <FL/Fl_JPEG_Image.H>
 #include <FL/Fl_Progress.H>
+#include <FL/Fl_Native_File_Chooser.H>
 
 #ifdef __WINDOWS__
     #include <windows.h>
@@ -135,6 +136,9 @@ class Fl_Books_Library: public Fl_Group//public Fl_Double_Window
             ((Fl_Books_Library*)p)->refresh();
         }
 
+        //External callbacks
+        friend void SelectLibFolder_cb(Fl_Widget* v, void *p);
+
 
 		void spacing(int val)
 		{
@@ -187,7 +191,6 @@ class Fl_Books_Library: public Fl_Group//public Fl_Double_Window
         void resize(int xx, int yy, int ww, int hh)
         {
             int old_w=w(), old_h=h();
-            //Fl_Double_Window::resize(xx, yy, ww, hh);
             Fl_Group::resize(xx, yy, ww, hh);
 
             if(ww!=old_w || hh!=old_h)
@@ -211,7 +214,6 @@ class Fl_Books_Library: public Fl_Group//public Fl_Double_Window
                 Main_Scroll->scroll_to(0, 0);
             }
         }
-
 
 		int cols(){return _cols;}
 		int rows(){return sub_packs.size();}

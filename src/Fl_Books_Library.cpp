@@ -287,6 +287,24 @@ void reload_cb(void * library)
     ((Fl_Books_Library*)library)->reload();
 }
 
+void SelectLibFolder_cb(Fl_Widget * w, void* p)
+{
+    Fl_Books_Library *bl = (Fl_Books_Library*)p;
+
+    Fl_Native_File_Chooser chooser=Fl_Native_File_Chooser();
+    chooser.title("Select library folder");
+    chooser.type(Fl_Native_File_Chooser::BROWSE_DIRECTORY);
+    char folder[FL_PATH_MAX];
+    chooser.directory(bl->abs_lib_dir);
+
+    //Show the chooser window
+    int ret=chooser.show();
+    if(ret !=1 && ret!=-1)
+    {
+        bl->LibFolder_Input->value(chooser.filename());
+        bl->apply_dir(bl->LibFolder_Input->value(), bl->windir);
+    }
+}
 
 Fl_Books_Library::Fl_Books_Library(int xx, int yy, int ww, int hh, const char *l, const char * lib_dir, const char *wind, unsigned int child_ww, unsigned int child_hh, unsigned int sp=0):Fl_Group(xx, yy, ww, hh, l)//Fl_Double_Window(ww, hh, l)
 {
@@ -302,7 +320,8 @@ Fl_Books_Library::Fl_Books_Library(int xx, int yy, int ww, int hh, const char *l
         Main_Group = new Fl_Group(x()+10, y()+3, 110+w()/6.+50+80+40+70+15+60, 20);
             //Lib folder
             Fl_Group * grp = new Fl_Group(x()+10, y()+3, 110+w()/6., 20);
-                Fl_Box * label = new Fl_Box(grp->x(), grp->y(), 110, 20, "Library folder:");label->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
+                Fl_Button * label = new Fl_Button(grp->x(), grp->y(), 110, 20, "Library folder:");label->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
+                label->callback(SelectLibFolder_cb, (void*)this);
                 LibFolder_Input = new Fl_Input(label->x()+label->w(), grp->y(), w()/6., 20, "");
                 LibFolder_Input->value("");
                 LibFolder_Input->callback(Fl_Books_Library::LibFolder_cb, this);
@@ -542,7 +561,6 @@ void Fl_Books_Library::refresh()
                 add_subpack();
             }
             //insert elem in the last subpack
-            //printf("item: %d %d %d %s\n", i, sub_packs[sub_packs.size()-1]->h(), elements[i]->h(), elements[i]->label());
             sub_packs[sub_packs.size()-1]->add(elements[i]);
             //show it
             elements[i]->show();
@@ -649,7 +667,6 @@ void Fl_Books_Library::reload()
     #ifdef DEBUG
         printf("%d comics found.\n", elements.size());
     #endif
-
 
     refresh();
     fl_cursor(FL_CURSOR_DEFAULT);

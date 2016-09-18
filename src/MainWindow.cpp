@@ -1763,7 +1763,6 @@ MainWindow::MainWindow(const char *exepath, const char *f)
 
     //A library view
     Library = new Fl_Books_Library(0, MenuBar->y()+MenuBar->h(), DisplayGrp->w(), DisplayGrp->h(), "", Pref->GetLibraryFolder(), ExePath, 180, 180*1.53, 10);
-    //Library->resize(0, MenuBar->h(), DisplayGrp->w(), DisplayGrp->h());
     window->add(Library);
     Library->callback(Library_cb, (void*)this);
 
@@ -1938,7 +1937,6 @@ void MainWindow::Init(char *filename)
     else
     {
         window->label("BDReader");
-        //Library->clear_modal_states(); //was originally modal since not attached to a parent
         ActivateNavigationWidgets(this, false);
         DisplayGrp->hide();
         Library->show();
