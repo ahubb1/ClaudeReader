@@ -497,6 +497,7 @@ void Close_cb(Fl_Widget* widget, void * param)
 
     //Make library availabe
     mw->Library->activate();
+    mw->Library->set_filter(1);//set to unread by default
     Fl::check();
     StatusBarUpdate(mw);
 }
@@ -1939,7 +1940,11 @@ void MainWindow::Init(char *filename)
         window->label("BDReader");
         ActivateNavigationWidgets(this, false);
         DisplayGrp->hide();
+        //The library
         Library->show();
+        /*Load last read comics, if any
+        printf("Pref says: %d/%d\n", PrefDoc->GetLastPageNb(), PrefDoc->GetNbPages());
+        //Choose either unread or read by default depending if last comics was finished or not*/
         Library->redraw();
     }
 }

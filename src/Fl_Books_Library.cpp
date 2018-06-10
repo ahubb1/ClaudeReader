@@ -166,10 +166,10 @@ Fl_Library_Element::Fl_Library_Element(int xx, int yy, int ww, int hh, const cha
         //If does not exist
         if(Img->w()==0)
         {
-            //Fallback to folder.jpg
+            /*Fallback to folder.jpg
             delete Img;
             sprintf(ThumbnailName, "%s%sfolder.jpg", abs_lib_dir, relative_path);
-            Img = new Fl_JPEG_Image(ThumbnailName);
+            Img = new Fl_JPEG_Image(ThumbnailName);*/
 
             //Or create one
             if(Img->w()==0)
@@ -660,6 +660,10 @@ void Fl_Books_Library::reload()
             add_element("", dir_listing[i]->d_name, windir);
         }
         progress_bar->value(i/(float)nb_files);
+        /*Exact values are inacurate: nb of files is not nb of comics: folders, other files etc...
+        char progresstxt[12];
+        sprintf(progresstxt, "%d/%d", i, nb_files);
+        progress_bar->label(progresstxt);*/
         Fl::check();
     }
     fl_filename_free_list(&dir_listing, nb_files);

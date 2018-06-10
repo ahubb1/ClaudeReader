@@ -181,6 +181,12 @@ class Fl_Books_Library: public Fl_Group//public Fl_Double_Window
 		void refresh();
 		void reload();
 
+		void set_filter(int idx)
+		{
+		    Filter_Choice->value(idx);
+		    refresh();
+		}
+
         bool set_dir(const char * lib_dir, const char *wind);
         void apply_dir(const char * lib_dir=0, const char *wind=0);
 
