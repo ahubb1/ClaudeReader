@@ -1,6 +1,6 @@
 //--------------------------------------------------------------------------
 //
-//    Copyright (C) 2014-2016 Vincent Crocher
+//    Copyright (C) 2014-2018 Vincent Crocher
 //
 //	  This file is part of BDReader.
 //

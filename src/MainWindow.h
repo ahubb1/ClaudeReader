@@ -62,11 +62,12 @@
     #include "WinRC.h"
 #endif
 
-#define WITH_LIBRARY
+//#define WITH_LIBRARY
 
 
 void Fullscreen_cb(Fl_Widget* widget, void * param);
 
+Document * OpenPerExtension(char *Filename);
 
 
 //! The main window and all its widgets (buttons, sliders...). Also the main "document" of the program.

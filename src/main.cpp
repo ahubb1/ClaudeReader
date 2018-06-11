@@ -45,20 +45,23 @@ int main(int argc, char **argv)
         static struct option long_options[] =
         {
             //Supported options
+            {"export", required_argument,  0, 'e'},
             {"version", no_argument,       0, 'v'},
-            {"help",  no_argument,       0, 'h'},
+            {"help",  no_argument,         0, 'h'},
             //{"output",    required_argument, 0, 'o'},
             {0, 0, 0, 0}
         };
         // getopt_long stores the option index here.
         int option_index = 0;
 
-        OptionChar = getopt_long (argc, argv, ":vh", long_options, &option_index);
+        OptionChar = getopt_long (argc, argv, ":vhe:", long_options, &option_index);
 
         // Detect the end of the options
         if (OptionChar == -1)
          break;
 
+
+         Document *doc;
          switch (OptionChar)
          {
              case 0:
@@ -73,6 +76,21 @@ int main(int argc, char **argv)
              case '?':
              case 'h':
                 printf("%s\n", HELPCMD_STRING);
+                return 0;
+                break;
+
+             case 'e':
+                printf("Export %s\n", optarg);
+                doc=OpenPerExtension(optarg);
+                if(doc && doc->GetNbOfPages()>0)
+                {
+
+                    delete doc;
+                }
+                else
+                {
+                    printf("Unable to open %s.\n", optarg);
+                }
                 return 0;
                 break;
 

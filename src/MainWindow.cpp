@@ -35,6 +35,42 @@ bool isDNDavailable=false;
 char DNDFilename[FL_PATH_MAX];
 
 
+//! Wrapper function to select Document type and open it according to file extension
+//!Return a pointer to created document if succesfull
+Document * OpenPerExtension(char *Filename)
+{
+    Document *new_doc=NULL;
+
+    bool extOk=false;
+    //select type according to extension
+    if(strstr(Filename, ".pdf" )!=NULL)
+    {
+        new_doc=new Document_pdf(Filename);
+        extOk=true;
+    }
+    else
+    {
+        if( (strstr(Filename, ".cbr" )!=NULL) || (strstr(Filename, ".cbz" )!=NULL) || (strstr(Filename, ".cbt" )!=NULL) || (strstr(Filename, ".cb7" )!=NULL) ||
+            (strstr(Filename, ".epub" )!=NULL) ||
+            (strstr(Filename, ".zip" )!=NULL) || (strstr(Filename, ".rar" )!=NULL) || (strstr(Filename, ".tar" )!=NULL) || (strstr(Filename, ".7z" )!=NULL))
+        {
+            new_doc=new Document_archive(Filename);
+            extOk=true;
+        }
+        else
+        {
+            if(fl_filename_isdir(Filename)!=0)
+            {
+                new_doc=new Document_folder(Filename);
+                extOk=true;
+            }
+        }
+    }
+
+    return new_doc;
+}
+
+
 //--------------------------- Update functions ---------------------------
 //! Update the current view (Display, status bar, thumbnails...) and preload
 //!Called when a new page should be displayed.
@@ -1828,35 +1864,10 @@ void MainWindow::Init(char *filename)
         }
 
         //Create a document using the new filename
-        Document *new_doc;
-        bool extOk=false;
-        //select type according to extension
-        if(strstr(Filename, ".pdf" )!=NULL)
-        {
-            new_doc=new Document_pdf(Filename);
-            extOk=true;
-        }
-        else
-        {
-            if( (strstr(Filename, ".cbr" )!=NULL) || (strstr(Filename, ".cbz" )!=NULL) || (strstr(Filename, ".cbt" )!=NULL) || (strstr(Filename, ".cb7" )!=NULL) ||
-                (strstr(Filename, ".epub" )!=NULL) ||
-                (strstr(Filename, ".zip" )!=NULL) || (strstr(Filename, ".rar" )!=NULL) || (strstr(Filename, ".tar" )!=NULL) || (strstr(Filename, ".7z" )!=NULL))
-            {
-                new_doc=new Document_archive(Filename);
-                extOk=true;
-            }
-            else
-            {
-                if(fl_filename_isdir(Filename)!=0)
-                {
-                    new_doc=new Document_folder(Filename);
-                    extOk=true;
-                }
-            }
-        }
+        Document *new_doc=OpenPerExtension(Filename);
 
         //Check if the document has been opened
-        if(extOk && new_doc->GetNbOfPages()>0)
+        if(new_doc && new_doc->GetNbOfPages()>0)
         {
             //Close library
             #ifdef WITH_LIBRARY
