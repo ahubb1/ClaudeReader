@@ -62,7 +62,7 @@
     #include "WinRC.h"
 #endif
 
-//#define WITH_LIBRARY
+#define WITH_LIBRARY
 
 
 void Fullscreen_cb(Fl_Widget* widget, void * param);
