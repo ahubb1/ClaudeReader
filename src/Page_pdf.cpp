@@ -40,7 +40,7 @@ Page_pdf::Page_pdf(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, 
 void Page_pdf::Load(fz_context *fzctx, fz_document *fzdoc)
 {
     //Load it (numbering from 0, not 1)
-    fz_page *fzpage = fz_load_page(fzdoc, PageNb-1);
+    fz_page *fzpage = fz_load_page(fzctx, fzdoc, PageNb-1);
 
     //Transform of the display
     int rotation=0;
@@ -66,7 +66,7 @@ void Page_pdf::Load(fz_context *fzctx, fz_document *fzdoc)
     fz_rect bounds;
     fz_try(fzctx)
     {
-        fz_bound_page(fzdoc, fzpage, &bounds);
+        fz_bound_page(fzctx, fzpage, &bounds);
         fz_transform_rect(&bounds, &transform);
     }
     fz_catch(fzctx)
@@ -102,9 +102,9 @@ void Page_pdf::Load(fz_context *fzctx, fz_document *fzdoc)
     fz_try(fzctx)
     {
         fz_device *dev = fz_new_draw_device(fzctx, pix);
-        fz_run_page_contents(fzdoc, fzpage, dev, &transform, NULL);
-        fz_free_device(dev);
-        fz_free_page(fzdoc, fzpage);
+        fz_run_page_contents(fzctx, fzpage, dev, &transform, NULL);
+        fz_drop_device(fzctx, dev);
+        fz_drop_page(fzctx, fzpage);
     }
     fz_catch(fzctx)
     {

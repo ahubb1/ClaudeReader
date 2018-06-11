@@ -39,17 +39,17 @@ AC_CHECK_LIB([Xinerama], [XineramaQueryScreens], [], [
   AC_MSG_ERROR([unable to find Xinerama library.])
 ])
 #mupdf
-AC_CHECK_LIB([mupdf], [fz_free], [], [
-  AC_MSG_ERROR([unable to find fz_free() function (mupdf library).])
+AC_CHECK_LIB([mupdf], [fz_drop_context], [], [
+  AC_MSG_ERROR([unable to find fz_drop_context() function (mupdf library >1.5).])
 ])
-AC_CHECK_LIB([mupdf-js-none], [pdf_new_js], [], [
-  AC_MSG_ERROR([unable to find pdf_new_js() function (mupdf-js-none library).])
-])
+#AC_CHECK_LIB([mupdf-js-none], [pdf_new_js], [], [
+#  AC_MSG_ERROR([unable to find pdf_new_js() function (mupdf-js-none library).])
+#])
 AC_CHECK_LIB([jpeg], [main], [], [
   AC_MSG_ERROR([unable to find jpeg library.])
 ])
-AC_CHECK_LIB([openjpeg], [main], [], [
-  AC_MSG_ERROR([unable to find openjpeg library.])
+AC_CHECK_LIB([openjp2], [main], [], [
+  AC_MSG_ERROR([unable to find openjpeg library (openjp2).])
 ])
 AC_CHECK_LIB([jbig2dec], [main], [], [
   AC_MSG_ERROR([unable to find jbig2dec library.])

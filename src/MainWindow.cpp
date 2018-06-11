@@ -142,7 +142,11 @@ void StatusBarUpdate(void * param)
       else
       {
           //No document open but library
-          sprintf(text, "Library folder: ", mw->Library->get_absolute_dir());
+          #ifdef WITH_LIBRARY
+            sprintf(text, "Library folder: ", mw->Library->get_absolute_dir());
+          #else
+            sprintf(text, "");
+          #endif
           mw->StatusBar->copy_label("");
           mw->StatusBar->redraw();
           mw->StatusBarZoom->copy_label(text);
@@ -366,6 +370,7 @@ void ResizingEvents(Fl_Widget* widget, void* param)
 
 //---------------------------------File menu----------------------------------
 //! Open document from library
+#ifdef WITH_LIBRARY
 void Library_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
@@ -385,6 +390,7 @@ void Library_cb(Fl_Widget* widget, void * param)
     mw->window->cursor(FL_CURSOR_DEFAULT);
     Fl::check();
 }
+#endif
 
 //! Open a document and load it (through a call to Init())
 void Open_cb(Fl_Widget* widget, void * param)
@@ -496,8 +502,10 @@ void Close_cb(Fl_Widget* widget, void * param)
     mw->Init("");
 
     //Make library availabe
+    #ifdef WITH_LIBRARY
     mw->Library->activate();
     mw->Library->set_filter(1);//set to unread by default
+    #endif
     Fl::check();
     StatusBarUpdate(mw);
 }
@@ -723,6 +731,7 @@ void SuggestNextFile(void *param)
 {
     MainWindow *mw=(MainWindow*)param;
 
+    #ifdef WITH_LIBRARY
     //Get suggested next comics
     char suggestion_filename[2048], suggestion_short_filename[2048];
     int ret = mw->Library->GetSuggestionNext(mw->Filename, suggestion_filename, suggestion_short_filename);
@@ -751,6 +760,7 @@ void SuggestNextFile(void *param)
             mw->Init(suggestion_filename);
             break;
     }
+    #endif
 }
 //-----------------------------------------------------------------------------
 
@@ -1763,9 +1773,11 @@ MainWindow::MainWindow(const char *exepath, const char *f)
     HelpDlg=NULL;
 
     //A library view
-    Library = new Fl_Books_Library(0, MenuBar->y()+MenuBar->h(), DisplayGrp->w(), DisplayGrp->h(), "", Pref->GetLibraryFolder(), ExePath, 180, 180*1.53, 10);
-    window->add(Library);
-    Library->callback(Library_cb, (void*)this);
+    #ifdef WITH_LIBRARY
+        Library = new Fl_Books_Library(0, MenuBar->y()+MenuBar->h(), DisplayGrp->w(), DisplayGrp->h(), "", Pref->GetLibraryFolder(), ExePath, 180, 180*1.53, 10);
+        window->add(Library);
+        Library->callback(Library_cb, (void*)this);
+    #endif
 
     //Initialize the window and Document
     UpdateWidgets(this);
@@ -1847,7 +1859,9 @@ void MainWindow::Init(char *filename)
         if(extOk && new_doc->GetNbOfPages()>0)
         {
             //Close library
+            #ifdef WITH_LIBRARY
             Library->hide();
+            #endif
             DisplayGrp->show();
 
             //Delete old doc if one (using an intermediate pointer to avoid access)
@@ -1931,7 +1945,9 @@ void MainWindow::Init(char *filename)
                 StatusUpdate(this);
 
                 //Reactivate library
+                #ifdef WITH_LIBRARY
                 Library->activate();
+                #endif
             }
         }
     }
@@ -1941,11 +1957,13 @@ void MainWindow::Init(char *filename)
         ActivateNavigationWidgets(this, false);
         DisplayGrp->hide();
         //The library
+        #ifdef WITH_LIBRARY
         Library->show();
         /*Load last read comics, if any
         printf("Pref says: %d/%d\n", PrefDoc->GetLastPageNb(), PrefDoc->GetNbPages());
         //Choose either unread or read by default depending if last comics was finished or not*/
         Library->redraw();
+        #endif
     }
 }
 
@@ -1975,7 +1993,9 @@ void MainWindow::SavePref()
         Pref->SetWinY(window->y());
      }
      //The Library path
+     #ifdef WITH_LIBRARY
      Pref->SetLibraryFolder(Library->get_absolute_dir());
+     #endif
 
      /*The preferences preferences
      Pref->SetSavePref(((Fl_Menu_Item*)MenuBar->find_item("&Preferences/Save preferences\t"))->value());

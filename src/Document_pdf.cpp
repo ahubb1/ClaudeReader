@@ -41,16 +41,27 @@ int Document_pdf::Open()
 {
     // Create a context to hold the exception stack and various caches.
     FzCtx = fz_new_context(NULL, NULL, FZ_STORE_UNLIMITED);
+
+    // Register the default file types to handle
+	fz_try(FzCtx)
+		fz_register_document_handlers(FzCtx);
+	fz_catch(FzCtx)
+	{
+		fprintf(stderr, "mupdf error: %s\n", fz_caught_message(FzCtx));
+		fz_drop_context(FzCtx);
+		return -1;
+	}
+
     // Open the PDF, XPS or CBZ document.
     fz_try(FzCtx)
     {
         FzDoc = fz_open_document(FzCtx, Filename);
         // Retrieve the number of pages
-        NbPages = fz_count_pages(FzDoc);
+        NbPages = fz_count_pages(FzCtx, FzDoc);
     }
     fz_catch(FzCtx)
     {
-        fz_free_context(FzCtx);
+        fz_drop_context(FzCtx);
         FzCtx=NULL;
         FzDoc=NULL;
         NbPages = 0;
@@ -66,9 +77,9 @@ void Document_pdf::Close()
     //Close the doc and free the context
     if(FzDoc)
         //TODO: add a try catch to avoid double closing ????
-        fz_close_document(FzDoc);
+        fz_drop_document(FzCtx, FzDoc);
     if(FzCtx)
-        fz_free_context(FzCtx);
+        fz_drop_context(FzCtx);
 }
 
 //! Create a new Page_pdf
