@@ -96,5 +96,7 @@ class Document
         Mat *ThumbnailsImgRenderCurrent;
 };
 
+Document * OpenPerExtension(char *Filename);
+
 
 #endif // DOCUMENT_H_INCLUDED

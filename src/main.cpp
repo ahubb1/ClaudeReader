@@ -84,7 +84,14 @@ int main(int argc, char **argv)
                 doc=OpenPerExtension(optarg);
                 if(doc && doc->GetNbOfPages()>0)
                 {
-
+                    doc->LoadPage(1);
+                    bool panelmode=true;
+                    bool pagepreview=true;
+                    Export_Document Export(doc, "./", ".jpg", panelmode, pagepreview);
+                    if(Export.Export()>0)
+                        printf("%s succesfully exported.\n", optarg);
+                    else
+                        printf("An error occured during export.\n");
                     delete doc;
                 }
                 else

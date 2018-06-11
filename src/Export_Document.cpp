@@ -222,6 +222,10 @@ int Export_Document::Export(Fl_Progress *progressbar)
             sprintf(txt, "Page %d/%d", CurrentPage, Doc->GetNbOfPages());
             progressbar->label(txt);
         }
+        else
+        {
+            printf("Exporting... page %d/%d\n", CurrentPage, Doc->GetNbOfPages());
+        }
         //Give some time to fltk for refreshing (and check for cancel button...)
         Fl::check();
 
