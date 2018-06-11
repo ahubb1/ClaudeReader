@@ -79,19 +79,40 @@ int main(int argc, char **argv)
                 return 0;
                 break;
 
+             //Command line export
              case 'e':
-                printf("Export %s\n", optarg);
+             {
+                printf("Exporting %s\n", optarg);
+                //Parse parameters is any
+                string export_folder, extension;
+                bool panelmode=true, pagepreview=true;
+                if(argc>3)
+                    export_folder=argv[3];
+                else
+                    export_folder="./";
+                if(argc>4)
+                    extension=argv[4];
+                else
+                    extension=".jpg";
+                if(argc>5)
+                    if(argv[5][0]='n')
+                        panelmode=false;
+                if(argc>6)
+                    if(argv[6][0]='n')
+                        pagepreview=false;
+
                 doc=OpenPerExtension(optarg);
                 if(doc && doc->GetNbOfPages()>0)
                 {
                     doc->LoadPage(1);
-                    bool panelmode=true;
-                    bool pagepreview=true;
-                    Export_Document Export(doc, "./", ".jpg", panelmode, pagepreview);
+                    Export_Document Export(doc, export_folder.c_str(), extension.c_str(), panelmode, pagepreview);
                     if(Export.Export()>0)
                         printf("%s succesfully exported.\n", optarg);
                     else
+                    {
                         printf("An error occured during export.\n");
+                        printf("Usage: bdreader -e filename export_folder [.jpg/.png/.bmp] [y/n] [y/n]\n");
+                    }
                     delete doc;
                 }
                 else
@@ -99,6 +120,7 @@ int main(int argc, char **argv)
                     printf("Unable to open %s.\n", optarg);
                 }
                 return 0;
+             }
                 break;
 
              default:
