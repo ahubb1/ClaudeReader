@@ -73,6 +73,8 @@ class Preferences
 
         void CopyLocalTo(Preferences *pref);
 
+        bool GetUseLibrary() { return UseLibrary; }
+        void SetUseLibrary(bool val) { UseLibrary = val; }
         READINGMODE GetReadingMode() { return ReadingMode; }
         void SetReadingMode(READINGMODE val) { ReadingMode = val; }
         bool GetPagePreview() { return PagePreview; }
@@ -130,6 +132,7 @@ class Preferences
         char Filename[FL_PATH_MAX];
         char ShortFilename[FL_PATH_MAX];
         char PrefDir[FL_PATH_MAX];
+        bool UseLibrary;
         READINGMODE ReadingMode;
         bool PagePreview;
         bool Thumbnails;

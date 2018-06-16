@@ -178,11 +178,10 @@ void StatusBarUpdate(void * param)
       else
       {
           //No document open but library
-          #ifdef WITH_LIBRARY
+          if(mw->Pref->GetUseLibrary())
             sprintf(text, "Library folder: ", mw->Library->get_absolute_dir());
-          #else
+          else
             sprintf(text, "");
-          #endif
           mw->StatusBar->copy_label("");
           mw->StatusBar->redraw();
           mw->StatusBarZoom->copy_label(text);
@@ -406,7 +405,6 @@ void ResizingEvents(Fl_Widget* widget, void* param)
 
 //---------------------------------File menu----------------------------------
 //! Open document from library
-#ifdef WITH_LIBRARY
 void Library_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
@@ -426,7 +424,6 @@ void Library_cb(Fl_Widget* widget, void * param)
     mw->window->cursor(FL_CURSOR_DEFAULT);
     Fl::check();
 }
-#endif
 
 //! Open a document and load it (through a call to Init())
 void Open_cb(Fl_Widget* widget, void * param)
@@ -538,10 +535,11 @@ void Close_cb(Fl_Widget* widget, void * param)
     mw->Init("");
 
     //Make library availabe
-    #ifdef WITH_LIBRARY
-    mw->Library->activate();
-    mw->Library->set_filter(1);//set to unread by default
-    #endif
+    if(mw->Library)
+    {
+        mw->Library->activate();
+        mw->Library->set_filter(1);//set to unread by default
+    }
     Fl::check();
     StatusBarUpdate(mw);
 }
@@ -767,36 +765,37 @@ void SuggestNextFile(void *param)
 {
     MainWindow *mw=(MainWindow*)param;
 
-    #ifdef WITH_LIBRARY
-    //Get suggested next comics
-    char suggestion_filename[2048], suggestion_short_filename[2048];
-    int ret = mw->Library->GetSuggestionNext(mw->Filename, suggestion_filename, suggestion_short_filename);
-
-
-    //Is there a suggestion?
-    fl_message_title("BDReader - What do we do ?");
-    if(ret<0)
-        ret=fl_choice("Open the comics library ?", "Cancel", "Library", NULL);
-    else
-        ret=fl_choice("Open %s ?", "Cancel", "Library", "Open", suggestion_short_filename);
-
-    switch(ret)
+    if(mw->Library)
     {
-        //Cancel: do nothing
-        case 0:
-            break;
+        //Get suggested next comics
+        char suggestion_filename[2048], suggestion_short_filename[2048];
+        int ret = mw->Library->GetSuggestionNext(mw->Filename, suggestion_filename, suggestion_short_filename);
 
-        //Open library: close current one
-        case 1:
-            Close_cb(NULL, param);
-            break;
 
-        //Open suggested file:
-        case 2:
-            mw->Init(suggestion_filename);
-            break;
+        //Is there a suggestion?
+        fl_message_title("BDReader - What do we do ?");
+        if(ret<0)
+            ret=fl_choice("Open the comics library ?", "Cancel", "Library", NULL);
+        else
+            ret=fl_choice("Open %s ?", "Cancel", "Library", "Open", suggestion_short_filename);
+
+        switch(ret)
+        {
+            //Cancel: do nothing
+            case 0:
+                break;
+
+            //Open library: close current one
+            case 1:
+                Close_cb(NULL, param);
+                break;
+
+            //Open suggested file:
+            case 2:
+                mw->Init(suggestion_filename);
+                break;
+        }
     }
-    #endif
 }
 //-----------------------------------------------------------------------------
 
@@ -1109,6 +1108,14 @@ void Contrast_cb(Fl_Widget* widget, void * param)
     mw->window->cursor(FL_CURSOR_DEFAULT);
     Fl::check();
 }
+
+//! Use or not comics library toggle callback: at restart
+void UseLibrary_cb(Fl_Widget* widget, void * param)
+{
+    MainWindow *mw=(MainWindow*)param;
+
+    mw->Pref->SetUseLibrary(!mw->Pref->GetUseLibrary());
+}
 //-----------------------------------------------------------------------------
 
 
@@ -1419,6 +1426,16 @@ void UpdateWidgets(void * param)
     else
         localPref=mw->Pref; //Gloabl ones otherwise
 
+    //Use library
+    if(localPref->GetUseLibrary())
+    {
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Use comics library\t"))->set();
+    }
+    else
+    {
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&View/Use comics library\t"))->clear();
+    }
+
     //The reading mode
     if(localPref->GetReadingMode()==PAGE)
     {
@@ -1629,12 +1646,13 @@ MainWindow::MainWindow(const char *exepath, const char *f)
                             { "-", '-', (Fl_Callback *)AdditionnalZoom_cb, this, FL_MENU_INVISIBLE },
                             { 0 },
                         { 0 },
-                    { "Rotation\t\tCtrl+R", FL_COMMAND + 'r', (Fl_Callback *)Rotate_cb, this, FL_SUBMENU },
+                    { "Rotation\t\tCtrl+R", FL_COMMAND + 'r', (Fl_Callback *)Rotate_cb, this, FL_SUBMENU | FL_MENU_DIVIDER },
                         { Pref->GetRotationOption(0).caption, 0, (Fl_Callback *)Rotate_cb, this, FL_MENU_RADIO | FL_MENU_CHECK },
                         { Pref->GetRotationOption(1).caption, 0, (Fl_Callback *)Rotate_cb, this, FL_MENU_RADIO },
                         { Pref->GetRotationOption(2).caption, 0, (Fl_Callback *)Rotate_cb, this, FL_MENU_RADIO },
                         { Pref->GetRotationOption(3).caption, 0, (Fl_Callback *)Rotate_cb, this, FL_MENU_RADIO },
                         { 0 },
+                    { "Use comics library\t", 0, (Fl_Callback *)UseLibrary_cb, this, FL_MENU_TOGGLE },
                     //{ "Enhance contrast\t", FL_COMMAND + 'c', (Fl_Callback *)Contrast_cb, this, FL_MENU_TOGGLE},
                     { 0 },
                 { "&Navigation",              0, 0, 0, FL_SUBMENU | FL_MENU_INACTIVE},
@@ -1809,11 +1827,16 @@ MainWindow::MainWindow(const char *exepath, const char *f)
     HelpDlg=NULL;
 
     //A library view
-    #ifdef WITH_LIBRARY
+    if(Pref->GetUseLibrary())
+    {
         Library = new Fl_Books_Library(0, MenuBar->y()+MenuBar->h(), DisplayGrp->w(), DisplayGrp->h(), "", Pref->GetLibraryFolder(), ExePath, 180, 180*1.53, 10);
         window->add(Library);
         Library->callback(Library_cb, (void*)this);
-    #endif
+    }
+    else
+    {
+        Library=NULL;
+    }
 
     //Initialize the window and Document
     UpdateWidgets(this);
@@ -1870,9 +1893,8 @@ void MainWindow::Init(char *filename)
         if(new_doc && new_doc->GetNbOfPages()>0)
         {
             //Close library
-            #ifdef WITH_LIBRARY
-            Library->hide();
-            #endif
+            if(Library)
+                Library->hide();
             DisplayGrp->show();
 
             //Delete old doc if one (using an intermediate pointer to avoid access)
@@ -1956,9 +1978,8 @@ void MainWindow::Init(char *filename)
                 StatusUpdate(this);
 
                 //Reactivate library
-                #ifdef WITH_LIBRARY
-                Library->activate();
-                #endif
+                if(Library)
+                    Library->activate();
             }
         }
     }
@@ -1968,13 +1989,14 @@ void MainWindow::Init(char *filename)
         ActivateNavigationWidgets(this, false);
         DisplayGrp->hide();
         //The library
-        #ifdef WITH_LIBRARY
-        Library->show();
-        /*Load last read comics, if any
-        printf("Pref says: %d/%d\n", PrefDoc->GetLastPageNb(), PrefDoc->GetNbPages());
-        //Choose either unread or read by default depending if last comics was finished or not*/
-        Library->redraw();
-        #endif
+        if(Library)
+        {
+            Library->show();
+            /*Load last read comics, if any
+            printf("Pref says: %d/%d\n", PrefDoc->GetLastPageNb(), PrefDoc->GetNbPages());
+            //Choose either unread or read by default depending if last comics was finished or not*/
+            Library->redraw();
+        }
     }
 }
 
@@ -2003,10 +2025,9 @@ void MainWindow::SavePref()
         Pref->SetWinX(window->x());
         Pref->SetWinY(window->y());
      }
-     //The Library path
-     #ifdef WITH_LIBRARY
-     Pref->SetLibraryFolder(Library->get_absolute_dir());
-     #endif
+     //The Library path if active
+     if(Library)
+        Pref->SetLibraryFolder(Library->get_absolute_dir());
 
      /*The preferences preferences
      Pref->SetSavePref(((Fl_Menu_Item*)MenuBar->find_item("&Preferences/Save preferences\t"))->value());

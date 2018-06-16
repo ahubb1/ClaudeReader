@@ -62,8 +62,6 @@
     #include "WinRC.h"
 #endif
 
-#define WITH_LIBRARY
-
 
 void Fullscreen_cb(Fl_Widget* widget, void * param);
 
@@ -106,6 +104,7 @@ class MainWindow
         friend void InContext_cb(Fl_Widget* widget, void * param);
         friend void PanelBorder_cb(Fl_Widget* widget, void * param);
         friend void Contrast_cb(Fl_Widget* widget, void * param);
+        friend void UseLibrary_cb(Fl_Widget* widget, void * param);
         friend void Rotate_cb(Fl_Widget* widget, void * param);
         friend void UpdatePage(MainWindow* mw);
         friend void UpdatePreloadPages(void * param);
@@ -145,9 +144,9 @@ class MainWindow
             Fl_Overlay_Arrow_Button *NextButton, *PreviousButton, *NextPageButton, *PreviousPageButton;
             Fl_Group *PageNbFullGrp;
             Fl_Progress *PageNbFullProgress;               //!< The fullscreen page number indicator
-            #ifdef WITH_LIBRARY
+            //#ifdef WITH_LIBRARY
             Fl_Books_Library *Library;
-            #endif
+            //#endif
 
          #ifndef __WINDOWS__
             Pixmap icon_pix;

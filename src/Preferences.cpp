@@ -75,6 +75,7 @@ Preferences::Preferences(const char windir[FL_PATH_MAX]):
     //Init to nothing
     LastDoc[0]='\0';
     LibraryFolder[0]='\0';
+    UseLibrary=false;
 
     //Max zoom possible values
     MaxZoomOptionsList[0].caption="None (Default)\t";
@@ -359,6 +360,7 @@ int Preferences::Load(const char filename[FL_PATH_MAX])
     if(GlobalPrefs->groupExists(".")!=0)
     {
         GlobalPrefs->get("LibraryFolder", LibraryFolder, LibraryFolder, 2047);
+        int u=(int)UseLibrary;GlobalPrefs->get("UseLibrary", u, u);UseLibrary=(bool)u;
         GlobalPrefs->get("WinW", WinW, WinW);
         GlobalPrefs->get("WinH", WinH, WinH);
         GlobalPrefs->get("WinX", WinX, WinX);
@@ -504,6 +506,7 @@ void Preferences::Save(Document *doc)
     //Global pref first
     GlobalPrefs = new Fl_Preferences(PrefDir, "bdreader", "bdreader");
         GlobalPrefs->set("LibraryFolder", LibraryFolder);
+        GlobalPrefs->set("UseLibrary", UseLibrary);
         GlobalPrefs->set("SavePref", SavePref);
         GlobalPrefs->set("LocalPref", LocalPref);
         GlobalPrefs->set("WinW", WinW);
