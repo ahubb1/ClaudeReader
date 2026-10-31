@@ -21,10 +21,12 @@ if(OpenCV_VERSION_MAJOR GREATER_EQUAL 5)
 endif()
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(MUPDF IMPORTED_TARGET mupdf)
-if(NOT MUPDF_FOUND)
-    # Debian and Ubuntu ship MuPDF without mupdf.pc: the static libraries and the system libraries they use
+set(MUPDF_TARGET PkgConfig::MUPDF)
+if(NOT WIN32 AND (NOT MUPDF_FOUND OR MUPDF_LINK_LIBRARIES MATCHES "[.]a(;|$)"))
+    # Debian and Ubuntu ship MuPDF as a static library whose mupdf.pc (when there is one) lists none of the
+    # libraries it uses: the static libraries and those system libraries
     find_path(MUPDF_INCLUDE_DIR mupdf/fitz.h REQUIRED)
-    find_library(MUPDF_LIBRARY NAMES mupdf REQUIRED)
+    find_library(MUPDF_LIBRARY NAMES libmupdf.a mupdf REQUIRED)
     find_library(MUPDF_THIRD_LIBRARY NAMES mupdf-third mupdfthird)
     find_library(MUJS_LIBRARY NAMES mujs)
     pkg_check_modules(MUPDF_DEPS REQUIRED IMPORTED_TARGET freetype2 harfbuzz libopenjp2 libjpeg zlib)
@@ -34,7 +36,7 @@ if(NOT MUPDF_FOUND)
     target_link_libraries(mupdf_libraries INTERFACE ${MUPDF_LIBRARY}
         $<$<BOOL:${MUPDF_THIRD_LIBRARY}>:${MUPDF_THIRD_LIBRARY}> $<$<BOOL:${MUJS_LIBRARY}>:${MUJS_LIBRARY}>
         PkgConfig::MUPDF_DEPS ${JBIG2DEC_LIBRARY} m)
-    add_library(PkgConfig::MUPDF ALIAS mupdf_libraries)
+    set(MUPDF_TARGET mupdf_libraries)
 endif()
 pkg_check_modules(LIBARCHIVE REQUIRED IMPORTED_TARGET libarchive)
 # Store: HTTP(S), HTML parsing and the Lua sources scripts (Lua built in: static library)
@@ -64,7 +66,7 @@ if(CLAUDEREADER_STATIC)
     set(DEPENDENCIES_CFLAGS ${MUPDF_STATIC_CFLAGS_OTHER} ${LIBARCHIVE_STATIC_CFLAGS_OTHER} ${CURL_STATIC_CFLAGS_OTHER})
     set(DEPENDENCIES_INCLUDES ${MUPDF_STATIC_INCLUDE_DIRS} ${LIBARCHIVE_STATIC_INCLUDE_DIRS} ${CURL_STATIC_INCLUDE_DIRS} ${GUMBO_STATIC_INCLUDE_DIRS})
 else()
-    set(DEPENDENCIES_LIBS PkgConfig::MUPDF PkgConfig::LIBARCHIVE PkgConfig::CURL PkgConfig::GUMBO)
+    set(DEPENDENCIES_LIBS ${MUPDF_TARGET} PkgConfig::LIBARCHIVE PkgConfig::CURL PkgConfig::GUMBO)
 endif()
 
 set(SOURCES
@@ -124,7 +126,7 @@ target_link_libraries(ClaudeReader PRIVATE
     Threads::Threads
     $<$<PLATFORM_ID:Windows>:dwmapi>
 )
-if(NOT MUPDF_FOUND AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
+if(TARGET mupdf_libraries)
     # The static libmupdf.a of Debian/Ubuntu and the shared libraries used by it and by OpenCV (libjpeg, libopenjp2...):
     # keep every listed library instead of dropping those seen before something needs them
     target_link_options(ClaudeReader PRIVATE -Wl,--no-as-needed)
