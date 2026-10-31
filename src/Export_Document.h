@@ -63,6 +63,7 @@ class Export_Document
         int CurrentPage;            //! The page currently processed by the Export() method.
         bool SavingInProgress;      //! Flag indicating if the export process is running.
         bool Canceled;              //! Set to true when the user cancel the export while running.
+        int WriteErrors=0;          //! Images that could not be written (-4 returned)
 };
 
 #endif // EXPORT_DOCUMENT_H

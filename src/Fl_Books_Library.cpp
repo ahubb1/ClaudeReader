@@ -125,17 +125,27 @@ bool ElementsAccessTimeSort(Fl_Library_Element* a, Fl_Library_Element* b)
 
 Fl_Library_Element::Fl_Library_Element(int xx, int yy, int ww, int hh, const char *l, const char *abs_lib_dir, const char * relative_path, const char *filename, const char *windir):Fl_Button(xx, yy, ww, hh, l)
 {
-    strncpy(Filename, filename, FL_PATH_MAX);
+    snprintf(Filename, FL_PATH_MAX, "%s", filename);
+    //A folder comic (listed with a final separator): its name as it is, no extension to remove
+    size_t len=strlen(Filename);
+    FolderComic=len>0 && (Filename[len-1]=='/' || Filename[len-1]=='\\');
+    if(FolderComic)
+        Filename[len-1]='\0';
+    Title=Filename;
+    if(!FolderComic)
+    {
+        size_t dot=Title.find_last_of('.');
+        if(dot!=std::string::npos && dot>0)
+            Title.erase(dot);
+    }
+    copy_tooltip(Title.c_str());
     //Cut filename
-    snprintf(ShortFilename, sizeof(ShortFilename), "%s", filename);
-    char * last_pt = strrchr(ShortFilename, '.');//locate last point
-    if(last_pt)
-        *last_pt='\0'; //remove extension (everything after last pt)
+    snprintf(ShortFilename, sizeof(ShortFilename), "%s", Title.c_str());
     Fl_Button::copy_label(ShortFilename);
-    //Keep lower case version for search
-    int i=0;
-    for(i=0; ShortFilename[i]; i++)
-        ShortFilenameLC[i] = tolower(ShortFilename[i]);
+    //Keep lower case version for search: the whole title (the short one is cut at 24 characters)
+    size_t i=0;
+    for(i=0; i<Title.size() && i+1<sizeof(ShortFilenameLC); i++)
+        ShortFilenameLC[i] = tolower((unsigned char)Title[i]);
     ShortFilenameLC[i]='\0';
     //Absolute one
     snprintf(AbsoluteFilename, FL_PATH_MAX, "%s%s%s", abs_lib_dir, relative_path, Filename);
@@ -335,6 +345,7 @@ void Fl_Library_Element::ShowTagsMenu()
         Tags::Toggle(TagKey(), all[index].Id);
     else if(index==all.size())
     {
+        CenterNextMessage();
         const char *name=fl_input("New tag for \"%s\":", "", ShortFilename);
         if(!name || !*name)
             return;
@@ -388,14 +399,25 @@ void Fl_Library_Element::draw()
         fl_rectf(ix, by, (int)(iw*fmin(1., LastPage/(double)NbPages)), bar_h);
     }
 
-    //Title (file name without extension)
-    char title[FL_PATH_MAX];
-    snprintf(title, sizeof(title), "%s", Filename);
-    fl_filename_setext(title, sizeof(title), "");
+    //Title: one line, "..." when too long (the whole title in the tooltip)
     fl_color(Hover ? THEME_FG_BRIGHT : THEME_FG);
     fl_font(FL_HELVETICA, 12);
+    std::string title=Title;
+    if(fl_width(title.c_str())>iw)
+    {
+        const char *ellipsis="\xe2\x80\xa6";
+        while(!title.empty() && fl_width((title+ellipsis).c_str())>iw)
+        {
+            //Remove the last UTF-8 character
+            size_t cut=title.size()-1;
+            while(cut>0 && ((unsigned char)title[cut]&0xC0)==0x80)
+                cut--;
+            title.erase(cut);
+        }
+        title+=ellipsis;
+    }
     fl_push_clip(ix, by+bar_h+4, iw, title_h-bar_h-8);
-    fl_draw(title, ix, by+bar_h+4, iw, title_h-bar_h-8, FL_ALIGN_TOP_LEFT|FL_ALIGN_WRAP);
+    fl_draw(title.c_str(), ix, by+bar_h+4, iw, title_h-bar_h-8, FL_ALIGN_TOP_LEFT);
     fl_pop_clip();
 
     //Tags: colored dot and name
@@ -680,11 +702,11 @@ void Fl_Books_Library::add_subpack()
 
 //!Add a new Fl_Library_Element to the Library if appropriate (i.e. if it has a correct extension)
 //! return true if element has been added, false otherwise
-bool Fl_Books_Library::add_element(const char *relative_path, const char *filename, const char *windir)
+bool Fl_Books_Library::add_element(const char *relative_path, const char *filename, const char *windir, bool folder_comic)
 {
-    //List only 'true' comics files (not archives or folders)
+    //List only 'true' comics files (not archives) and the folders of images
     DOCUMENT_TYPE type=GetDocumentType(filename);
-    if( type==DOC_MUPDF || (type==DOC_ARCHIVE && strncasecmp(fl_filename_ext(filename), ".cb", 3)==0) )
+    if( folder_comic || type==DOC_MUPDF || (type==DOC_ARCHIVE && strncasecmp(fl_filename_ext(filename), ".cb", 3)==0) )
     {
         //Create a new element
         nb_visible_elem++;//visible by default
@@ -890,6 +912,32 @@ void Fl_Books_Library::scan_entry(const char *relative_dir, const char *name, in
         return;
     }
 
+    //A folder with two page images or more is a comic, as when it is opened (issue #5): store downloads in
+    //Images format, scans... Its sub-folders are not browsed
+    {
+        dirent **listing;
+        int nb=fl_filename_list(full_name, &listing, fl_casenumericsort);
+        int images=0;
+        for(int i=0; i<nb && images<2; i++)
+        {
+            const char *entry=listing[i]->d_name;
+            size_t len=strlen(entry);
+            if(len>0 && entry[len-1]!='/' && IsPageImage(entry))
+                images++;
+        }
+        if(nb>0)
+            fl_filename_free_list(&listing, nb);
+        if(images>=2)
+        {
+            //Listed with a final separator: a folder comic for the element
+            std::string folder=name;
+            if(folder.empty() || (folder.back()!='/' && folder.back()!='\\'))
+                folder+="/";
+            add_element(relative_dir, folder.c_str(), windir, true);
+            return;
+        }
+    }
+
     if(depth>=MAX_LIBRARY_DEPTH)
         return;
 
@@ -906,6 +954,33 @@ void Fl_Books_Library::scan_entry(const char *relative_dir, const char *name, in
         scan_entry(sub_relative_dir, listing[i]->d_name, depth+1);
     if(nb>0)
         fl_filename_free_list(&listing, nb);
+}
+
+void Fl_Books_Library::mark_duplicate_names()
+{
+    //Comics of a folder by name (case insensitive)
+    std::map<std::string, std::vector<Fl_Library_Element*> > names;
+    for(size_t i=0; i<elements.size(); i++)
+        names[std::string(elements[i]->GetRelativeDir())+"|"+elements[i]->GetShortFilenameLC()].push_back(elements[i]);
+    for(std::map<std::string, std::vector<Fl_Library_Element*> >::iterator it=names.begin(); it!=names.end(); ++it)
+    {
+        if(it->second.size()<2)
+            continue;
+        for(size_t k=0; k<it->second.size(); k++)
+        {
+            Fl_Library_Element *e=it->second[k];
+            std::string format;
+            if(e->IsFolderComic())
+                format="folder";
+            else
+            {
+                const char *ext=fl_filename_ext(e->GetFilename());
+                for(const char *c=ext[0]=='.' ? ext+1 : ext; *c; c++)
+                    format+=(char)toupper((unsigned char)*c);
+            }
+            e->SetTitle(e->GetTitle()+" ("+format+")");
+        }
+    }
 }
 
 void Fl_Books_Library::reload()
@@ -958,6 +1033,7 @@ void Fl_Books_Library::reload()
         printf("%d comics found.\n", elements.size());
     #endif
 
+    mark_duplicate_names();
     refresh();
     fl_cursor(FL_CURSOR_DEFAULT);
     activate();
@@ -1014,7 +1090,7 @@ bool Fl_Books_Library::set_dir(const char * lib_dir, const char *wind)
     else
     {   char msg[FL_PATH_MAX+25];
         snprintf(msg, FL_PATH_MAX+25, "Invalid directory (%s) !", lib_dir);
-        fl_alert(msg);
+        (CenterNextMessage(), fl_alert)(msg);
         return false;
     }
 }

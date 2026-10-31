@@ -568,6 +568,7 @@ static lua_State *NewLimitedState(LuaLimits *limits)
 LuaSource::LuaSource(const std::string &script, const std::string &origin):
     Origin(origin),
     L(NULL),
+    Script(script),
     Valid(false)
 {
     L=NewLimitedState(&Limits);
@@ -705,6 +706,8 @@ bool LuaSource::CallEntries(const char *function, int nargs, std::vector<StoreEn
         return false;
     }
     entries->clear();
+    bool is_pages=strcmp(function, "pages")==0;
+    int skipped=0;
     lua_Integer n=(lua_Integer)lua_rawlen(L, -1);
     for(lua_Integer i=1; i<=n; i++)
     {
@@ -733,12 +736,24 @@ bool LuaSource::CallEntries(const char *function, int nargs, std::vector<StoreEn
                 lua_pop(L, 1);
             }
         }
-        else if(lua_isstring(L, -1))
+        else if(lua_isstring(L, -1) && is_pages)
             entry.Fields["url"]=lua_tostring(L, -1); //pages() can return plain URLs
         lua_pop(L, 1);
+        //A search result or a chapter needs an id, a page an url: the others are skipped (issue #14)
+        if(entry.Get(is_pages ? "url" : "id").empty())
+        {
+            skipped++;
+            continue;
+        }
         entries->push_back(entry);
     }
     lua_pop(L, 1);
+    if(entries->empty() && skipped>0)
+    {
+        *error=Name+": "+function+"() returned "+std::to_string(skipped)+(skipped>1 ? " entries" : " entry")+
+               (is_pages ? " without url" : " without id");
+        return false;
+    }
     return true;
 }
 

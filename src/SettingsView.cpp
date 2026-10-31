@@ -566,7 +566,7 @@ void Fl_Settings_View::TagName_cb(Fl_Widget *w, void *p)
     int existing=Tags::Find(name->value());
     if(existing>0 && existing!=name->Id)
     {
-        fl_alert("A tag named \"%s\" already exists.", name->value());
+        (CenterNextMessage(), fl_alert)("A tag named \"%s\" already exists.", name->value());
         name->value(tag->Name.c_str());
         return;
     }
@@ -584,7 +584,7 @@ void Fl_Settings_View::TagDelete_cb(Fl_Widget *w, void *p)
     const TagDef *tag=row<0 ? NULL : Tags::Get(((Fl_Tag_Swatch*)v->TagRows[row*4])->Id);
     if(!tag)
         return;
-    if(fl_choice("Delete the tag \"%s\"?\nThe comics keep everything else.", "Cancel", "Delete", NULL, tag->Name.c_str())!=1)
+    if((CenterNextMessage(), fl_choice)("Delete the tag \"%s\"?\nThe comics keep everything else.", "Cancel", "Delete", NULL, tag->Name.c_str())!=1)
         return;
     Tags::Remove(tag->Id);
     if(v->OnTagsChanged)
@@ -792,7 +792,7 @@ void Fl_Settings_View::StoreRemove_cb(Fl_Widget *w, void *p)
     if(index<0 || index>=(int)v->Stores.size())
         return;
     InstalledStore store=v->Stores[index];
-    if(fl_choice("Remove the store \"%s\"?\n%s", "Cancel", "Remove", NULL, store.Name.c_str(),
+    if((CenterNextMessage(), fl_choice)("Remove the store \"%s\"?\n%s", "Cancel", "Remove", NULL, store.Name.c_str(),
                  store.ReplacesBuiltIn ? "The built-in version is used again." : "Its file is deleted.")!=1)
         return;
     if(!FileUtf8::Remove(store.Origin))
@@ -831,6 +831,7 @@ void Fl_Settings_View::StoreAddFile_cb(Fl_Widget *w, void *p)
 void Fl_Settings_View::StoreAddLink_cb(Fl_Widget *w, void *p)
 {
     Fl_Settings_View *v=(Fl_Settings_View*)p;
+    CenterNextMessage();
     const char *url=fl_input("Address of the store script (.lua):", "https://");
     if(!url)
         return;

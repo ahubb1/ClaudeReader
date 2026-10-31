@@ -47,10 +47,29 @@ static std::string Narrow(const wchar_t *w)
 }
 #endif
 
+#ifdef _WIN32
+//! Paths longer than MAX_PATH (260): the extended form \\?\C:\... (absolute, backslashes only)
+static std::wstring WidePath(const std::string &path)
+{
+    bool absolute=(path.size()>2 && path[1]==':' && (path[2]=='\\' || path[2]=='/')) ||
+                  (path.size()>2 && (path[0]=='\\' || path[0]=='/') && (path[1]=='\\' || path[1]=='/'));
+    if(path.size()<MAX_PATH-12 || !absolute || path.compare(0, 4, "\\\\?\\")==0)
+        return Wide(path);
+    std::string p=path;
+    for(size_t i=0; i<p.size(); i++)
+        if(p[i]=='/')
+            p[i]='\\';
+    //UNC: \\server\share -> \\?\UNC\server\share
+    if(p.compare(0, 2, "\\\\")==0)
+        return Wide("\\\\?\\UNC\\"+p.substr(2));
+    return Wide("\\\\?\\"+p);
+}
+#endif
+
 FILE *FileUtf8::Open(const std::string &path, const char *mode)
 {
 #ifdef _WIN32
-    return _wfopen(Wide(path).c_str(), Wide(mode).c_str());
+    return _wfopen(WidePath(path).c_str(), Wide(mode).c_str());
 #else
     return fopen(path.c_str(), mode);
 #endif

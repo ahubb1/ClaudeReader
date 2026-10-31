@@ -167,7 +167,7 @@ int Export_Document::Export(Fl_Progress *progressbar)
                     Mat rendering(*Doc->RenderMat());
 
                     //Write it (extension already choosen)
-                    WriteImageUtf8(filename, rendering);
+                    if(!WriteImageUtf8(filename, rendering)) WriteErrors++;
                     nbimages++;
 
                     casenb++;
@@ -199,14 +199,14 @@ int Export_Document::Export(Fl_Progress *progressbar)
                 Mat rendering(*Doc->RenderMat());
 
                 //Write it (extension already choosen)
-                WriteImageUtf8(filename, rendering);
+                if(!WriteImageUtf8(filename, rendering)) WriteErrors++;
                 nbimages++;
 
                 //If we are in Panel but failed, double the page: easier for a user on another reader
                 if(PanelMode)
                 {
                     sprintf(filename, "%s%s_%s01%s", PathToExport, BaseFilename, longpagenb, FilesExtension);
-                    WriteImageUtf8(filename, rendering);
+                    if(!WriteImageUtf8(filename, rendering)) WriteErrors++;
                     nbimages++;
                 }
             }
@@ -240,6 +240,8 @@ int Export_Document::Export(Fl_Progress *progressbar)
     //Done
     SavingInProgress=false;
 
+    if(WriteErrors>0)
+        return -4;
     if(CurrentPage==Doc->GetNbOfPages() && !Canceled)
         return nbimages;
     else

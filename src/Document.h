@@ -110,6 +110,8 @@ bool IsPageImage(const std::string &name);
 
 //! Read a whole file. The path is UTF-8 (also on Windows, where the C/OpenCV functions use the ANSI code page)
 bool ReadFileUtf8(const char *path, vector<unsigned char> *data);
+//! Decode a page image (BGR): OpenCV, and FLTK for the GIF images when OpenCV cannot read them (OpenCV 4)
+Mat DecodePageImage(const vector<unsigned char> &data);
 //! Encode an image according to the path extension and write it. The path is UTF-8
 bool WriteImageUtf8(const char *path, const Mat &img);
 

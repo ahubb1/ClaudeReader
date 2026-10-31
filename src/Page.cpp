@@ -316,12 +316,11 @@ void Page::DetectCases()
         printf("------ %d:\n", PageNb);
     #endif
 
-    //If we are not on special pages (first or last one)
-    bool specialPage=true;
-    if(PageNb>1 && (NbPages-PageNb)>0 && !Failed)
-    {
-        specialPage=false;
-    }
+    //Special pages, shown whole: the cover (first page of a comic of 3 pages or more) and the pages not loaded.
+    //The last page and the pages of 1 or 2 page comics are read panel by panel too (issue #6)
+    bool specialPage=Failed || (PageNb==1 && NbPages>=3);
+    //First or last page: whole if no panel is found (a back cover, a full page drawing), not cut in strips
+    bool edgePage=PageNb==1 || PageNb==NbPages;
 
     //Only if we are in CASE mode
     if(ReadingMode==CASE && !DetectionFailed && !specialPage)
@@ -404,8 +403,17 @@ void Page::DetectCases()
     } //if CASE
 
 
+    //A first or last page with no panel found, or a single one (the page itself, a back cover): shown whole
+    //as the cover, not cut in strips nor shown twice
+    bool wholeEdgePage=edgePage && ReadingMode==CASE && (DetectionFailed || Cases.size()<=1);
+    if(wholeEdgePage)
+    {
+        DetectionFailed=false;  //Not a strip page (export, resizing)
+        Cases.clear();
+    }
+
     //If in STRIP mode or detection has failed in CASE mode
-    if( (ReadingMode==STRIP || (DetectionFailed && ReadingMode==CASE)) && !specialPage)
+    if( (ReadingMode==STRIP || (DetectionFailed && ReadingMode==CASE)) && !specialPage && !wholeEdgePage)
     {
         //Do the default strip cutting (optimized to display width
         DetectionStripCutting();
@@ -413,7 +421,7 @@ void Page::DetectCases()
 
 
     //If in PAGE mode or special page or the page loading has failed
-    if(ReadingMode==PAGE || ReadingMode==SCROLL || specialPage)
+    if(ReadingMode==PAGE || ReadingMode==SCROLL || specialPage || wholeEdgePage)
     {
         //Nothing else than initialization of nb of cases
         NbCases=0;

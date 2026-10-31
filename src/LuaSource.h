@@ -38,6 +38,7 @@
 #include <map>
 #include <mutex>
 #include "Net.h"
+#include <ctype.h>
 
 struct lua_State;
 
@@ -84,6 +85,9 @@ class LuaSource
         bool Pages(const StoreEntry &chapter, std::vector<StorePage> *pages, std::string *error);
 
         bool IsTorrent() const {return Kind=="torrent";}
+        //! A new instance of the same script (its own Lua state): the downloads use one, so that the searches
+        //! and chapter lists of the store do not wait for them (issue #8)
+        LuaSource *Clone() const {return new LuaSource(Script, Origin);}
 
         std::string Id, Name, Kind, Site, Version, Origin;
         NetHeaders Headers;     //!< Default headers of the source (images download)
@@ -93,6 +97,7 @@ class LuaSource
         void PushEntry(const StoreEntry &entry);
 
         lua_State *L;
+        std::string Script;
         LuaLimits Limits;
         std::mutex Lock;
         bool Valid;
@@ -101,6 +106,16 @@ class LuaSource
 
 //! Built-in sources and the ones of the user sources folder (a user source with the same id replaces the built-in one)
 std::vector<LuaSource*> LoadStoreSources(std::vector<std::string> *errors);
+
+//! A store error for the user: without the Lua stack traceback (kept for the --store command line)
+inline std::string UserError(const std::string &error)
+{
+    size_t cut=error.find("stack traceback:");
+    std::string text=cut==std::string::npos ? error : error.substr(0, cut);
+    while(!text.empty() && isspace((unsigned char)text.back()))
+        text.pop_back();
+    return text;
+}
 
 //! Folder of the user sources (*.lua), created if needed
 std::string UserSourcesDir();

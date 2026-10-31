@@ -42,7 +42,7 @@ void Page_folder::Load(string imgname)
 {
 	vector<unsigned char> data;
 	if(ReadFileUtf8(imgname.c_str(), &data))
-		PageRenderCv = imdecode(data, IMREAD_COLOR);
+		PageRenderCv = DecodePageImage(data);
 	if(!PageRenderCv.data )                              // Check for invalid input
     {
         LoadErrorPage();

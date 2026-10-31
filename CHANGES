@@ -14,6 +14,18 @@ ClaudeReader 1.1 (in progress, 1.1 beta 1: 31/10/2026)
 	-Store scripts have a time limit (instructions) and a memory limit (256 MB): a store stuck in a loop gives an error
 	 instead of freezing ClaudeReader (#3)
 	-Bug fixed: the Delete button of the tags in Settings did nothing
+	-Panels: the last page, and the pages of one or two page comics, are read panel by panel too; the cover (first
+	 page of 3 or more) and a first or last page without panels are shown whole (#6)
+	-Library: folders of images are comics, as the store downloads in Images format (#5); comics up to 20 folders
+	 deep (#11); comics with the same name show their format, e.g. "Normal (PDF)", long titles end with "..." and
+	 the search finds words after the 24th character (#13)
+	-GIF pages (#10)
+	-Store: the chapter lists and searches of a store do not wait for its downloads (#8); "1 result", no "Load more"
+	 after the last results, no Lua traceback in the messages, results without id are skipped (#14)
+	-Messages centered on the window, the file name instead of the full path (#7)
+	-Bugs fixed: tags lost for the comics named "[...]" (#1); memory leak of the first pages, 600 MB for a
+	 library of 340 comics (#2); library disabled after a comic failed to open (#4); command line export: paths
+	 longer than 260 characters, errors reported (#12)
 	-Linux build again (CMake finds Lua and MuPDF as packaged by Debian/Ubuntu); GitHub Actions build of Linux and of
 	 the Windows single exe, with a panel detection check on a generated comic (tests/make_test_comic.py)
 ClaudeReader 1.0 (30/10/2026)

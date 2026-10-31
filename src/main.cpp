@@ -128,8 +128,11 @@ int main(int argc, char **argv)
                     doc->SetRightToLeft(rightToLeft);
                     doc->LoadPage(1);
                     Export_Document Export(doc, export_folder.c_str(), extension.c_str(), panelmode, pagepreview);
-                    if(Export.Export()>0)
-                        printf("%s succesfully exported.\n", optarg);
+                    int exported=Export.Export();
+                    if(exported>0)
+                        printf("%s successfully exported.\n", optarg);
+                    else if(exported==-4)
+                        printf("Error: some images could not be written in %s (missing folder, no space or permission?).\n", export_folder.c_str());
                     else
                     {
                         printf("An error occured during export.\n");

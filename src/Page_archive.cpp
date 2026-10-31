@@ -19,6 +19,7 @@
 //
 //---------------------------------------------------------------------------
 #include "Page_archive.h"
+#include "Document.h" //DecodePageImage
 
 //! Constructor of the archive page.
 //!Initialize, load a page, render it and call the cases detection if needed (not a
@@ -65,7 +66,7 @@ void Page_archive::Load(archive *arch, archive_entry *entry, int img_idx)
 
 	//Decode the buffer into a cvMat
 	if(size==0 && !cv_buff.empty())
-		PageRenderCv = imdecode(cv_buff, IMREAD_COLOR);
+		PageRenderCv = DecodePageImage(cv_buff);
 
 	//The file should be valid and size>0 but parsing or decoding errors are possible
 	if(PageRenderCv.empty())

@@ -36,8 +36,31 @@ namespace
         return new Fl_Preferences(GetUserDataDir(), "claudereader", "tags", Fl_Preferences::C_LOCALE);
     }
 
-    //! Key of a comic: its path in the library, '|' as separator (no '/' in the preferences names)
+    //! Key of a comic: its path in the library, '|' as separator (no '/' in the preferences names).
+    //! '%', '[', ':' and line breaks are percent-encoded: in the preferences file a line starting with '['
+    //! is a group and ':' ends the name ("[Group] Title.cbz" lost its tags, issue #1)
     std::string ComicKey(const std::string &library_path)
+    {
+        std::string key;
+        for(size_t i=0; i<library_path.size(); i++)
+        {
+            char c=library_path[i];
+            if(c=='/' || c=='\\')
+                key+='|';
+            else if(c=='%' || c=='[' || c==':' || c=='\n' || c=='\r')
+            {
+                char hex[4];
+                snprintf(hex, sizeof(hex), "%%%02X", (unsigned char)c);
+                key+=hex;
+            }
+            else
+                key+=c;
+        }
+        return key;
+    }
+
+    //! Key used before the encoding (tags saved by ClaudeReader 1.0 for names with '%')
+    std::string OldComicKey(const std::string &library_path)
     {
         std::string key=library_path;
         for(size_t i=0; i<key.size(); i++)
@@ -236,6 +259,9 @@ std::vector<int> Tags::OfComic(const std::string &filename)
     {
         Fl_Preferences comics(prefs, "comics");
         comics.get(ComicKey(filename).c_str(), value, "", sizeof(value));
+        //Saved by an older version (the name needed no encoding then)
+        if(!value[0] && OldComicKey(filename)!=ComicKey(filename) && filename.find('[')==std::string::npos)
+            comics.get(OldComicKey(filename).c_str(), value, "", sizeof(value));
     }
     delete prefs;
     //Only the existing tags

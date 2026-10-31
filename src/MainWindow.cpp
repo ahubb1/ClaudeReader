@@ -274,7 +274,7 @@ void TimerDND_cb(void* param)
         #ifndef __WINDOWS__ //On linux a locale file uri begin with "file://"
             if(strncmp(DNDFilename, "file://", 7) != 0)
             {
-                fl_alert("Invalid filename !");
+                (CenterNextMessage(), fl_alert)("Invalid filename !");
             }
             else
             {
@@ -289,7 +289,7 @@ void TimerDND_cb(void* param)
             }
             else
             {
-                fl_alert("Invalid filename !");
+                (CenterNextMessage(), fl_alert)("Invalid filename !");
             }
         #endif
     }
@@ -734,7 +734,7 @@ void Open_cb(Fl_Widget* widget, void * param)
         sprintf(tmpFilename, "%s", ((Fl_Menu_*)widget)->mvalue()->label());
         if( tmpFilename[0]=='\0' || GetDocumentType(tmpFilename)==DOC_UNSUPPORTED )
         {
-            fl_alert("Invalid filename !");
+            (CenterNextMessage(), fl_alert)("Invalid filename !");
             //Turn cursor back to normal
             mw->window->cursor(FL_CURSOR_DEFAULT);
             Fl::check();
@@ -813,7 +813,7 @@ void ExportDoc_cb(Fl_Widget* widget, void * param)
             //Ask if export panels or pages
             bool panel, preview;
             fl_message_title("Export");
-            int panelchoice=fl_choice("Export as ?\n -One image for each Page\n -One image for each Panel\n -One image for each Panel+Page preview", "Panel+Preview", "Panel", "Page");
+            int panelchoice=(CenterNextMessage(), fl_choice)("Export as ?\n -One image for each Page\n -One image for each Panel\n -One image for each Panel+Page preview", "Panel+Preview", "Panel", "Page");
             switch(panelchoice)
             {
                 case 0:
@@ -836,7 +836,7 @@ void ExportDoc_cb(Fl_Widget* widget, void * param)
             //Select the image format
             char fileext[5];
             fl_message_title("Export");
-            int formatchoice=fl_choice("Select an image format to export to:", "Jpeg", "Png", "Bmp");
+            int formatchoice=(CenterNextMessage(), fl_choice)("Select an image format to export to:", "Jpeg", "Png", "Bmp");
             switch(formatchoice)
             {
                 case 0:
@@ -854,7 +854,7 @@ void ExportDoc_cb(Fl_Widget* widget, void * param)
 
             //Ask for confirmation first
             fl_message_title("Export");
-            if(fl_choice("Export %s to %s as images (%s) ?", "Cancel", "Export", NULL, fl_filename_name(mw->Doc->GetFilename()), chooser.filename(), fileext)!=1)
+            if((CenterNextMessage(), fl_choice)("Export %s to %s as images (%s) ?", "Cancel", "Export", NULL, fl_filename_name(mw->Doc->GetFilename()), chooser.filename(), fileext)!=1)
                 return;
 
             //Go to document first page
@@ -897,7 +897,7 @@ void ExportDoc_cb(Fl_Widget* widget, void * param)
             if(retexp>=0)
             {
                 fl_message_title("Export");
-                fl_alert("Export succesfull ! (%d images created)", retexp);
+                (CenterNextMessage(), fl_alert)("Export succesfull ! (%d images created)", retexp);
             }
             else
             {
@@ -905,15 +905,15 @@ void ExportDoc_cb(Fl_Widget* widget, void * param)
                 {
                     case -1:
                         fl_message_title("Export");
-                        fl_alert("Error: Invalid export path (%s) !", chooser.filename());
+                        (CenterNextMessage(), fl_alert)("Error: Invalid export path (%s) !", chooser.filename());
                         break;
                     case -2:
                         fl_message_title("Export");
-                        fl_alert("Error: Image format not supported (%s) !", fileext);
+                        (CenterNextMessage(), fl_alert)("Error: Image format not supported (%s) !", fileext);
                         break;
                     default:
                         fl_message_title("Export");
-                        fl_alert("Error while exporting !");
+                        (CenterNextMessage(), fl_alert)("Error while exporting !");
                         break;
                 }
             }
@@ -934,7 +934,7 @@ void ExportDoc_cb(Fl_Widget* widget, void * param)
     }
     else
     {
-        fl_alert("Open a comics first !");
+        (CenterNextMessage(), fl_alert)("Open a comics first !");
     }
 }
 
@@ -1511,7 +1511,7 @@ void PreviousPage_cb(Fl_Widget* widget, void * param)
     {
         if(mw->Doc->LoadPage()==-3)
         {
-            fl_alert("Unable to access the document. Try to reopen it.");
+            (CenterNextMessage(), fl_alert)("Unable to access the document. Try to reopen it.");
         }
 
         //Update everything
@@ -1548,7 +1548,7 @@ void NextPage_cb(Fl_Widget* widget, void * param)
     {
         if(mw->Doc->LoadPage()==-3)
         {
-            fl_alert("Unable to access the document. Try to reopen it.");
+            (CenterNextMessage(), fl_alert)("Unable to access the document. Try to reopen it.");
         }
 
         //Update everything
@@ -1622,7 +1622,7 @@ void FirstPage_cb(Fl_Widget* widget, void * param)
         return;
     if(mw->Doc->LoadPage(1)==-3)
     {
-        fl_alert("Unable to access the document. Try to reopen it.");
+        (CenterNextMessage(), fl_alert)("Unable to access the document. Try to reopen it.");
     }
 
     //Update everything
@@ -1638,7 +1638,7 @@ void LastPage_cb(Fl_Widget* widget, void * param)
         return;
     if(mw->Doc->LoadPage(mw->Doc->GetNbOfPages())==-3)
     {
-        fl_alert("Unable to access the document. Try to reopen it.");
+        (CenterNextMessage(), fl_alert)("Unable to access the document. Try to reopen it.");
     }
 
     //Update everything
@@ -1652,6 +1652,7 @@ void GoToPage_cb(Fl_Widget* widget, void * param)
     //Ask the user which page he wants to go to:
     char disp[5];
     sprintf(disp, "%d", mw->Doc->GetCurrentPageNb());
+    CenterNextMessage();
     const char *ret=fl_input("Go to page: ", disp);
     //If not Cancel
     if(ret!=NULL)
@@ -1661,7 +1662,7 @@ void GoToPage_cb(Fl_Widget* widget, void * param)
         //Check if the page nb entered is valid
         if(pagenb<1 || pagenb>mw->Doc->GetNbOfPages())
         {
-            fl_alert("Not a valid page number (or out of range) !");
+            (CenterNextMessage(), fl_alert)("Not a valid page number (or out of range) !");
         }
         else
         {
@@ -1670,7 +1671,7 @@ void GoToPage_cb(Fl_Widget* widget, void * param)
                 return;
             if(mw->Doc->LoadPage(pagenb)==-3)
             {
-                fl_alert("Unable to access the document. Try to reopen it.");
+                (CenterNextMessage(), fl_alert)("Unable to access the document. Try to reopen it.");
             }
 
             //Update everything
@@ -1774,7 +1775,7 @@ void About_cb(Fl_Widget* widget, void * param)
     //MainWindow *mw=(MainWindow*)param;
 
     fl_message_title("About");
-    fl_message(ABOUT_STRING);
+    (CenterNextMessage(), fl_message)(ABOUT_STRING);
 }
 //-----------------------------------------------------------------------------
 
@@ -2519,8 +2520,20 @@ void MainWindow::Init(char *filename)
         //if the document couldn't be openned
         else
         {
-            //Say it to the user
-            fl_alert("Unable to open the %s.\nIs it a valid comics file (pdf or archive) or folder (two images or more) ?", Filename);
+            //Not a document (or no page)
+            if(new_doc)
+                delete new_doc;
+
+            //Say it to the user: the name, then the folder (the full path made the message too wide, issue #7)
+            char folder[FL_PATH_MAX];
+            snprintf(folder, sizeof(folder), "%s", Filename);
+            *(char*)fl_filename_name(folder)='\0';
+            (CenterNextMessage(), fl_alert)("Unable to open \"%s\".\nIs it a valid comic file (PDF, EPUB, archive) or a folder of two images or more?\n\nFolder: %s",
+                     fl_filename_name(Filename), folder);
+
+            //The library is usable again (it was disabled while opening, issue #4)
+            if(Library)
+                Library->activate();
 
             //Check if we have an active document
             if(!Doc)

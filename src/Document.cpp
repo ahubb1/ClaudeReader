@@ -22,6 +22,9 @@
 #include <FL/filename.H>
 #include <strings.h>
 #include <FL/fl_utf8.h>
+#include "FileUtf8.h"
+#include <FL/Fl_GIF_Image.H>
+#include <FL/Fl_RGB_Image.H>
 
 
 //! Create a new document object according to the given filename.
@@ -51,27 +54,13 @@ Document::Document(char *filename):
 //!Free the Pages objects created if some and document if some still open.
 Document::~Document()
 {
-    //Free pages
-    if(currentPage)
-    {
-        if( (previousPage && currentPage!=previousPage) || (nextPage && currentPage!=nextPage) )
-            delete currentPage;
-        currentPage=NULL;
-    }
-
-    if(nextPage)
-    {
-        if( (previousPage && nextPage!=previousPage) || (currentPage && nextPage!=currentPage) )
-            delete nextPage;
-        nextPage=NULL;
-    }
-
-    if(previousPage)
-    {
-        if( (currentPage && previousPage!=currentPage) || (nextPage && previousPage!=nextPage) )
-            delete previousPage;
-        previousPage=NULL;
-    }
+    //Free pages (each object once): a page alone (thumbnails, one-page comics) leaked before (issue #2)
+    if(nextPage && nextPage!=currentPage)
+        delete nextPage;
+    if(previousPage && previousPage!=currentPage && previousPage!=nextPage)
+        delete previousPage;
+    delete currentPage;
+    currentPage=nextPage=previousPage=NULL;
 }
 
 
@@ -125,7 +114,7 @@ int Document::LoadPage(int p)
                 #ifdef DEBUG
                     printf("previous: \t");
                 #endif
-                if( (currentPage && previousPage!=currentPage) || (nextPage && previousPage!=nextPage) )
+                if(previousPage!=currentPage && previousPage!=nextPage && previousPage!=tmp)
                     delete previousPage;
                 previousPage=NULL;
             }
@@ -166,7 +155,7 @@ int Document::LoadPage(int p)
                     #ifdef DEBUG
                         printf("next: \t");
                     #endif
-                    if( (previousPage && nextPage!=previousPage) || (currentPage && nextPage!=currentPage) )
+                    if(nextPage!=previousPage && nextPage!=currentPage && nextPage!=tmp)
                         delete nextPage;
                 }
                 //Update the next page: it's now the old current page...
@@ -185,14 +174,8 @@ int Document::LoadPage(int p)
             else
             {
                 //Change the current page
-                if(currentPage)
-                {
-                    #ifdef DEBUG
-                        printf("current: \t");
-                    #endif
-                    if( (previousPage && currentPage!=previousPage) || (nextPage && currentPage!=nextPage) )
-                        delete currentPage;
-                }
+                if(currentPage && currentPage!=previousPage && currentPage!=nextPage)
+                    delete currentPage;
 
                 //Create the new page
                 currentPage=CreatePage(ActivePage);
@@ -253,40 +236,22 @@ void Document::PreloadPages()
     if( (!nextPage) || (nextPage && nextPage->GetPageNb()!=(ActivePage+1)) )
     {
         //and if this page exists in the document
-        if( (ActivePage+1)<=NbPages )
-        {
-            //Load the new next page
-            nextPage=CreatePage(ActivePage+1);
-        }
-        else
-        {
-            //If they were one, not the good one and the new one doesn't exist in the document
-            if(nextPage)
-                if( (previousPage && nextPage!=previousPage) || (currentPage && nextPage!=currentPage) )
-                    delete nextPage;
-            //the page doesn't exist
-            nextPage=NULL;
-        }
+        //The former one (another page) is freed
+        if(nextPage && nextPage!=previousPage && nextPage!=currentPage)
+            delete nextPage;
+        //Load the new next page, if this page exists in the document
+        nextPage=(ActivePage+1)<=NbPages ? CreatePage(ActivePage+1) : NULL;
     }
 
     //If previous page is not already the one loaded (or there is currently no previous page)
     if( (!previousPage) || (previousPage && previousPage->GetPageNb()!=(ActivePage-1)) )
     {
         //and if this page exists in the document
-        if( (ActivePage-1)>0 )
-        {
-            //Load the new previous page
-            previousPage=CreatePage(ActivePage-1);
-        }
-        else
-        {
-            //If they were one, not the good one and the new one doesn't exist in the document
-            if(previousPage)
-                if( (currentPage && previousPage!=currentPage) || (nextPage && previousPage!=nextPage) )
-                    delete previousPage;
-            //the page doesn't exist
-            previousPage=NULL;
-        }
+        //The former one (another page) is freed
+        if(previousPage && previousPage!=currentPage && previousPage!=nextPage)
+            delete previousPage;
+        //Load the new previous page, if this page exists in the document
+        previousPage=(ActivePage-1)>0 ? CreatePage(ActivePage-1) : NULL;
     }
 
     //Close the document, free the context..
@@ -568,6 +533,31 @@ DOCUMENT_TYPE GetDocumentType(const char *Filename)
     return DOC_UNSUPPORTED;
 }
 
+Mat DecodePageImage(const vector<unsigned char> &data)
+{
+    Mat page;
+    if(data.empty())
+        return page;
+    page=imdecode(data, IMREAD_COLOR);
+    //GIF: OpenCV 5 reads them, older versions do not (issue #10)
+    if(page.empty() && data.size()>6 && memcmp(data.data(), "GIF8", 4)==0)
+    {
+        Fl_GIF_Image gif("page.gif", data.data(), data.size());
+        if(gif.w()>0 && gif.h()>0 && gif.fail()==0)
+        {
+            Fl_RGB_Image rgb(&gif, FL_WHITE);   //The transparent pixels on white
+            if(rgb.w()>0 && rgb.data() && rgb.data()[0])
+            {
+                int depth=rgb.d();
+                Mat pixels(rgb.h(), rgb.w(), depth==4 ? CV_8UC4 : depth==1 ? CV_8UC1 : CV_8UC3, (void*)rgb.data()[0],
+                           rgb.ld() ? rgb.ld() : (size_t)rgb.w()*depth);
+                cvtColor(pixels, page, depth==4 ? COLOR_RGBA2BGR : depth==1 ? COLOR_GRAY2BGR : COLOR_RGB2BGR);
+            }
+        }
+    }
+    return page;
+}
+
 bool ReadFileUtf8(const char *path, vector<unsigned char> *data)
 {
     FILE *f=fl_fopen(path, "rb");
@@ -587,7 +577,8 @@ bool WriteImageUtf8(const char *path, const Mat &img)
     vector<unsigned char> encoded;
     if(!imencode(fl_filename_ext(path), img, encoded))
         return false;
-    FILE *f=fl_fopen(path, "wb");
+    //FileUtf8: paths longer than 260 characters too (issue #12)
+    FILE *f=FileUtf8::Open(path, "wb");
     if(!f)
         return false;
     bool ok=fwrite(encoded.data(), 1, encoded.size(), f)==encoded.size();
@@ -597,7 +588,7 @@ bool WriteImageUtf8(const char *path, const Mat &img)
 
 bool IsPageImage(const std::string &name)
 {
-    static const char *extensions[]={".jpg", ".jpeg", ".jpe", ".jp2", ".png", ".webp", ".tif", ".tiff", ".bmp", ".pbm", ".ppm", ".pgm", NULL};
+    static const char *extensions[]={".jpg", ".jpeg", ".jpe", ".jp2", ".png", ".webp", ".gif", ".tif", ".tiff", ".bmp", ".pbm", ".ppm", ".pgm", NULL};
     const char *ext=fl_filename_ext(name.c_str());
     for(int i=0; extensions[i]; i++)
         if(strcasecmp(ext, extensions[i])==0)

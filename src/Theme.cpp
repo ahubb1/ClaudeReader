@@ -21,6 +21,7 @@
 #include "Theme.h"
 #include <FL/fl_draw.H>
 #include <FL/Fl_Tooltip.H>
+#include <FL/fl_ask.H>
 #include <string>
 #ifdef _WIN32
     #include <FL/platform.H>
@@ -117,6 +118,16 @@ void ApplyDarkTitleBar(Fl_Window *win)
                 DwmSetWindowAttribute(hwnd, 19, &dark, sizeof(dark));
         }
     #endif
+}
+
+
+void CenterNextMessage()
+{
+    Fl_Window *w=Fl::first_window();
+    while(w && w->window())
+        w=w->window();
+    if(w)
+        fl_message_position(w->x()+w->w()/2, w->y()+w->h()/2, 1);
 }
 
 

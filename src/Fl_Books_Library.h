@@ -75,7 +75,7 @@
 #include "Document_archive.h"
 #include "Document_folder.h"
 
-#define MAX_LIBRARY_DEPTH 8 //Sub-folders levels browsed in the library folder
+#define MAX_LIBRARY_DEPTH 20 //Sub-folders levels browsed in the library folder (a limit for folder loops)
 
 class Fl_Books_Library;
 
@@ -98,6 +98,11 @@ class Fl_Library_Element: public Fl_Button
 		void SetAlphaNumPosition(int val){AlphaNumPosition=val;}
 		const char * GetFilename(){return Filename;}
 		const char * GetShortFilenameLC(){return ShortFilenameLC;}
+		//! Name shown on the card: the file name without extension (or the folder name), with the format when
+		//! another comic of the folder has the same name
+		const std::string &GetTitle(){return Title;}
+		void SetTitle(const std::string &title){Title=title; copy_tooltip(Title.c_str());}
+		bool IsFolderComic(){return FolderComic;}
 		char * GetAbsoluteFilename(){return AbsoluteFilename;}
 		//! Folder of the comic, relative to the library folder ("" or ending with '/')
 		const char * GetRelativeDir(){return RelativeDir;}
@@ -118,6 +123,8 @@ class Fl_Library_Element: public Fl_Button
 	    std::vector<int> TagIds;
 
 		char Filename[FL_PATH_MAX];
+		std::string Title;
+		bool FolderComic;           //!< A folder of images
 		char ShortFilenameLC[FL_PATH_MAX];
 		char AbsoluteFilename[FL_PATH_MAX];
 		char ShortFilename[LENGTH_SHORT];
@@ -233,7 +240,9 @@ class Fl_Books_Library: public Fl_Group//public Fl_Double_Window
 
 
         void add_subpack();
-		bool add_element(const char *relative_path, const char *filename, const char *windir);
+		bool add_element(const char *relative_path, const char *filename, const char *windir, bool folder_comic=false);
+		//! The format in the title of the comics with the same name in the same folder (Normal.cbz, Normal.pdf)
+		void mark_duplicate_names();
 		void scan_entry(const char *relative_dir, const char *name, int depth);
 		void refresh();
 		void reload();

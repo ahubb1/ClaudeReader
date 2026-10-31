@@ -384,7 +384,7 @@ void Fl_Store_View::LoadSources()
         std::string text="Some store scripts have errors:";
         for(size_t i=0; i<errors.size(); i++)
             text+="\n"+errors[i];
-        fl_alert("%s", text.c_str());
+        (CenterNextMessage(), fl_alert)("%s", text.c_str());
     }
 }
 
@@ -481,16 +481,17 @@ void Fl_Store_View::Search(const std::string &query, int page)
         if(!*ok)
         {
             if(page==1)
-                ShowMessage("The search failed:\n"+*error);
+                ShowMessage("The search failed:\n"+UserError(*error));
             SetStatus(source->Name+": search failed");
             return;
         }
-        LastPage=results->empty();
+        //No more results: none, or fewer than a page (the stores return 20 to 100 results a page)
+        LastPage=results->empty() || results->size()<10;
         Message->hide();
         AddCards(*results);
         if(Entries.empty())
             ShowMessage("Nothing found");
-        SetStatus(source->Name+": "+std::to_string(Entries.size())+" results");
+        SetStatus(source->Name+": "+std::to_string(Entries.size())+(Entries.size()==1 ? " result" : " results"));
     });
 }
 
@@ -683,7 +684,7 @@ void Fl_Store_View::OpenDetail(int index)
             if(!*ok)
             {
                 ChaptersLabel->copy_label("CHAPTERS   unavailable");
-                DetailStatus->copy_label(error->c_str());
+                DetailStatus->copy_label(UserError(*error).c_str());
                 return;
             }
             Chapters=*list;
@@ -786,7 +787,10 @@ void Fl_Store_View::StartNextDownload()
     std::thread([=]()
     {
         std::string output, error;
-        bool ok=DownloadChapter(job.Source, job.Chapter, base, job.Format,
+        //Its own instance of the store: the store tab stays usable during the download (issue #8)
+        std::unique_ptr<LuaSource> worker(job.Source->Clone());
+        LuaSource *source=worker->IsValid() ? worker.get() : job.Source;
+        bool ok=DownloadChapter(source, job.Chapter, base, job.Format,
             [=](int done, int total)
             {
                 RunInUiThread([=]()
@@ -819,7 +823,7 @@ void Fl_Store_View::StartNextDownload()
             else if(Cancel)
                 SetStatus("Download canceled ("+title+")");
             else
-                SetStatus("Download failed ("+title+"): "+error);
+                SetStatus("Download failed ("+title+"): "+UserError(error));
             DetailStatus->copy_label(Status.c_str());
             StartNextDownload();
         });
@@ -909,7 +913,7 @@ void Fl_Store_View::Magnet_cb(Fl_Widget *w, void *p)
     std::string magnet=v->Entries[v->Selected].Get("magnet");
     char error[256]="";
     if(!fl_open_uri(magnet.c_str(), error, sizeof(error)))
-        fl_alert("No application opens magnet links (install a torrent client):\n%s", error);
+        (CenterNextMessage(), fl_alert)("No application opens magnet links (install a torrent client):\n%s", error);
 }
 
 void Fl_Store_View::CopyMagnet_cb(Fl_Widget *w, void *p)
