@@ -174,7 +174,7 @@ jobs:
             echo "**Windows**: download \`ClaudeReader-windows-x64.exe\` and run it, nothing to install (Windows 10 or 11, 64-bit)."
             echo
             echo "**Linux**: download \`ClaudeReader-linux-x86_64\`, make it executable (\`chmod +x ClaudeReader-linux-x86_64\`) and run it."
-            echo "Built on Ubuntu 24.04: it uses the system OpenCV, MuPDF, libarchive, curl and gumbo libraries (see the README)."
+            echo "Built on Ubuntu 24.04: it uses the system OpenCV, libarchive, curl and gumbo libraries (see the README)."
             echo
             echo "Changes: see [CHANGES](https://github.com/$GITHUB_REPOSITORY/blob/$GITHUB_REF_NAME/CHANGES)."
           } > notes.md
