@@ -27,7 +27,7 @@
 #include "md5.h"
 #include "Preferences.h" //GetUserDataDir
 
-#define NET_USER_AGENT "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36 ClaudeReader/1.0"
+#define NET_USER_AGENT "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36 ClaudeReader/1.1"
 #define NET_HOST_DELAY_MS 100   //Minimum delay between two requests to the same host (sites rate limits; HTTP 429 answers are retried)
 
 

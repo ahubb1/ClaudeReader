@@ -10,17 +10,17 @@ ClaudeReader runs on Windows and Linux. It is based on [BDReader](http://bdreade
 
 ### Windows
 
-ClaudeReader for Windows is a single file, `ClaudeReader.exe`, with nothing to install.
+ClaudeReader for Windows is a single file with nothing to install (Windows 10 or 11, 64-bit).
 
-1. Download the Windows package: `ClaudeReader-windows-x64` from the latest successful run of the **Build** workflow (Actions tab).
-2. Unzip it anywhere, for example in `Documents\ClaudeReader`.
-3. Run `ClaudeReader.exe`. To open comics by double-clicking them, choose ClaudeReader in *Open with* for `.cbz`, `.cbr` or `.pdf` files.
+1. Download `ClaudeReader-windows-x64.exe` from the latest release (the **Releases** page of the repository).
+2. Put it anywhere, for example in `Documents\ClaudeReader`, and run it.
+3. To open comics by double-clicking them, choose ClaudeReader in *Open with* for `.cbz`, `.cbr` or `.pdf` files.
 
-Settings, reading positions and thumbnails are kept in `%APPDATA%\ClaudeReader`. To uninstall, delete the program folder and that folder.
+Settings, reading positions and thumbnails are kept in `%APPDATA%\ClaudeReader`. To uninstall, delete the exe and that folder.
 
 ### Linux
 
-A ready-made build for Ubuntu 24.04 is in the `ClaudeReader-linux-x86_64` artifact of the **Build** workflow. Unpack it and run `./ClaudeReader`. It uses the system's OpenCV, libarchive, curl and gumbo libraries; installing the packages listed under *Building from source* provides them.
+Download `ClaudeReader-linux-x86_64` from the latest release, make it executable (`chmod +x ClaudeReader-linux-x86_64`) and run it. It is built on Ubuntu 24.04 and uses the system's OpenCV, libarchive, curl and gumbo libraries; installing the packages listed under *Building from source* provides them.
 
 On other distributions, build it from source (below). Settings are kept in `~/.claudereader`.
 
