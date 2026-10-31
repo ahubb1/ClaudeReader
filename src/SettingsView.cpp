@@ -24,6 +24,7 @@
 #include <FL/fl_draw.H>
 #include <FL/fl_ask.H>
 #include <FL/Fl_Native_File_Chooser.H>
+#include <FL/Fl_Color_Chooser.H>
 #include <algorithm>
 
 #define SETTINGS_PAD    32
@@ -69,6 +70,102 @@ class Fl_Tag_Swatch : public Fl_Button
         int Id;
 };
 
+//! Choice styled as the inputs
+static Fl_Choice *SettingsChoice()
+{
+    Fl_Choice *c=new Fl_Choice(0, 0, 160, 26);
+    c->box(THEME_INPUT_BOX);
+    c->color(THEME_INPUT_BG);
+    c->textcolor(THEME_FG);
+    c->textsize(13);
+    c->down_box(FL_FLAT_BOX);
+    c->clear_visible_focus();
+    return c;
+}
+
+static Fl_Color RgbColor(unsigned int rgb)
+{
+    return fl_rgb_color((rgb>>16)&0xFF, (rgb>>8)&0xFF, rgb&0xFF);
+}
+
+//! Highlight color choice: a round dot, ringed when it is the current color
+class Fl_Color_Swatch : public Fl_Button
+{
+    public:
+        Fl_Color_Swatch(unsigned int rgb):Fl_Button(0, 0, 24, 26), Rgb(rgb), Selected(false) { box(FL_FLAT_BOX); clear_visible_focus(); }
+        void draw()
+        {
+            fl_color(THEME_EDITOR_BG);
+            fl_rectf(x(), y(), w(), h());
+            int cx=x()+w()/2, cy=y()+h()/2;
+            if(Selected)
+            {
+                fl_color(THEME_FG_BRIGHT);
+                fl_pie(cx-10, cy-10, 20, 20, 0, 360);
+                fl_color(THEME_EDITOR_BG);
+                fl_pie(cx-8, cy-8, 16, 16, 0, 360);
+            }
+            fl_color(RgbColor(Rgb));
+            fl_pie(cx-7, cy-7, 14, 14, 0, 360);
+            //Dark colors stay visible on the dark background
+            fl_color(THEME_INPUT_BORDER);
+            fl_arc(cx-7, cy-7, 14, 14, 0, 360);
+        }
+        unsigned int Rgb;
+        bool Selected;
+};
+
+//! A small page with three panels, the second one highlighted as in the reader
+class Fl_Highlight_Preview : public Fl_Widget
+{
+    public:
+        Fl_Highlight_Preview(const PanelHighlight *h):Fl_Widget(0, 0, 220, 150), Highlight(h) {}
+        void draw()
+        {
+            fl_color(THEME_INPUT_BG);
+            fl_rectf(x(), y(), w(), h());
+            bool dim=Highlight->Style==HIGHLIGHT_DIM;
+            //Page and panels: darkened but the current one when dimming
+            auto shade=[dim](uchar v, bool current) { return (uchar)(dim && !current ? v*0.35 : v); };
+            int px=x()+(w()-100)/2, py=y()+10, pw=100, ph=h()-20;
+            fl_color(fl_rgb_color(shade(240, false), shade(238, false), shade(232, false)));
+            fl_rectf(px, py, pw, ph);
+            int m=6, half=(pw-3*m)/2;
+            int top_h=(ph-3*m)/2;
+            int panels[3][4]={{px+m, py+m, pw-2*m, top_h}, {px+m, py+2*m+top_h, half, ph-3*m-top_h}, {px+2*m+half, py+2*m+top_h, half, ph-3*m-top_h}};
+            for(int i=0; i<3; i++)
+            {
+                bool current=i==1;
+                fl_color(fl_rgb_color(shade(150, current), shade(170, current), shade(195, current)));
+                fl_rectf(panels[i][0], panels[i][1], panels[i][2], panels[i][3]);
+            }
+            //The highlight, as the viewer draws it
+            int t=std::max(1, std::min(Highlight->Thickness, HIGHLIGHT_MAX_THICKNESS));
+            int o=t/2+1;
+            int ax=panels[1][0]-o, ay=panels[1][1]-o, aw=panels[1][2]+2*o, ah=panels[1][3]+2*o;
+            if(Highlight->Style==HIGHLIGHT_FRAME)
+            {
+                fl_color(fl_rgb_color(24, 24, 24));
+                fl_line_style(FL_SOLID|FL_CAP_SQUARE|FL_JOIN_MITER, 9);
+                fl_rect(ax-o-4, ay-o-4, aw+2*o+8, ah+2*o+8);
+            }
+            fl_color(RgbColor(Highlight->Color));
+            fl_line_style(FL_SOLID|FL_CAP_SQUARE|FL_JOIN_MITER, t);
+            if(Highlight->Style==HIGHLIGHT_CORNERS)
+            {
+                int l=std::max(8, std::min(aw, ah)/5);
+                fl_line(ax, ay+l, ax, ay, ax+l, ay);
+                fl_line(ax+aw-l, ay, ax+aw, ay, ax+aw, ay+l);
+                fl_line(ax+aw, ay+ah-l, ax+aw, ay+ah, ax+aw-l, ay+ah);
+                fl_line(ax+l, ay+ah, ax, ay+ah, ax, ay+ah-l);
+            }
+            else
+                fl_rect(ax, ay, aw, ah);
+            fl_line_style(0);
+        }
+        const PanelHighlight *Highlight;
+};
+
 //! Name of a tag: renamed with Enter or when leaving the field
 class Fl_Tag_Name : public Fl_Input
 {
@@ -102,6 +199,46 @@ Fl_Settings_View::Fl_Settings_View(int X, int Y, int W, int H):Fl_Group(X, Y, W,
             NewTagInput->callback(TagAdd_cb, this);
             NewTagButton=SettingsButton("Add tag", true);
             NewTagButton->callback(TagAdd_cb, this);
+
+            //Panel highlight
+            HighlightTitle=Section("Panel highlight", "How the panel being read is shown in panel mode. "
+                                   "Ctrl+B shows or hides it while reading.");
+            StyleLabel=Text(13, THEME_FG);
+            StyleLabel->label("Style");
+            StyleChoice=SettingsChoice();
+            for(int i=0; i<HIGHLIGHT_STYLES; i++)
+                StyleChoice->add(PanelHighlight::StyleName(i));
+            StyleChoice->callback(Highlight_cb, this);
+            ThicknessLabel=Text(13, THEME_FG);
+            ThicknessLabel->label("Thickness");
+            ThicknessChoice=SettingsChoice();
+            for(int i=1; i<=HIGHLIGHT_MAX_THICKNESS; i++)
+                ThicknessChoice->add((std::to_string(i)+" px").c_str());
+            ThicknessChoice->callback(Highlight_cb, this);
+            ColorLabel=Text(13, THEME_FG);
+            ColorLabel->label("Color");
+            {
+                //Accent, the tags palette, white and black
+                std::vector<unsigned int> colors={0x0078D4};
+                for(int i=0; i<Tags::PaletteSize(); i++)
+                {
+                    uchar r, g, b;
+                    Fl::get_color(Tags::Color(i), r, g, b);
+                    colors.push_back((r<<16)|(g<<8)|b);
+                }
+                colors.push_back(0xFFFFFF);
+                colors.push_back(0x000000);
+                for(size_t i=0; i<colors.size(); i++)
+                {
+                    Fl_Color_Swatch *s=new Fl_Color_Swatch(colors[i]);
+                    s->callback(HighlightColor_cb, this);
+                    ColorSwatches.push_back(s);
+                }
+            }
+            CustomColorButton=SettingsButton("Custom...", false);
+            CustomColorButton->tooltip("Any color");
+            CustomColorButton->callback(HighlightCustom_cb, this);
+            HighlightPreview=new Fl_Highlight_Preview(&Highlight);
 
             //Library
             LibraryTitle=Section("Library", "The folder of your comics (its sub-folders are shown as folders in the library). "
@@ -160,6 +297,12 @@ void Fl_Settings_View::resize(int X, int Y, int W, int H)
 void Fl_Settings_View::Refresh()
 {
     BuildTagRows();
+    if(GetHighlight)
+        Highlight=GetHighlight();
+    StyleChoice->value(std::max(0, std::min(Highlight.Style, HIGHLIGHT_STYLES-1)));
+    ThicknessChoice->value(std::max(1, std::min(Highlight.Thickness, HIGHLIGHT_MAX_THICKNESS))-1);
+    for(size_t i=0; i<ColorSwatches.size(); i++)
+        ((Fl_Color_Swatch*)ColorSwatches[i])->Selected=((Fl_Color_Swatch*)ColorSwatches[i])->Rgb==Highlight.Color;
     if(GetLibraryFolder)
         LibraryText=GetLibraryFolder();
     LibraryPath->copy_label(LibraryText.c_str());
@@ -250,6 +393,36 @@ void Fl_Settings_View::Layout()
     NewTagButton->resize(cx+302, cy, 80, 26);
     cy+=70;
 
+    section(HighlightTitle);
+    {
+        int rows_y=cy;
+        StyleLabel->resize(cx, cy, 70, 26);
+        StyleChoice->resize(cx+76, cy, 150, 26);
+        cy+=ROW_H+6;
+        ThicknessLabel->resize(cx, cy, 70, 26);
+        ThicknessChoice->resize(cx+76, cy, 150, 26);
+        cy+=ROW_H+6;
+        ColorLabel->resize(cx, cy, 70, 26);
+        int sx=cx+76;
+        for(size_t i=0; i<ColorSwatches.size(); i++)
+        {
+            //Two rows of swatches
+            if(i==6)
+            {
+                sx=cx+76;
+                cy+=28;
+            }
+            ColorSwatches[i]->resize(sx, cy, 24, 26);
+            sx+=26;
+        }
+        CustomColorButton->resize(sx+8, cy, 80, 26);
+        cy+=ROW_H+6;
+        //The preview at the right of the controls
+        HighlightPreview->resize(cx+std::max(330, cw-220), rows_y, 220, std::max(150, cy-rows_y-6));
+        cy=std::max(cy, rows_y+156);
+    }
+    cy+=40;
+
     section(LibraryTitle);
     LibraryPath->resize(cx, cy, cw-130, 26);
     LibraryButton->resize(cx+cw-120, cy, 120, 26);
@@ -271,6 +444,45 @@ void Fl_Settings_View::Layout()
 
 
 //------------------------------------Callbacks------------------------
+
+void Fl_Settings_View::HighlightChanged()
+{
+    for(size_t i=0; i<ColorSwatches.size(); i++)
+    {
+        Fl_Color_Swatch *s=(Fl_Color_Swatch*)ColorSwatches[i];
+        s->Selected=s->Rgb==Highlight.Color;
+        s->redraw();
+    }
+    HighlightPreview->redraw();
+    if(OnHighlight)
+        OnHighlight(Highlight);
+}
+
+void Fl_Settings_View::Highlight_cb(Fl_Widget *w, void *p)
+{
+    Fl_Settings_View *v=(Fl_Settings_View*)p;
+    v->Highlight.Style=v->StyleChoice->value();
+    v->Highlight.Thickness=v->ThicknessChoice->value()+1;
+    v->HighlightChanged();
+}
+
+void Fl_Settings_View::HighlightColor_cb(Fl_Widget *w, void *p)
+{
+    Fl_Settings_View *v=(Fl_Settings_View*)p;
+    v->Highlight.Color=((Fl_Color_Swatch*)w)->Rgb;
+    v->HighlightChanged();
+}
+
+void Fl_Settings_View::HighlightCustom_cb(Fl_Widget *w, void *p)
+{
+    Fl_Settings_View *v=(Fl_Settings_View*)p;
+    uchar r=(v->Highlight.Color>>16)&0xFF, g=(v->Highlight.Color>>8)&0xFF, b=v->Highlight.Color&0xFF;
+    if(fl_color_chooser("Panel highlight color", r, g, b, 1))
+    {
+        v->Highlight.Color=(r<<16)|(g<<8)|b;
+        v->HighlightChanged();
+    }
+}
 
 void Fl_Settings_View::TagColor_cb(Fl_Widget *w, void *p)
 {

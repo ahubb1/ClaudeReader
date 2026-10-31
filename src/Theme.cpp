@@ -198,7 +198,6 @@ Fl_SVG_Image *ThemeIcon(THEME_ICON icon, Fl_Color color, int size)
 
 Fl_Activity_Button::Fl_Activity_Button(int X, int Y, int W, int H, THEME_ICON icon, int icon_size):
     Fl_Button(X, Y, W, H, 0),
-    MenuPath(NULL),
     Hover(false),
     CurrentView(false),
     Toggled(false)

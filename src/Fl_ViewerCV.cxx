@@ -138,13 +138,51 @@ void Fl_ViewerCV::UpdateView()
         Mat image_roi;
         cv::resize((*image)(source), image_roi, visible.size(), 0, 0, Scale>1 ? INTER_AREA : INTER_CUBIC);
 
-        //Add a visual border around the current panel
+        //Show the current panel (Settings: style, thickness, color)
         if(panel_view && Border && InContext)
         {
-            //Opaque dark frame (theme bars color) with a thin accent line against the panel (BGR)
             Rect panel(cvFloor(localDisplayRect.x/Scale)-visible.x, cvFloor(localDisplayRect.y/Scale)-visible.y, cvFloor(localDisplayRect.width/Scale), cvFloor(localDisplayRect.height/Scale));
-            cv::rectangle(image_roi, Rect(panel.x-7, panel.y-7, panel.width+14, panel.height+14), Scalar(24, 24, 24, 255), 9);
-            cv::rectangle(image_roi, Rect(panel.x-2, panel.y-2, panel.width+4, panel.height+4), Scalar(212, 120, 0, 255), 2);
+            int t=std::max(1, std::min(Highlight.Thickness, HIGHLIGHT_MAX_THICKNESS));
+            Scalar line((Highlight.Color)&0xFF, (Highlight.Color>>8)&0xFF, (Highlight.Color>>16)&0xFF, 255); //BGR
+            //The line just outside the panel (cv::rectangle draws centered on the rectangle)
+            int o=t/2+1;
+            Rect around(panel.x-o, panel.y-o, panel.width+2*o, panel.height+2*o);
+            switch(Highlight.Style)
+            {
+                case HIGHLIGHT_LINE:
+                    cv::rectangle(image_roi, around, line, t);
+                    break;
+                case HIGHLIGHT_DIM:
+                {
+                    //Everything but the panel darkened
+                    Mat dimmed;
+                    image_roi.convertTo(dimmed, -1, 0.35, 0);
+                    Rect keep=panel&Rect(0, 0, image_roi.cols, image_roi.rows);
+                    if(keep.area()>0)
+                        image_roi(keep).copyTo(dimmed(keep));
+                    image_roi=dimmed;
+                    cv::rectangle(image_roi, around, line, t);
+                    break;
+                }
+                case HIGHLIGHT_CORNERS:
+                {
+                    //Brackets at the corners
+                    int l=std::max(12, std::min(around.width, around.height)/6);
+                    Point c[4]={around.tl(), Point(around.x+around.width, around.y), around.br(), Point(around.x, around.y+around.height)};
+                    int dx[4]={1, -1, -1, 1}, dy[4]={1, 1, -1, -1};
+                    for(int i=0; i<4; i++)
+                    {
+                        cv::line(image_roi, c[i], Point(c[i].x+dx[i]*l, c[i].y), line, t);
+                        cv::line(image_roi, c[i], Point(c[i].x, c[i].y+dy[i]*l), line, t);
+                    }
+                    break;
+                }
+                default:
+                    //Opaque dark frame (theme bars color) around the line
+                    cv::rectangle(image_roi, Rect(around.x-o-4, around.y-o-4, around.width+2*o+8, around.height+2*o+8), Scalar(24, 24, 24, 255), 9);
+                    cv::rectangle(image_roi, around, line, t);
+                    break;
+            }
         }
 
         //Centered if smaller than the widget

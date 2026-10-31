@@ -1,4 +1,14 @@
 ClaudeReader changes (based on BDReader)
+ClaudeReader 1.1 (in progress)
+	-Reader bar above the page: back to the library, comic title and position, reading mode (Panels, Page, Strip,
+	 Scroll), right to left, pages side bar and fullscreen; hidden in fullscreen
+	-Activity bar with the places only (Library, Store, Reader, Settings): Open in the File menu (Ctrl+O),
+	 Help with F1, fullscreen also with F11
+	-Scroll mode (W) for webtoons and manhwa: the pages one under the other at the same width, scrolled continuously
+	 (wheel, arrows, Page Up/Down, Space, dragging), Ctrl+wheel or +/- for the width, only the pages around the view in memory
+	-Settings: panel highlight style (frame, line, dim the rest, corners), thickness and color, with a preview
+	-Linux build again (CMake finds Lua and MuPDF as packaged by Debian/Ubuntu); GitHub Actions build of Linux and of
+	 the Windows single exe, with a panel detection check on a generated comic (tests/make_test_comic.py)
 ClaudeReader 1.0 (30/10/2026)
 	-Windows: a single ClaudeReader.exe, no DLLs (every library linked statically: ./build.sh --static)
 	-Library folders: the sub-folders of the library are shown as folder cards (categories), open one with a click,

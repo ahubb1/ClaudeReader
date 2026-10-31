@@ -3,7 +3,7 @@
 #   ./build.sh            build/ClaudeReader.exe and the DLLs it needs
 #   ./build.sh --static   build-static/ClaudeReader.exe alone (needs the static OpenCV, see deps/build-opencv.sh)
 set -e
-export PATH=/c/msys64/ucrt64/bin:$PATH
+export PATH=${MINGW_PREFIX:-/c/msys64/ucrt64}/bin:$PATH
 cd "$(dirname "$0")"
 
 if [ "$1" = "--static" ]; then

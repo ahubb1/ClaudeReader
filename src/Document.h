@@ -71,6 +71,8 @@ class Document
         READINGMODE GetReadingMode() {return ReadingMode;}
         int GetNbOfPages() {return NbPages;}
         int GetCurrentPageNb() {return ActivePage;}
+        //! Page reached without loading it (scroll mode: the webtoon view loads its pages itself)
+        void SetCurrentPageNb(int p) {if(p>0 && p<=NbPages) ActivePage=p;}
         void SetPagePreview(bool val);
         bool IsPagePreview() {return PagePreview;}
         void SetDisplayRatio(float val);

@@ -427,7 +427,7 @@ Mat *Document::ThumbnailsRenderNext()
 //! \return -2 if no new page is loaded (last page)
 int Document::NextCase()
 {
-    if(currentPage->NextCase()<0 || ReadingMode==PAGE)
+    if(currentPage->NextCase()<0 || ReadingMode==PAGE || ReadingMode==SCROLL)
     {
         if(NextPage()>0)
         {
@@ -448,7 +448,7 @@ int Document::NextCase()
 //! \return -2 if no new page is loaded (last page)
 int Document::PreviousCase()
 {
-    if(currentPage->PreviousCase()<0 || ReadingMode==PAGE)
+    if(currentPage->PreviousCase()<0 || ReadingMode==PAGE || ReadingMode==SCROLL)
     {
         if(PreviousPage()>0)
         {

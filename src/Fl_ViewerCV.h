@@ -45,6 +45,7 @@ http://derindelimavi.blogspot.com/ bluekid70@gmail.com
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/imgcodecs.hpp>
+#include "PanelHighlight.h"
 
 
 using namespace cv;
@@ -96,6 +97,8 @@ class FL_EXPORT Fl_ViewerCV : public Fl_Widget
         void SetInContext(bool val){InContext=val;}
         bool IsBorder(){return Border;}
         void SetBorder(bool val){Border=val;}
+        //! How the current panel is shown (when Border is on)
+        void SetHighlight(const PanelHighlight &val){Highlight=val;}
         float GetScalingFactor(){return Scale;}
         void SetMaxZoom(float val){MaxZoom=val;}
         float GetMaxZoom(){return MaxZoom;}
@@ -116,6 +119,7 @@ class FL_EXPORT Fl_ViewerCV : public Fl_Widget
         bool fit;
         bool InContext;
         bool Border;
+        PanelHighlight Highlight;
         float Scale;
         float MaxZoom;
         float CustomZoom;

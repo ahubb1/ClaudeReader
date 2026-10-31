@@ -46,6 +46,8 @@
 #include "Theme.h"
 #include "StoreView.h"
 #include "EndPage.h"
+#include "ReaderBar.h"
+#include "WebtoonView.h"
 #include "SettingsView.h"
 #include "Fl_Help_Window.h"
 #include "Fl_ViewerCV.h"
@@ -90,7 +92,9 @@ class MainWindow
         friend void ToggleLibrary_cb(Fl_Widget* widget, void * param);
         friend void LibraryView_cb(Fl_Widget* widget, void * param);
         friend void ReaderView_cb(Fl_Widget* widget, void * param);
-        friend void ActivityMenu_cb(Fl_Widget* widget, void * param);
+        friend void PickMenu(MainWindow *mw, const char *path);
+        friend void UpdateReaderBar(MainWindow *mw);
+        friend void ShowReaderBar(MainWindow *mw, bool show);
         friend void CreateLibrary(MainWindow *mw);
         friend void ShowLibrary(MainWindow *mw);
         friend void ShowReader(MainWindow *mw);
@@ -111,6 +115,9 @@ class MainWindow
         friend void PageMode_cb(Fl_Widget* widget, void * param);
         friend void StripMode_cb(Fl_Widget* widget, void * param);
         friend void CaseMode_cb(Fl_Widget* widget, void * param);
+        friend void ScrollMode_cb(Fl_Widget* widget, void * param);
+        friend void ShowWebtoon(MainWindow *mw, bool show);
+        friend bool WebtoonGo(MainWindow *mw, int page);
         friend void MangaMode_cb(Fl_Widget* widget, void * param);
         friend void ApplyReadingDirection(MainWindow *mw, bool rtl);
         friend void PagePreview_cb(Fl_Widget* widget, void * param);
@@ -156,7 +163,10 @@ class MainWindow
             Fl_Box *StatusBar, *StatusBarZoom;
             Fl_Box *StatusBadge;             //!< Accent box at the left of the status bar
             Fl_Group *ActivityBar;           //!< Icons bar on the left (views and main actions)
-            Fl_Activity_Button *LibraryButton, *StoreButton, *ReaderButton, *OpenButton, *PagesButton, *MangaButton, *FullscreenButton, *HelpButton, *SettingsButton;
+            Fl_Activity_Button *LibraryButton, *StoreButton, *ReaderButton, *SettingsButton;   //!< The places only
+            Fl_Reader_Bar *ReaderBar;        //!< Tool bar of the reading area: modes, direction, side bar, fullscreen
+            Fl_Group *ReadingArea;           //!< The display and its overlays, below the reader bar
+            Fl_Webtoon_View *Webtoon;        //!< Scroll mode: replaces the display
             Fl_Box *WelcomeBox;              //!< Hint displayed when there is neither a document nor a library
             Fl_Store_View *Store;            //!< Comics and manga stores (sources scripts)
             Fl_End_Page *EndPage;            //!< Shown after the last page: what to read next

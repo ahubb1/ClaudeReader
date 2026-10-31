@@ -41,6 +41,7 @@
 
 
 #include "Document.h"
+#include "PanelHighlight.h"
 
 #define MAX_NB_RECENT 25
 
@@ -114,6 +115,8 @@ class Preferences
         char *GetShortFilename() { return ShortFilename; }
         char *GetLibraryFolder() { return LibraryFolder; }
         void SetLibraryFolder(char *lib_folder) { snprintf(LibraryFolder, FL_PATH_MAX, "%s", lib_folder); }
+        const PanelHighlight &GetHighlight() { return Highlight; }
+        void SetHighlight(const PanelHighlight &val) { Highlight = val; }
         char *GetLastDoc() { return LastDoc; }
         int GetLastPageNb() { return LastPageNb; }
         void SetLastPageNb(int val) { LastPageNb = val; }
@@ -139,6 +142,7 @@ class Preferences
         char ShortFilename[FL_PATH_MAX];
         char PrefDir[FL_PATH_MAX];
         bool UseLibrary;
+        PanelHighlight Highlight;   //!< Global only
         READINGMODE ReadingMode;
         bool PagePreview;
         bool Thumbnails;

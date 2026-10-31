@@ -269,7 +269,7 @@ Page::Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, float di
     RightToLeft(rtl)
 {
     //Init
-    if(ReadingMode!=PAGE && !PreviewPage)
+    if(ReadingMode!=PAGE && ReadingMode!=SCROLL && !PreviewPage)
         ActiveCase=0;
     else
         ActiveCase=-1;
@@ -413,7 +413,7 @@ void Page::DetectCases()
 
 
     //If in PAGE mode or special page or the page loading has failed
-    if(ReadingMode==PAGE || specialPage)
+    if(ReadingMode==PAGE || ReadingMode==SCROLL || specialPage)
     {
         //Nothing else than initialization of nb of cases
         NbCases=0;
@@ -876,7 +876,7 @@ Mat * Page::RenderCaseMat()
     if(Loaded)
     {
         //Render the whole page
-        if(ActiveCase==-1 || ReadingMode==PAGE)
+        if(ActiveCase==-1 || ReadingMode==PAGE || ReadingMode==SCROLL)
         {
             //ImgRender.release();
             PageRenderCv.copyTo(ImgRender);
@@ -904,7 +904,7 @@ Rect * Page::RenderCase()
     if(Loaded)
     {
         //Render the whole page
-        if(ActiveCase==-1 || ReadingMode==PAGE)
+        if(ActiveCase==-1 || ReadingMode==PAGE || ReadingMode==SCROLL)
         {
             //PageRenderCv.copyTo(ImgRender);
             RectRender.width=PageRenderCv.cols;

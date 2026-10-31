@@ -18,7 +18,7 @@
 //---------------------------------------------------------------------------
 /**
  * \file SettingsView.h
- * \brief Settings view: tags, library folder, store cache
+ * \brief Settings view: tags, panel highlight, library folder, store cache
  *
  */
 #ifndef SETTINGSVIEW_H
@@ -32,7 +32,9 @@
 #include <FL/Fl_Box.H>
 #include <FL/Fl_Button.H>
 #include <FL/Fl_Check_Button.H>
+#include <FL/Fl_Choice.H>
 #include "Theme.h"
+#include "PanelHighlight.h"
 
 //! The settings (shown instead of the library, the store or the reader)
 class Fl_Settings_View : public Fl_Group
@@ -49,6 +51,8 @@ class Fl_Settings_View : public Fl_Group
         std::function<void(const std::string &)> OnLibraryFolder;  //!< A new library folder was chosen
         std::function<void(bool)> OnUseLibrary;
         std::function<void()> OnTagsChanged;                        //!< Tags added, renamed, recolored, removed
+        std::function<PanelHighlight()> GetHighlight;
+        std::function<void(const PanelHighlight &)> OnHighlight;    //!< Style, thickness or color of the panel highlight changed
 
         //Callbacks
         static void TagColor_cb(Fl_Widget *w, void *p);
@@ -59,6 +63,9 @@ class Fl_Settings_View : public Fl_Group
         static void UseLibrary_cb(Fl_Widget *w, void *p);
         static void ClearCache_cb(Fl_Widget *w, void *p);
         static void SourcesFolder_cb(Fl_Widget *w, void *p);
+        static void Highlight_cb(Fl_Widget *w, void *p);
+        static void HighlightColor_cb(Fl_Widget *w, void *p);
+        static void HighlightCustom_cb(Fl_Widget *w, void *p);
 
     private:
         void Layout();
@@ -72,6 +79,14 @@ class Fl_Settings_View : public Fl_Group
         std::vector<Fl_Widget*> TagRows;    //!< Widgets of the tags list (rebuilt), 4 per tag
         Fl_Hint_Input *NewTagInput;
         Fl_Button *NewTagButton;
+        void HighlightChanged();
+
+        Fl_Box *HighlightTitle, *StyleLabel, *ThicknessLabel, *ColorLabel;
+        Fl_Choice *StyleChoice, *ThicknessChoice;
+        std::vector<Fl_Button*> ColorSwatches;
+        Fl_Button *CustomColorButton;
+        Fl_Widget *HighlightPreview;
+        PanelHighlight Highlight;
         Fl_Box *LibraryTitle, *LibraryPath;
         Fl_Button *LibraryButton;
         Fl_Check_Button *UseLibraryCheck;

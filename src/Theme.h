@@ -84,8 +84,6 @@ class Fl_Activity_Button : public Fl_Button
         void SetCurrentView(bool val) {CurrentView=val; redraw();}  //!< Accent bar on the left side
         void SetToggled(bool val) {Toggled=val; redraw();}          //!< Accent colored icon
 
-        const char *MenuPath;   //!< Menu item triggered by the button (see ActivityMenu_cb), can be NULL
-
     private:
         Fl_SVG_Image *IconDim, *IconBright, *IconAccent;
         bool Hover, CurrentView, Toggled;

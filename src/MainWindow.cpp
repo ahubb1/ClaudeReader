@@ -30,6 +30,7 @@
 //Defined further down, used before
 void ActivateNavigationWidgets(void *param, bool val);
 void UpdateActivityBar(MainWindow *mw);
+void UpdateReaderBar(MainWindow *mw);
 void UpdateWindowTitle(MainWindow *mw);
 void ShowLibrary(MainWindow *mw);
 void ShowReader(MainWindow *mw);
@@ -70,6 +71,15 @@ void UpdatePage(MainWindow *mw)
 {
     if(mw->EndPage)
         HideEndPage(mw);
+
+    //Scroll mode: the webtoon view shows the page (it loads its pages itself)
+    if(mw->Webtoon->visible())
+    {
+        if(mw->Webtoon->CurrentPage()!=mw->Doc->GetCurrentPageNb())
+            mw->Webtoon->ShowPage(mw->Doc->GetCurrentPageNb());
+        StatusUpdate(mw);
+        return;
+    }
 
     //Turn cursor to wait
     fl_cursor(FL_CURSOR_WAIT);
@@ -145,8 +155,12 @@ void StatusBarUpdate(void * param)
           }
           else
           {
-              snprintf(text, sizeof(text), "%s     Page %d/%d", mw->Doc->GetReadingMode()==STRIP ? "Strip mode" : "Page mode", mw->Doc->GetCurrentPageNb(), mw->Doc->GetNbOfPages());
-              snprintf(textZoom, sizeof(textZoom), "Zoom %d%%     Max %s", (int)(mw->Display->GetCurrentZoom()*100.), textMaxZoom);
+              const char *mode=mw->Doc->GetReadingMode()==STRIP ? "Strip mode" : mw->Doc->GetReadingMode()==SCROLL ? "Scroll mode" : "Page mode";
+              snprintf(text, sizeof(text), "%s     Page %d/%d", mode, mw->Doc->GetCurrentPageNb(), mw->Doc->GetNbOfPages());
+              if(mw->Doc->GetReadingMode()==SCROLL)
+                  snprintf(textZoom, sizeof(textZoom), "Width: Ctrl+wheel or +/-");
+              else
+                  snprintf(textZoom, sizeof(textZoom), "Zoom %d%%     Max %s", (int)(mw->Display->GetCurrentZoom()*100.), textMaxZoom);
           }
       }
       //Settings
@@ -165,6 +179,7 @@ void StatusBarUpdate(void * param)
           snprintf(textZoom, sizeof(textZoom), "Library     %s", mw->Library->get_absolute_dir());
       }
 
+      UpdateReaderBar(mw);
       mw->StatusBar->copy_label(text);
       mw->StatusBar->redraw();
       mw->StatusBarZoom->copy_label(textZoom);
@@ -560,17 +575,43 @@ void ReaderView_cb(Fl_Widget* widget, void * param)
     ShowReader((MainWindow*)param);
 }
 
-//! Activity bar buttons doing the same as a menu item
-void ActivityMenu_cb(Fl_Widget* widget, void * param)
+//! Reader bar buttons doing the same as a menu item (keeps the menu toggles and radio items in sync)
+void PickMenu(MainWindow *mw, const char *path)
 {
-    MainWindow *mw=(MainWindow*)param;
-    Fl_Activity_Button *button=(Fl_Activity_Button*)widget;
-
-    if(!button->MenuPath)
-        return;
-    const Fl_Menu_Item *item=mw->MenuBar->find_item(button->MenuPath);
-    if(item)
+    const Fl_Menu_Item *item=mw->MenuBar->find_item(path);
+    if(item && item->active())
         mw->MenuBar->picked(item);
+}
+
+//! Reader bar: title, position, reading mode, direction and side bar of the open comic
+void UpdateReaderBar(MainWindow *mw)
+{
+    if(!mw->ReaderBar || !mw->Doc || !mw->Doc->currentPage)
+        return;
+    char title[FL_PATH_MAX];
+    snprintf(title, sizeof(title), "%s", fl_filename_name(mw->Doc->GetFilename()));
+    fl_filename_setext(title, sizeof(title), "");
+    bool panels=mw->Doc->GetReadingMode()==CASE && !mw->EndPage->visible();
+    mw->ReaderBar->SetPosition(title, mw->Doc->GetCurrentPageNb(), mw->Doc->GetNbOfPages(),
+                               panels ? mw->Doc->currentPage->GetActiveCase()+1 : 0, panels ? mw->Doc->currentPage->GetNbCases() : 0);
+    mw->ReaderBar->SetModes(mw->Doc->GetReadingMode(), mw->Doc->GetRightToLeft(), mw->ThumbDisplayGrp->visible());
+}
+
+//! Reader bar shown above the reading area (hidden in fullscreen): the reading area takes the space left
+void ShowReaderBar(MainWindow *mw, bool show)
+{
+    Fl_Group *g=mw->MainDisplayGrp;
+    int bar=show ? READER_BAR_H : 0;
+    if(show)
+    {
+        mw->ReaderBar->resize(g->x(), g->y(), g->w(), READER_BAR_H);
+        mw->ReaderBar->show();
+    }
+    else
+        mw->ReaderBar->hide();
+    mw->ReadingArea->resize(g->x(), g->y()+bar, g->w(), g->h()-bar);
+    g->init_sizes();
+    g->redraw();
 }
 
 //! State of the activity bar buttons and of the welcome hint according to the current view
@@ -594,16 +635,8 @@ void UpdateActivityBar(MainWindow *mw)
     else
         mw->ReaderButton->deactivate();
 
-    Fl_Activity_Button *readingButtons[]={mw->PagesButton, mw->MangaButton, mw->FullscreenButton};
-    for(int i=0; i<3; i++)
-    {
-        if(reading)
-            readingButtons[i]->activate();
-        else
-            readingButtons[i]->deactivate();
-    }
-    mw->PagesButton->SetToggled(reading && mw->ThumbDisplayGrp->visible());
-    mw->MangaButton->SetToggled(reading && mw->Doc->GetRightToLeft());
+    if(reading)
+        UpdateReaderBar(mw);
 
     //Nothing to show
     if(!mw->Doc && !library && !store && !settings)
@@ -1019,6 +1052,7 @@ void Fullscreen_cb(Fl_Widget* widget, void * param)
         while(mw->window->w()<Fl::w() || mw->window->h()<Fl::h())
             Fl::wait(.10);
         mw->DisplayGrp->resize(0, 0, mw->window->w(), mw->window->h());
+        ShowReaderBar(mw, false);
         mw->PageNbFullGrp->resize((int)(mw->window->w()-(mw->window->w()/15.)), (int)(mw->window->h()-(mw->window->w()/40.)), mw->window->w()/20., mw->window->w()/80.);
         mw->PageNbFullGrp->show();
         Fl::wait(.10);
@@ -1048,6 +1082,7 @@ void Fullscreen_cb(Fl_Widget* widget, void * param)
         mw->PageNbFullGrp->hide();
         //Resize the display group
         mw->DisplayGrp->resize(THEME_ACTIVITY_W, THEME_MENU_H, mw->window->w()-THEME_ACTIVITY_W, mw->window->h()-THEME_MENU_H-THEME_STATUS_H);
+        ShowReaderBar(mw, true);
         Fl::wait(.20);
         mw->window->resizable(mw->DisplayGrp);
         Fl::wait(.20);
@@ -1326,6 +1361,7 @@ void PageMode_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
 
+    ShowWebtoon(mw, false);
     mw->Doc->SetReadingMode(PAGE);
     //mw->Display->SetImage(mw->Doc->Render());
     mw->Display->SetImage(mw->Doc->RenderPage(), *mw->Doc->Render());
@@ -1339,6 +1375,7 @@ void StripMode_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
 
+    ShowWebtoon(mw, false);
     mw->Doc->SetReadingMode(STRIP);
     //Adjust the strip size according to the new display ratio
     mw->Doc->SetDisplayRatio(mw->Display->w()/(float)mw->Display->h());
@@ -1354,6 +1391,7 @@ void CaseMode_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
 
+    ShowWebtoon(mw, false);
     mw->Doc->SetReadingMode(CASE);
     //mw->Display->SetImage(mw->Doc->Render());
     mw->Display->SetImage(mw->Doc->RenderPage(), *mw->Doc->Render());
@@ -1361,6 +1399,43 @@ void CaseMode_cb(Fl_Widget* widget, void * param)
     ActivatePanelViewWidgets(mw, true);
     Fl::check();
     mw->Doc->UpdatePreloadedPages();
+}
+
+//! Switch to scroll reading mode: the pages one under the other (webtoons)
+void ScrollMode_cb(Fl_Widget* widget, void * param)
+{
+    MainWindow *mw=(MainWindow*)param;
+
+    mw->Doc->SetReadingMode(SCROLL);
+    ActivatePanelViewWidgets(mw, false);
+    ShowWebtoon(mw, true);
+    StatusUpdate(mw);
+}
+
+//! The webtoon view instead of the display (scroll mode), or back to the display
+void ShowWebtoon(MainWindow *mw, bool show)
+{
+    if(show)
+    {
+        HideEndPage(mw);
+        mw->Display->hide();
+        Fl_Widget *arrows[]={mw->NextButton, mw->PreviousButton, mw->NextPageButton, mw->PreviousPageButton};
+        for(int i=0; i<4; i++)
+            arrows[i]->hide();
+        mw->Webtoon->show();
+        mw->Webtoon->SetDocument(mw->Doc, mw->Doc->GetCurrentPageNb());
+        mw->Webtoon->take_focus();
+    }
+    else if(mw->Webtoon->visible())
+    {
+        mw->Webtoon->hide();
+        mw->Webtoon->Clear();
+        mw->Display->show();
+        ActivateNavigationWidgets(mw, true);
+        //The document only knows the page number: its pages again around it
+        if(mw->Doc)
+            mw->Doc->ReloadPages();
+    }
 }
 
 //! Show the reading direction in the menu and the status bar checkbox.
@@ -1372,7 +1447,7 @@ void ApplyReadingDirection(MainWindow *mw, bool rtl)
         item->set();
     else
         item->clear();
-    mw->MangaButton->SetToggled(rtl);
+    UpdateReaderBar(mw);
 }
 
 //! Toggle manga mode: panels read from right to left
@@ -1392,6 +1467,25 @@ void MangaMode_cb(Fl_Widget* widget, void * param)
     mw->Doc->UpdatePreloadedPages();
 }
 
+//! Scroll mode: the page changes go to the webtoon view, the document only follows the page number
+//! (its cache of previous/current/next pages expects moves to adjacent pages). False in the other modes.
+bool WebtoonGo(MainWindow *mw, int page)
+{
+    if(!mw->Webtoon->visible())
+        return false;
+    if(page>mw->Doc->GetNbOfPages())
+        ShowEndPage(mw);
+    else
+    {
+        page=max(1, page);
+        mw->Webtoon->ShowPage(page);
+        mw->Doc->SetCurrentPageNb(page);
+        StatusBarUpdate(mw);
+        StatusFullScreenUpdate(mw);
+    }
+    return true;
+}
+
 //! Go to previous page (through Doc)
 void PreviousPage_cb(Fl_Widget* widget, void * param)
 {
@@ -1403,6 +1497,8 @@ void PreviousPage_cb(Fl_Widget* widget, void * param)
         HideEndPage(mw);
         return;
     }
+    if(WebtoonGo(mw, mw->Doc->GetCurrentPageNb()-1))
+        return;
 
     //Update the current page number
     int p=mw->Doc->PreviousPage();
@@ -1429,6 +1525,8 @@ void NextPage_cb(Fl_Widget* widget, void * param)
 
     //Nothing after the end page
     if(mw->EndPage->visible())
+        return;
+    if(WebtoonGo(mw, mw->Doc->GetCurrentPageNb()+1))
         return;
 
     //Update the current page number
@@ -1468,6 +1566,8 @@ void PreviousCase_cb(Fl_Widget* widget, void * param)
         HideEndPage(mw);
         return;
     }
+    if(WebtoonGo(mw, mw->Doc->GetCurrentPageNb()-1))
+        return;
 
     int ret = mw->Doc->PreviousCase();
     StatusUpdate(mw);
@@ -1488,6 +1588,8 @@ void NextCase_cb(Fl_Widget* widget, void * param)
 
     //Nothing after the end page
     if(mw->EndPage->visible())
+        return;
+    if(WebtoonGo(mw, mw->Doc->GetCurrentPageNb()+1))
         return;
 
     int ret = mw->Doc->NextCase();
@@ -1515,6 +1617,9 @@ void FirstPage_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
 
+    HideEndPage(mw);
+    if(WebtoonGo(mw, 1))
+        return;
     if(mw->Doc->LoadPage(1)==-3)
     {
         fl_alert("Unable to access the document. Try to reopen it.");
@@ -1528,6 +1633,9 @@ void LastPage_cb(Fl_Widget* widget, void * param)
 {
     MainWindow *mw=(MainWindow*)param;
 
+    HideEndPage(mw);
+    if(WebtoonGo(mw, mw->Doc->GetNbOfPages()))
+        return;
     if(mw->Doc->LoadPage(mw->Doc->GetNbOfPages())==-3)
     {
         fl_alert("Unable to access the document. Try to reopen it.");
@@ -1557,6 +1665,9 @@ void GoToPage_cb(Fl_Widget* widget, void * param)
         }
         else
         {
+            HideEndPage(mw);
+            if(WebtoonGo(mw, pagenb))
+                return;
             if(mw->Doc->LoadPage(pagenb)==-3)
             {
                 fl_alert("Unable to access the document. Try to reopen it.");
@@ -1707,6 +1818,11 @@ void UpdateWidgets(void * param)
         ((Fl_Menu_Item*)mw->MenuBar->find_item("&Navigation/Strip mode\t"))->setonly();
         ActivatePanelViewWidgets(mw, false);
     }
+    if(localPref->GetReadingMode()==SCROLL)
+    {
+        ((Fl_Menu_Item*)mw->MenuBar->find_item("&Navigation/Scroll mode (webtoon)\t"))->setonly();
+        ActivatePanelViewWidgets(mw, false);
+    }
 
     //Preview page
     if(localPref->GetPagePreview())
@@ -1838,6 +1954,8 @@ MainWindow::MainWindow(const char *exepath, const char *f)
     Store=NULL;
     Settings=NULL;
     EndPage=NULL;
+    ReaderBar=NULL;
+    Webtoon=NULL;
     LibraryDirty=false;
 
     //Use the program name (first argument) to get its full path (path used to store preferences on Windows)
@@ -1888,6 +2006,7 @@ MainWindow::MainWindow(const char *exepath, const char *f)
                     { "Thumbnails view\t", FL_COMMAND + 't', (Fl_Callback *)Thumbnails_cb, this, FL_MENU_TOGGLE },
                     {"Fullscreen2\t", FL_Escape, (Fl_Callback *)Fullscreen_cb, this, FL_MENU_INVISIBLE | FL_MENU_INACTIVE },
                     {"Fullscreen\t", FL_COMMAND + 'f', (Fl_Callback *)Fullscreen_cb, this, FL_MENU_DIVIDER },
+                    {"Fullscreen3\t", FL_F + 11, (Fl_Callback *)Fullscreen_cb, this, FL_MENU_INVISIBLE },
                     { "Maximal zoom\t", 0, 0, 0, FL_SUBMENU },
                         { Pref->GetMaxZoomOption(0).caption, 0, (Fl_Callback *)MaxZoom_cb, this, FL_MENU_RADIO | FL_MENU_CHECK },
                         { Pref->GetMaxZoomOption(1).caption, 0, (Fl_Callback *)MaxZoom_cb, this, FL_MENU_RADIO },
@@ -1923,7 +2042,8 @@ MainWindow::MainWindow(const char *exepath, const char *f)
                 { "&Navigation",              0, 0, 0, FL_SUBMENU | FL_MENU_INACTIVE},
                     { "Panel mode\t", 'c', (Fl_Callback *)CaseMode_cb, this, FL_MENU_RADIO },
                     { "Strip mode\t", 's', (Fl_Callback *)StripMode_cb, this, FL_MENU_RADIO },
-                    { "Page mode\t", 'p', (Fl_Callback *)PageMode_cb, this, FL_MENU_RADIO | FL_MENU_DIVIDER },
+                    { "Page mode\t", 'p', (Fl_Callback *)PageMode_cb, this, FL_MENU_RADIO },
+                    { "Scroll mode (webtoon)\t", 'w', (Fl_Callback *)ScrollMode_cb, this, FL_MENU_RADIO | FL_MENU_DIVIDER },
                     { "Page preview\t", FL_COMMAND+'p', (Fl_Callback *)PagePreview_cb, this, FL_MENU_TOGGLE },
                     { "Manga mode (right to left)\t", 'm', (Fl_Callback *)MangaMode_cb, this, FL_MENU_TOGGLE | FL_MENU_DIVIDER },
                     { "Next panel\t", FL_Right, (Fl_Callback *)NextCase_cb, this },
@@ -1935,7 +2055,8 @@ MainWindow::MainWindow(const char *exepath, const char *f)
                     { "Go to page\t", FL_COMMAND + 'g' , (Fl_Callback *)GoToPage_cb, this },
                     { 0 },
                 { "&Help",              0, 0, 0, FL_SUBMENU },
-                    { "Help\t", FL_COMMAND + 'h', (Fl_Callback *)Help_cb, this },
+                    { "Help\t", FL_F + 1, (Fl_Callback *)Help_cb, this },
+                    { "Help2\t", FL_COMMAND + 'h', (Fl_Callback *)Help_cb, this, FL_MENU_INVISIBLE },
                     { "About\t", 0, (Fl_Callback *)About_cb, this },
                     { 0 },
                 { 0 }
@@ -1970,28 +2091,11 @@ MainWindow::MainWindow(const char *exepath, const char *f)
                 ReaderButton = new Fl_Activity_Button(bx, by+bh, bw, bh, ICON_READER);
                 ReaderButton->tooltip("Reader: back to the open comic (Ctrl+L)");
                 ReaderButton->callback(ReaderView_cb, (void*)this);
-                OpenButton = new Fl_Activity_Button(bx, by+2*bh, bw, bh, ICON_OPEN);
-                OpenButton->tooltip("Open a comic (Ctrl+O)");
-                OpenButton->MenuPath="&File/Open file\t";
-                PagesButton = new Fl_Activity_Button(bx, by+3*bh, bw, bh, ICON_PAGES);
-                PagesButton->tooltip("Pages side bar (Ctrl+T)");
-                PagesButton->MenuPath="&View/Thumbnails view\t";
-                MangaButton = new Fl_Activity_Button(bx, by+4*bh, bw, bh, ICON_MANGA);
-                MangaButton->tooltip("Manga mode: panels read from right to left (M)");
-                MangaButton->MenuPath="&Navigation/Manga mode (right to left)\t";
-                Fl_Box *activitySpace = new Fl_Box(bx, by+5*bh, bw, ActivityBar->h()-9*bh);
-                FullscreenButton = new Fl_Activity_Button(bx, ActivityBar->y()+ActivityBar->h()-3*bh, bw, bh, ICON_FULLSCREEN);
-                FullscreenButton->tooltip("Fullscreen (Ctrl+F, Esc to leave)");
-                FullscreenButton->MenuPath="&View/Fullscreen\t";
-                HelpButton = new Fl_Activity_Button(bx, ActivityBar->y()+ActivityBar->h()-2*bh, bw, bh, ICON_HELP);
-                HelpButton->tooltip("Help (Ctrl+H)");
-                HelpButton->MenuPath="&Help/Help\t";
+                //Only places: the reading tools are in the reader bar, Open and Help in the menus (Ctrl+O, F1)
+                Fl_Box *activitySpace = new Fl_Box(bx, by+2*bh, bw, ActivityBar->h()-4*bh);
                 SettingsButton = new Fl_Activity_Button(bx, ActivityBar->y()+ActivityBar->h()-bh, bw, bh, ICON_GEAR);
                 SettingsButton->tooltip("Settings: tags, library folder, store cache (Ctrl+,)");
                 SettingsButton->callback(SettingsView_cb, (void*)this);
-                Fl_Activity_Button *menuButtons[]={OpenButton, PagesButton, MangaButton, FullscreenButton, HelpButton};
-                for(int i=0; i<5; i++)
-                    menuButtons[i]->callback(ActivityMenu_cb, (void*)this);
                 ActivityBar->resizable(activitySpace);
             }
             ActivityBar->end();
@@ -2045,10 +2149,36 @@ MainWindow::MainWindow(const char *exepath, const char *f)
                  //Sub group containing the main display and the navigation buttons
                  MainDisplayGrp = new Fl_Group(DisplayGrp->x()+ThumbDisplayGrp->w(), DisplayGrp->y(), DisplayGrp->w()-ThumbDisplayGrp->w(), DisplayGrp->h());
                  MainDisplayGrp->begin();
+                 //Tool bar of the reading area
+                     ReaderBar = new Fl_Reader_Bar(MainDisplayGrp->x(), MainDisplayGrp->y(), MainDisplayGrp->w());
+                     ReaderBar->OnLibrary=[this]() { ShowLibrary(this); };
+                     ReaderBar->OnMode=[this](int mode)
+                     {
+                         PickMenu(this, mode==CASE ? "&Navigation/Panel mode\t" : mode==STRIP ? "&Navigation/Strip mode\t" :
+                                        mode==SCROLL ? "&Navigation/Scroll mode (webtoon)\t" : "&Navigation/Page mode\t");
+                     };
+                     ReaderBar->OnDirection=[this]() { PickMenu(this, "&Navigation/Manga mode (right to left)\t"); };
+                     ReaderBar->OnPages=[this]() { PickMenu(this, "&View/Thumbnails view\t"); };
+                     ReaderBar->OnFullscreen=[this]() { PickMenu(this, "&View/Fullscreen\t"); };
+                 //The display and its overlays
+                 ReadingArea = new Fl_Group(MainDisplayGrp->x(), MainDisplayGrp->y()+READER_BAR_H, MainDisplayGrp->w(), MainDisplayGrp->h()-READER_BAR_H);
+                 ReadingArea->begin();
                  //Main display
-                     Display = new Fl_ViewerCV(MainDisplayGrp->x(), MainDisplayGrp->y(), MainDisplayGrp->w(), MainDisplayGrp->h());
+                     Display = new Fl_ViewerCV(ReadingArea->x(), ReadingArea->y(), ReadingArea->w(), ReadingArea->h());
                      Display->SetHandleKeys(true);
                      Display->color(THEME_EDITOR_BG);
+                     Display->SetHighlight(Pref->GetHighlight());
+                 //Scroll mode view, in place of the display
+                     Webtoon = new Fl_Webtoon_View(ReadingArea->x(), ReadingArea->y(), ReadingArea->w(), ReadingArea->h());
+                     Webtoon->hide();
+                     Webtoon->OnPageChanged=[this](int page)
+                     {
+                         Doc->SetCurrentPageNb(page);
+                         //No Fl::wait (StatusUpdate) while scrolling: the queued keys would scroll again inside this one
+                         StatusBarUpdate(this);
+                         StatusFullScreenUpdate(this);
+                     };
+                     Webtoon->OnEnd=[this]() { ShowEndPage(this); };
 
                  //Navigation buttons
                      NextButton = new Fl_Overlay_Arrow_Button(Display->x()+Display->w()-0.045*window->w(), (int)(Display->y()), 0.045*window->w(), Display->h(), "", 0, 0.8, 0.15, 0);
@@ -2077,7 +2207,7 @@ MainWindow::MainWindow(const char *exepath, const char *f)
                      }
 
                      //The fullscreen page number indicator
-                     PageNbFullGrp=new Fl_Group(MainDisplayGrp->x()+MainDisplayGrp->w()-110, MainDisplayGrp->y()+MainDisplayGrp->h()-30, 100, 20);
+                     PageNbFullGrp=new Fl_Group(ReadingArea->x()+ReadingArea->w()-110, ReadingArea->y()+ReadingArea->h()-30, 100, 20);
                      PageNbFullGrp->begin();
                      PageNbFullProgress = new Fl_Progress(PageNbFullGrp->x(), PageNbFullGrp->y(), PageNbFullGrp->w(), PageNbFullGrp->h(), "1/1");
                          PageNbFullProgress->box(FL_FLAT_BOX);
@@ -2106,10 +2236,12 @@ MainWindow::MainWindow(const char *exepath, const char *f)
                          snprintf(filename, sizeof(filename), "%s", EndPageNext.c_str());
                          Init(filename);
                      };
+                 ReadingArea->end();
+                 ReadingArea->resizable(Display);
                 MainDisplayGrp->end();
                 MainDisplayGrp->box(FL_FLAT_BOX);
                 MainDisplayGrp->color(THEME_EDITOR_BG);
-                MainDisplayGrp->resizable(Display);
+                MainDisplayGrp->resizable(ReadingArea);
 
             DisplayGrp->end();
             DisplayGrp->resizable(MainDisplayGrp);
@@ -2118,7 +2250,7 @@ MainWindow::MainWindow(const char *exepath, const char *f)
 
          //Hint shown when there is nothing to display
             WelcomeBox = new Fl_Box(DisplayGrp->x(), DisplayGrp->y(), DisplayGrp->w(), DisplayGrp->h(),
-                                    "Open a comic          Ctrl+O\nComics library          Ctrl+L\nHelp          Ctrl+H");
+                                    "Open a comic          Ctrl+O\nComics library          Ctrl+L\nHelp          F1");
             WelcomeBox->box(FL_FLAT_BOX);
             WelcomeBox->color(THEME_EDITOR_BG);
             WelcomeBox->labelcolor(THEME_FG_DIM);
@@ -2223,6 +2355,15 @@ MainWindow::MainWindow(const char *exepath, const char *f)
             if(use) item->set(); else item->clear();
         }
     };
+    Settings->GetHighlight=[this]() { return Pref->GetHighlight(); };
+    Settings->OnHighlight=[this](const PanelHighlight &highlight)
+    {
+        Pref->SetHighlight(highlight);
+        Display->SetHighlight(highlight);
+        //Drawn again when the reader is shown
+        if(Doc && Doc->currentPage && Doc->currentPage->IsLoaded())
+            Display->SetImage(Doc->RenderPage(), *Doc->Render());
+    };
     Settings->OnTagsChanged=[this]()
     {
         if(Library)
@@ -2304,6 +2445,7 @@ void MainWindow::Init(char *filename)
             {
                 Document *olddoc=Doc;
                 Doc=NULL;
+                Webtoon->Clear();
                 delete olddoc;
             }
 
@@ -2351,8 +2493,22 @@ void MainWindow::Init(char *filename)
             ActivateNavigationWidgets(this, true);
             UpdateWindowTitle(this);
 
-            //Update everything
-            UpdatePage(this);
+            //Update everything: the webtoon view in scroll mode, the display otherwise
+            if(Doc->GetReadingMode()==SCROLL)
+            {
+                ShowWebtoon(this, true);
+                StatusUpdate(this);
+            }
+            else
+            {
+                if(Webtoon->visible())
+                {
+                    Webtoon->hide();
+                    Display->show();
+                    ActivateNavigationWidgets(this, true);
+                }
+                UpdatePage(this);
+            }
         }
         //if the document couldn't be openned
         else

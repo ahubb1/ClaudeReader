@@ -2,7 +2,7 @@
 # Static OpenCV for the single exe (./build.sh --static): only the modules ClaudeReader uses, the image codecs
 # from the MSYS2 static libraries (shared with FLTK and MuPDF), installed in deps/opencv-static
 set -e
-export PATH=/c/msys64/ucrt64/bin:$PATH
+export PATH=${MINGW_PREFIX:-/c/msys64/ucrt64}/bin:$PATH
 cd "$(dirname "$0")"
 VERSION=5.0.0
 if [ ! -d src/opencv-$VERSION ]; then
@@ -10,7 +10,7 @@ if [ ! -d src/opencv-$VERSION ]; then
     curl -L -o src/opencv-$VERSION.tar.gz https://github.com/opencv/opencv/archive/refs/tags/$VERSION.tar.gz
     tar xzf src/opencv-$VERSION.tar.gz -C src
 fi
-LIB=/c/msys64/ucrt64/lib
+LIB=${MINGW_PREFIX:-/c/msys64/ucrt64}/lib
 cmake -S src/opencv-$VERSION -B build-opencv -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$PWD/opencv-static" \
     -DCMAKE_CXX_FLAGS="-DOPJ_STATIC -DLZMA_API_STATIC -DLERC_STATIC" \
     -DBUILD_SHARED_LIBS=OFF -DBUILD_LIST=core,imgproc,imgcodecs,geometry \

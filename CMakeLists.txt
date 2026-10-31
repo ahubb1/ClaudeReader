@@ -20,13 +20,30 @@ if(OpenCV_VERSION_MAJOR GREATER_EQUAL 5)
     find_package(OpenCV REQUIRED COMPONENTS core imgproc imgcodecs geometry)
 endif()
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(MUPDF REQUIRED IMPORTED_TARGET mupdf)
+pkg_check_modules(MUPDF IMPORTED_TARGET mupdf)
+if(NOT MUPDF_FOUND)
+    # Debian and Ubuntu ship MuPDF without mupdf.pc: the static libraries and the system libraries they use
+    find_path(MUPDF_INCLUDE_DIR mupdf/fitz.h REQUIRED)
+    find_library(MUPDF_LIBRARY NAMES mupdf REQUIRED)
+    find_library(MUPDF_THIRD_LIBRARY NAMES mupdf-third mupdfthird)
+    find_library(MUJS_LIBRARY NAMES mujs)
+    pkg_check_modules(MUPDF_DEPS REQUIRED IMPORTED_TARGET freetype2 harfbuzz libopenjp2 libjpeg zlib)
+    find_library(JBIG2DEC_LIBRARY NAMES jbig2dec REQUIRED)
+    add_library(mupdf_libraries INTERFACE)
+    target_include_directories(mupdf_libraries INTERFACE ${MUPDF_INCLUDE_DIR})
+    target_link_libraries(mupdf_libraries INTERFACE ${MUPDF_LIBRARY}
+        $<$<BOOL:${MUPDF_THIRD_LIBRARY}>:${MUPDF_THIRD_LIBRARY}> $<$<BOOL:${MUJS_LIBRARY}>:${MUJS_LIBRARY}>
+        PkgConfig::MUPDF_DEPS ${JBIG2DEC_LIBRARY} m)
+    add_library(PkgConfig::MUPDF ALIAS mupdf_libraries)
+endif()
 pkg_check_modules(LIBARCHIVE REQUIRED IMPORTED_TARGET libarchive)
 # Store: HTTP(S), HTML parsing and the Lua sources scripts (Lua built in: static library)
 pkg_check_modules(CURL REQUIRED IMPORTED_TARGET libcurl)
 pkg_check_modules(GUMBO REQUIRED IMPORTED_TARGET gumbo)
-pkg_check_modules(LUA REQUIRED lua)
-find_library(LUA_STATIC_LIBRARY NAMES liblua.a HINTS ${LUA_LIBRARY_DIRS} REQUIRED)
+# "lua" in MSYS2 and Arch, "lua5.4" in Debian and Ubuntu
+pkg_search_module(LUA REQUIRED lua lua5.5 lua5.4 lua-5.5 lua-5.4)
+find_library(LUA_STATIC_LIBRARY NAMES liblua.a liblua5.5.a liblua5.4.a liblua-5.4.a
+             HINTS ${LUA_LIBRARY_DIRS} REQUIRED)
 if(CLAUDEREADER_STATIC)
     pkg_check_modules(TIFF REQUIRED libtiff-4)
     find_library(OPENJP2_STATIC_LIBRARY NAMES libopenjp2.a REQUIRED)
@@ -82,6 +99,8 @@ set(SOURCES
     src/EndPage.cpp
     src/Tags.cpp
     src/SettingsView.cpp
+    src/ReaderBar.cpp
+    src/WebtoonView.cpp
 )
 if(WIN32)
     list(APPEND SOURCES src/WinRC.rc)
@@ -90,6 +109,8 @@ if(CLAUDEREADER_STATIC)
     list(APPEND SOURCES src/StaticImports.cpp)
 endif()
 
+find_package(Threads REQUIRED)  # Store downloads and covers (std::thread)
+
 add_executable(ClaudeReader ${SOURCES})
 target_include_directories(ClaudeReader PRIVATE src ${LUA_INCLUDE_DIRS} ${DEPENDENCIES_INCLUDES})
 target_compile_options(ClaudeReader PRIVATE ${DEPENDENCIES_CFLAGS})
@@ -97,7 +118,8 @@ target_link_libraries(ClaudeReader PRIVATE
     fltk::images fltk::fltk
     ${OpenCV_LIBS}
     ${DEPENDENCIES_LIBS}
-    ${LUA_STATIC_LIBRARY}
+    ${LUA_STATIC_LIBRARY} ${CMAKE_DL_LIBS}   # Lua loads C modules with dlopen on Linux
+    Threads::Threads
     $<$<PLATFORM_ID:Windows>:dwmapi>
 )
 if(CLAUDEREADER_STATIC)

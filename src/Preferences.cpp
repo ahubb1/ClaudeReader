@@ -389,6 +389,9 @@ int Preferences::Load(const char filename[FL_PATH_MAX])
     {
         GlobalPrefs->get("LibraryFolder", LibraryFolder, LibraryFolder, 2047);
         int u=(int)UseLibrary;GlobalPrefs->get("UseLibrary", u, u);UseLibrary=(bool)u;
+        GlobalPrefs->get("HighlightStyle", Highlight.Style, Highlight.Style);
+        GlobalPrefs->get("HighlightThickness", Highlight.Thickness, Highlight.Thickness);
+        int c=(int)Highlight.Color;GlobalPrefs->get("HighlightColor", c, c);Highlight.Color=(unsigned int)c&0xFFFFFF;
         GlobalPrefs->get("WinW", WinW, WinW);
         GlobalPrefs->get("WinH", WinH, WinH);
         GlobalPrefs->get("WinX", WinX, WinX);
@@ -539,6 +542,9 @@ void Preferences::Save(Document *doc)
     GlobalPrefs = new Fl_Preferences(PrefDir, "claudereader", "claudereader");
         GlobalPrefs->set("LibraryFolder", LibraryFolder);
         GlobalPrefs->set("UseLibrary", UseLibrary);
+        GlobalPrefs->set("HighlightStyle", Highlight.Style);
+        GlobalPrefs->set("HighlightThickness", Highlight.Thickness);
+        GlobalPrefs->set("HighlightColor", (int)Highlight.Color);
         GlobalPrefs->set("SavePref", SavePref);
         GlobalPrefs->set("LocalPref", LocalPref);
         GlobalPrefs->set("WinW", WinW);
