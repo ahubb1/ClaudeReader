@@ -124,6 +124,11 @@ target_link_libraries(ClaudeReader PRIVATE
     Threads::Threads
     $<$<PLATFORM_ID:Windows>:dwmapi>
 )
+if(NOT MUPDF_FOUND AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    # The static libmupdf.a of Debian/Ubuntu and the shared libraries used by it and by OpenCV (libjpeg, libopenjp2...):
+    # keep every listed library instead of dropping those seen before something needs them
+    target_link_options(ClaudeReader PRIVATE -Wl,--no-as-needed)
+endif()
 if(CLAUDEREADER_STATIC)
     # -static: the .a of every -l library, the GCC and C++ runtimes included; -s: no symbols in the release exe
     target_link_options(ClaudeReader PRIVATE -static $<$<CONFIG:Release>:-s>)

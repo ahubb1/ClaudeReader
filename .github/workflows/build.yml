@@ -25,9 +25,9 @@ jobs:
             libcairo2-dev libpango1.0-dev libglu1-mesa-dev libpng-dev
 
       # Ubuntu 24.04 has FLTK 1.3 only: FLTK 1.4 built once, then cached
-      - name: Cache FLTK
+      - name: Restore FLTK
         id: fltk-cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: ~/fltk
           key: fltk-${{ env.FLTK_VERSION }}-ubuntu-24.04
@@ -41,6 +41,14 @@ jobs:
             -DFLTK_BACKEND_WAYLAND=OFF
           cmake --build /tmp/fltk-build
           cmake --install /tmp/fltk-build
+
+      # Saved right away: kept even if a later step fails
+      - name: Save FLTK
+        if: steps.fltk-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ~/fltk
+          key: fltk-${{ env.FLTK_VERSION }}-ubuntu-24.04
 
       - name: Build ClaudeReader
         run: |
