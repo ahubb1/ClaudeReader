@@ -60,7 +60,7 @@ jobs:
       - name: Package
         run: |
           mkdir -p ClaudeReader-linux-x86_64
-          cp build/ClaudeReader README CHANGES ClaudeReader-linux-x86_64/
+          cp build/ClaudeReader README.md CHANGES ClaudeReader-linux-x86_64/
           cp share/bdreader.desktop ClaudeReader-linux-x86_64/claudereader.desktop
           tar czf ClaudeReader-linux-x86_64.tar.gz ClaudeReader-linux-x86_64
 
@@ -125,7 +125,7 @@ jobs:
         run: |
           mkdir -p ClaudeReader
           cp build-static/ClaudeReader.exe ClaudeReader/
-          cp README ClaudeReader/README.txt
+          cp README.md ClaudeReader/README.md
           cp CHANGES ClaudeReader/CHANGES.txt
           cp doc/License.txt ClaudeReader/LICENSE.txt
 

@@ -114,10 +114,12 @@ find_package(Threads REQUIRED)  # Store downloads and covers (std::thread)
 add_executable(ClaudeReader ${SOURCES})
 target_include_directories(ClaudeReader PRIVATE src ${LUA_INCLUDE_DIRS} ${DEPENDENCIES_INCLUDES})
 target_compile_options(ClaudeReader PRIVATE ${DEPENDENCIES_CFLAGS})
+# MuPDF first: with a static libmupdf.a, the shared libraries it uses must come after it
+# (the linker drops a shared library seen before anything needs it, e.g. libjpeg through FLTK on Ubuntu)
 target_link_libraries(ClaudeReader PRIVATE
+    ${DEPENDENCIES_LIBS}
     fltk::images fltk::fltk
     ${OpenCV_LIBS}
-    ${DEPENDENCIES_LIBS}
     ${LUA_STATIC_LIBRARY} ${CMAKE_DL_LIBS}   # Lua loads C modules with dlopen on Linux
     Threads::Threads
     $<$<PLATFORM_ID:Windows>:dwmapi>

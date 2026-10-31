@@ -56,7 +56,7 @@ echo "done."
 echo -n -e '\t' Copy other files...
 cp CHANGES $fullname/
 cp COPYING $fullname/
-cp README $fullname/
+cp README.md $fullname/
 echo "done."
 #echo -n -e '\t' Copy Code::Blocks project...
 #mkdir $fullname/codeblocks
@@ -115,7 +115,7 @@ read valid
 if [[ $valid == y* ]]
 then
 	echo -n -e '\t' Move files to doc...
-	mv $base_file-$version_nb/README $base_file-$version_nb/doc/
+	mv $base_file-$version_nb/README.md $base_file-$version_nb/doc/
 	mv $base_file-$version_nb/CHANGES $base_file-$version_nb/doc/
 	mv $base_file-$version_nb/COPYING $base_file-$version_nb/doc/
 	echo -n -e '\t' Creation of the archive...
