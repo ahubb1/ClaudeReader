@@ -1,5 +1,5 @@
 ClaudeReader changes (based on BDReader)
-ClaudeReader 1.1 (in progress, 1.1 beta 1: 31/10/2026)
+ClaudeReader 1.1 (31/10/2026)
 	-Reader bar above the page: back to the library, comic title and position, reading mode (Panels, Page, Strip,
 	 Scroll), right to left, pages side bar and fullscreen; hidden in fullscreen
 	-Activity bar with the places only (Library, Store, Reader, Settings): Open in the File menu (Ctrl+O),
