@@ -64,12 +64,20 @@
 #endif
 
 #include "md5.h"
+#include "Theme.h"
+#include "Fl_Path_Bar.h"
+#include "Tags.h"
+#include <functional>
 
 #include "Preferences.h"
 #include "Document.h"
 #include "Document_pdf.h"
 #include "Document_archive.h"
 #include "Document_folder.h"
+
+#define MAX_LIBRARY_DEPTH 8 //Sub-folders levels browsed in the library folder
+
+class Fl_Books_Library;
 
 class Fl_Library_Element: public Fl_Button
 {
@@ -78,7 +86,9 @@ class Fl_Library_Element: public Fl_Button
 	public:
 		Fl_Library_Element(int xx, int yy, int ww, int hh, const char *l, const char *abs_lib_dir, const char * relative_path, const char *filename, const char *windir);
 
-		bool HasThumbnail(){if(Img->w()>0)return true;else return false;}
+		bool HasThumbnail(){return Img && Img->w()>0;}
+		int handle(int event);
+		void draw();
 		bool HasPrefFile(){if(LastTime>0)return true;else return false;}
 		int GetLastPage(){return LastPage;}
 		long int GetLastTime(){return LastTime;}
@@ -89,9 +99,23 @@ class Fl_Library_Element: public Fl_Button
 		const char * GetFilename(){return Filename;}
 		const char * GetShortFilenameLC(){return ShortFilenameLC;}
 		char * GetAbsoluteFilename(){return AbsoluteFilename;}
+		//! Folder of the comic, relative to the library folder ("" or ending with '/')
+		const char * GetRelativeDir(){return RelativeDir;}
+		const std::vector<int> &GetTags(){return TagIds;}
+		//! Identity of the comic for the tags: its path in the library
+		std::string TagKey(){return std::string(RelativeDir)+Filename;}
+		bool HasTag(int id);
+		void ReloadTags();
+
+		Fl_Books_Library *Library;  //!< Library owning the element (context menu)
 
 	private:
+	    void ShowTagsMenu();
+
 	    Fl_Image * Img;
+	    bool Hover;
+	    char RelativeDir[FL_PATH_MAX];
+	    std::vector<int> TagIds;
 
 		char Filename[FL_PATH_MAX];
 		char ShortFilenameLC[FL_PATH_MAX];
@@ -109,6 +133,24 @@ class Fl_Library_Element: public Fl_Button
 
 
 
+//! A sub-folder of the current library folder (folders view)
+class Fl_Library_Folder: public Fl_Button
+{
+	public:
+		Fl_Library_Folder(int ww, int hh, const std::string &name, const std::string &relative_dir, int count);
+		~Fl_Library_Folder();
+		int handle(int event);
+		void draw();
+
+		std::string Name, RelativeDir;
+		int Count;  //!< Comics inside (sub-folders included)
+
+	private:
+		bool Hover;
+		Fl_SVG_Image *Icon, *IconHover;
+};
+
+
 class Fl_Books_Library: public Fl_Group//public Fl_Double_Window
 {
 	public:
@@ -120,8 +162,22 @@ class Fl_Books_Library: public Fl_Group//public Fl_Double_Window
         //Internal callbacks
         static void LibFolder_cb(Fl_Widget* v, void *p)
         {
-            Fl_Books_Library* bl=((Fl_Books_Library*)p);
-            bl->apply_dir(bl->LibFolder_Input->value(), bl->windir);
+            ((Fl_Books_Library*)p)->path_chosen(((Fl_Books_Library*)p)->LibFolder_Input->value());
+        }
+        static void Folder_cb(Fl_Widget* w, void * p)
+        {
+            ((Fl_Books_Library*)p)->open_folder(((Fl_Library_Folder*)w)->RelativeDir);
+        }
+        static void Tag_cb(Fl_Widget* w, void * p)
+        {
+            ((Fl_Books_Library*)p)->refresh();
+        }
+        static void View_cb(Fl_Widget* w, void * p)
+        {
+            Fl_Books_Library *bl=(Fl_Books_Library*)p;
+            bl->FoldersView=!bl->FoldersView;
+            bl->View_Button->SetToggled(bl->FoldersView);
+            bl->refresh();
         }
         static void Filter_cb(Fl_Widget* w, void * p)
         {
@@ -178,6 +234,7 @@ class Fl_Books_Library: public Fl_Group//public Fl_Double_Window
 
         void add_subpack();
 		bool add_element(const char *relative_path, const char *filename, const char *windir);
+		void scan_entry(const char *relative_dir, const char *name, int depth);
 		void refresh();
 		void reload();
 
@@ -192,34 +249,17 @@ class Fl_Books_Library: public Fl_Group//public Fl_Double_Window
 
         char *get_absolute_dir() {return abs_lib_dir;}
 
+        //! Show a folder of the library ("" for the library folder, else ending with '/')
+        void open_folder(const std::string &relative_dir);
+        //! The tags changed (settings, context menu): chips, tag filter
+        void refresh_tags();
+        int handle(int event);
+
+        std::function<void()> OnManageTags;    //!< "Manage tags..." of the comics context menu
+
         int GetSuggestionNext(char current_filename[2048], char suggestion_filename[2048], char suggestion_short_filename[2048]);
 
-        void resize(int xx, int yy, int ww, int hh)
-        {
-            int old_w=w(), old_h=h();
-            Fl_Group::resize(xx, yy, ww, hh);
-
-            if(ww!=old_w || hh!=old_h)
-            {
-                MenuBar->resize(xx, yy, w(), 25);
-                if((MenuBar->child(MenuBar->children()))->w()<10)//the space children
-                {
-                    Main_Group->size(3./5.*w()-5, Main_Group->h());
-                    Search_Group->size(2./5.*w()-5, Search_Group->h());
-                    Search_Group->position(Sort_Invert_Button->x()+Sort_Invert_Button->w()+10, Search_Group->y());
-                }
-                else
-                {
-                    MenuBar->resizable(MenuBar);
-                }
-                emptyboxtop->resize(Main_Scroll->x(), Main_Scroll->y(), Main_Scroll->w()-20, 10);
-                Main_Table->resize(Main_Scroll->x(), Main_Scroll->y()+emptyboxtop->h(), Main_Scroll->w()-20, Main_Scroll->h()-emptyboxtop->h());
-                _cols=(Main_Table->w()-spacing())/((child_w+spacing()));
-                refresh();
-                Main_Scroll->init_sizes();
-                Main_Scroll->scroll_to(0, 0);
-            }
-        }
+        void resize(int xx, int yy, int ww, int hh);
 
 		int cols(){return _cols;}
 		int rows(){return sub_packs.size();}
@@ -233,9 +273,14 @@ class Fl_Books_Library: public Fl_Group//public Fl_Double_Window
 		Fl_Input *LibFolder_Input;
 		Fl_Choice *Filter_Choice;
 		Fl_Choice *Sort_Choice;
-		Fl_Check_Button *Sort_Invert_Button;
+		Fl_Choice *Tag_Choice;
+		std::vector<int> TagChoiceIds;  //!< Tag of each Tag_Choice item (after "Any")
+		Fl_Activity_Button *View_Button;
+		bool FoldersView;               //!< Folders view (else all the comics in one list)
+		std::string CurrentDir;         //!< Folder shown, relative to the library folder
+		std::vector<Fl_Library_Folder*> folders;
 		Fl_Group * Search_Group;
-		Fl_Input *Search_Input;
+		Fl_Hint_Input *Search_Input;
 		Fl_Box *Search_Label;
 		Fl_Scroll *Main_Scroll;
 		Fl_Box *emptyboxtop, *emptyboxbottom;
@@ -247,6 +292,11 @@ class Fl_Books_Library: public Fl_Group//public Fl_Double_Window
 
 		char abs_lib_dir[FL_PATH_MAX];
 		char windir[FL_PATH_MAX];
+
+		void layout_toolbar();
+		void update_path_bar();
+		void path_chosen(const char *path);
+		void fill_tag_choice();
 };
 
 

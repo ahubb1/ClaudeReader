@@ -19,6 +19,9 @@
 //
 //---------------------------------------------------------------------------
 #include "Document.h"
+#include <FL/filename.H>
+#include <strings.h>
+#include <FL/fl_utf8.h>
 
 
 //! Create a new document object according to the given filename.
@@ -37,7 +40,8 @@ Document::Document(char *filename):
      PagePreview(true),
      DisplayRatio(1.2),
      Rotation(0),
-     ContrastEnhancement(false)
+     ContrastEnhancement(false),
+     RightToLeft(false)
 {
     //Init
     snprintf(Filename, 2048, "%s", filename);
@@ -316,12 +320,14 @@ void Document::UpdatePreloadedPages()
     if(previousPage)
     {
         previousPage->SetReadingMode(ReadingMode);
+        previousPage->SetRightToLeft(RightToLeft);
         previousPage->SetDisplayRatio(DisplayRatio);
         previousPage->DetectCases();
     }
     if(nextPage)
     {
         nextPage->SetReadingMode(ReadingMode);
+        nextPage->SetRightToLeft(RightToLeft);
         nextPage->SetDisplayRatio(DisplayRatio);
         nextPage->DetectCases();
     }
@@ -376,7 +382,7 @@ int Document::WriteDocumentThumbnail(const char *name, int width)
         resize(*page_large, page_small, Size(width, height), 0, 0, INTER_CUBIC);
 
         //Write
-        imwrite(name, page_small);
+        WriteImageUtf8(name, page_small);
 
         return 0;
     }
@@ -526,4 +532,75 @@ void Document::SetPagePreview(bool val)
     //Set it to the document
     PagePreview=val;
     //will be applied to the next Pages loaded
+}
+
+
+//! Set the panels reading order (manga: right to left) and re-order the current page
+void Document::SetRightToLeft(bool val)
+{
+    RightToLeft=val;
+    if(currentPage)
+    {
+        currentPage->SetRightToLeft(RightToLeft);
+        currentPage->DetectCases();
+        currentPage->SetActiveCase(0);
+    }
+}
+
+
+//! Select the kind of document according to the file extension (case insensitive), or folder
+DOCUMENT_TYPE GetDocumentType(const char *Filename)
+{
+    //Rendered by MuPDF
+    static const char *MupdfExtensions[]={".pdf", ".epub", ".xps", ".oxps", ".fb2", ".mobi", NULL};
+    //Images archives read with libarchive
+    static const char *ArchiveExtensions[]={".cbz", ".cbr", ".cbt", ".cb7", ".zip", ".rar", ".tar", ".7z", NULL};
+
+    const char *ext=fl_filename_ext(Filename);
+    for(int i=0; MupdfExtensions[i]; i++)
+        if(strcasecmp(ext, MupdfExtensions[i])==0)
+            return DOC_MUPDF;
+    for(int i=0; ArchiveExtensions[i]; i++)
+        if(strcasecmp(ext, ArchiveExtensions[i])==0)
+            return DOC_ARCHIVE;
+    if(fl_filename_isdir(Filename)!=0)
+        return DOC_FOLDER;
+    return DOC_UNSUPPORTED;
+}
+
+bool ReadFileUtf8(const char *path, vector<unsigned char> *data)
+{
+    FILE *f=fl_fopen(path, "rb");
+    if(!f)
+        return false;
+    data->clear();
+    unsigned char chunk[65536];
+    size_t n;
+    while((n=fread(chunk, 1, sizeof(chunk), f))>0)
+        data->insert(data->end(), chunk, chunk+n);
+    fclose(f);
+    return !data->empty();
+}
+
+bool WriteImageUtf8(const char *path, const Mat &img)
+{
+    vector<unsigned char> encoded;
+    if(!imencode(fl_filename_ext(path), img, encoded))
+        return false;
+    FILE *f=fl_fopen(path, "wb");
+    if(!f)
+        return false;
+    bool ok=fwrite(encoded.data(), 1, encoded.size(), f)==encoded.size();
+    fclose(f);
+    return ok;
+}
+
+bool IsPageImage(const std::string &name)
+{
+    static const char *extensions[]={".jpg", ".jpeg", ".jpe", ".jp2", ".png", ".webp", ".tif", ".tiff", ".bmp", ".pbm", ".ppm", ".pgm", NULL};
+    const char *ext=fl_filename_ext(name.c_str());
+    for(int i=0; extensions[i]; i++)
+        if(strcasecmp(ext, extensions[i])==0)
+            return true;
+    return false;
 }

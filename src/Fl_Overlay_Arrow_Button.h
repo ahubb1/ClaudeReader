@@ -33,6 +33,7 @@
 #include <FL/Fl.H>
 #include <FL/fl_draw.H>
 #include <FL/Fl_Button.H>
+#include <FL/Fl_SVG_Image.H>
 
 const Fl_Color FL_TRANS = 0xffffffff;
 
@@ -53,7 +54,8 @@ class Fl_Overlay_Arrow_Button : public Fl_Button
         //!\note: color(Fl_Color) sets the widget background color, labelcolor(Fl_Color) sets the inside arrow color and selection_color(Fl_Color) sets
         //!the arrow contour color (line color).
         //!\note: the arrow is drawn centered on the widget.
-        Fl_Overlay_Arrow_Button(int X, int Y, int W, int H, const char *L=0, float R=.0, float Wa=1., float Ha=1., int S=0):Fl_Button(X, Y, W, H, L){r=R;w_a=Wa;h_a=Ha;style=S;is_visible=false;};
+        Fl_Overlay_Arrow_Button(int X, int Y, int W, int H, const char *L=0, float R=.0, float Wa=1., float Ha=1., int S=0):Fl_Button(X, Y, W, H, L){r=R;w_a=Wa;h_a=Ha;style=S;is_visible=false;Icon=NULL;IconPressed=NULL;IconSize=0;};
+        ~Fl_Overlay_Arrow_Button() {delete Icon; delete IconPressed;}
     protected:
         int handle(int E);
         void draw();
@@ -68,6 +70,10 @@ class Fl_Overlay_Arrow_Button : public Fl_Button
 
         //Arrow style: 0 (classic arrow, straight), 1 (straight lines but more complex shape, more sharp) or 2 (rounded arrow)
         int style;
+        //Chevron in a translucent circle (normal and pressed), built for the current size
+        Fl_SVG_Image *Icon, *IconPressed;
+        int IconSize;
+        void BuildIcons(int size);
 };
 
 #endif // FL_OVERLAY_ARROW_BUTTON_H

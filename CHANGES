@@ -1,4 +1,44 @@
-BDReader changes
+ClaudeReader changes (based on BDReader)
+ClaudeReader 1.0 (30/10/2026)
+	-Windows: a single ClaudeReader.exe, no DLLs (every library linked statically: ./build.sh --static)
+	-Library folders: the sub-folders of the library are shown as folder cards (categories), open one with a click,
+	 back with Backspace or the path bar; the folder button of the toolbar switches to all the comics in one list
+	-Tags: create, rename, recolor and delete them in the new Settings view (gear icon, Ctrl+,); right click a comic
+	 to add or remove tags (or create one); tags shown on the cards, Tag filter in the toolbar, search matches
+	 names and tags ("#name" searches the tags only). Tags follow the comic path in the library
+	-Settings view: tags, library folder, open the library at start, store cache size and clearing
+	-Store downloads named "<series> - <chapter>" (reading history and tags no longer shared between series)
+	-Store: Cancel button while downloading (stops the current chapter, nothing written, empties the waiting list);
+	 Mangapill home page shows the series names (was the chapter numbers "#48")
+	-End of comic page in the reading area (no more dialog box): read the next comic of the folder,
+	 restart, return to the library, open another comic; left arrow goes back to the last page
+	-Large pages and long strips (webtoons): only the visible part is scaled (peak memory of an
+	 800x60000 strip: 1.5 GB -> 250 MB) and the panels detection works on a reduced copy above 12 MP
+	-WebP pages in archives and folders, page image extensions case insensitive
+	-Store: browse, search and download comics and manga (activity bar bag icon, Ctrl+Shift+S).
+	 Built-in stores MangaDex, Mangapill and Nyaa (torrents: magnet links for your torrent client);
+	 stores are Lua scripts (Lua built in): add or fix stores in %APPDATA%\ClaudeReader\sources.
+	 Downloads to the library as CBZ, PDF, ZIP or images, cached (pages, covers, searches), "Read" downloads
+	 and opens a chapter. Command line: ClaudeReader --store list|<store> search|chapters|pages|download
+	-Renamed ClaudeReader; settings, reading history and thumbnails moved from the BDReader folder automatically
+	-VSCodium like dark theme: activity bar (Library, Reader, Open, Pages, Manga "JP" toggle, Fullscreen, Help),
+	 side bar for the pages, flat status bar, dark title bar, Segoe UI, chevron navigation buttons, opaque panel frame
+	-Library and reader views: switch with the activity bar or Ctrl+L, the open comic keeps its place
+	-Library: dark cards with title and reading progress, explorer like path bar (folders, sub-folders menus,
+	 editable path, folder chooser), sub-folders scanned recursively
+	-Non-English file names (accents, Japanese...) open from the library, the Open dialog and "Open with"
+	-Manga mode is a per comics setting (off by default)
+	-Bugs fixed: random panel detection differences (out of bounds access in the original rectangles merging),
+	 crash when maximizing (library resize), program path not terminated, overlapping sprintf
+	-Manga mode with manga reading order (tiers top to bottom, right to left inside a tier, stacked
+	 panels next to a tall one read top to bottom first), saved per comics: "Invert" checkbox in the status bar,
+	 M shortcut or Navigation menu (navigation keys unchanged: right arrow = next panel); -r/--rtl for command line export (library sort "Invert" removed)
+	-CMake build replacing autotools; Windows build with MSYS2 (UCRT64)
+	-Ported to FLTK 1.4, OpenCV 4/5 and current MuPDF API; STLplus dependency removed
+	-EPUB, XPS, FB2 and MOBI rendered with MuPDF; case insensitive file extensions
+	-Windows: preferences and thumbnails stored in %APPDATA%\BDReader
+	-Bugs fixed: crash on click while loading, library crash on unsupported files,
+	 "show panel in context" not saved, command line export options ignored
 Vincent Crocher 20/06/2016
 v1.1
 	-Comics library

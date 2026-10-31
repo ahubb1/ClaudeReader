@@ -1,5 +1,0 @@
-bdreader_CPPFLAGS = $(GLIB_CFLAGS)
-bin_PROGRAMS = bdreader
-bdreader_SOURCES = main.cpp MainWindow.cpp Preferences.cpp Document.cpp Page.cpp Document_pdf.cpp Page_pdf.cpp Document_archive.cpp Page_archive.cpp Document_folder.cpp Page_folder.cpp Export_Document.cpp Fl_ViewerCV.cxx Fl_Overlay_Arrow_Button.cxx Fl_Help_Window.cpp MainWindow.h Preferences.h Document.h Page.h Document_pdf.h Page_pdf.h Document_archive.h Page_archive.h Document_folder.h Page_folder.h Export_Document.h Fl_ViewerCV.h Fl_Overlay_Arrow_Button.h Fl_Help_Window.h icon32.xbm help.h about.h helpcmd.h version.h
-bdreader_LDADD = $(LIBS)
-bdreader_LDADD += $(GLIB_LIBS)

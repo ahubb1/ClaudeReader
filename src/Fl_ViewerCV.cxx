@@ -23,6 +23,7 @@ Based on Fl_Opencv programmed by BlueKid
 http://derindelimavi.blogspot.com/ bluekid70@gmail.com
 */
 #include "Fl_ViewerCV.h"
+#include <algorithm>
 
 
 
@@ -39,7 +40,6 @@ Fl_ViewerCV::Fl_ViewerCV(int X,int Y,int W,int H, float mzoom):Fl_Widget(X,Y,W,H
   Scale=1.0;
   MaxZoom=mzoom;
   CustomZoom=1.0;
-  mouse_cb=NULL;
   HandleKeys=false;
   Resizing_cb=NULL;
   Resizing_cb_param=NULL;
@@ -71,6 +71,10 @@ void Fl_ViewerCV::draw(int xx, int yy, int ww, int hh)
 
 void Fl_ViewerCV::UpdateView()
 {
+    //Nothing to display yet (events can arrive while a document is loading)
+    if(!image || image->empty())
+        return;
+
     Rect localDisplayRect;
     //If there is NO display rect
     if( !(DisplayRect.width>0 && DisplayRect.height>0 && DisplayRect.x>=0 && DisplayRect.y>=0) )
@@ -100,68 +104,57 @@ void Fl_ViewerCV::UpdateView()
     Scale=fmax(Scale, 1./MaxZoom);
 
 
-    //Real area to draw: centered on the DisplayRect but can be larger
-        //Scale the original image to it's new size
+    //Real area to draw: centered on the DisplayRect but can be larger.
+    //Only the visible part of the page is scaled: scaling the whole page first used up to gigabytes
+    //with large pages or long strips (memory proportional to the page size and zoom).
+        bool panel_view=(localDisplayRect.width!=image->cols);
+        //Size of the whole page once scaled
+        int scaled_w=std::max(1, cvFloor(image->cols/Scale)), scaled_h=std::max(1, cvFloor(image->rows/Scale));
+
+        //Visible area, in scaled page coordinates
+        Rect visible;
+        if(!InContext && panel_view)
+        {
+            //The panel alone
+            visible=Rect(cvFloor(localDisplayRect.x/Scale), cvFloor(localDisplayRect.y/Scale), cvFloor(localDisplayRect.width/Scale), cvFloor(localDisplayRect.height/Scale));
+        }
+        else
+        {
+            //A widget sized window centered on the panel, kept inside the page
+            int visible_w=std::min(w(), scaled_w), visible_h=std::min(h(), scaled_h);
+            int x_center=cvRound((localDisplayRect.x+localDisplayRect.width/2.)/Scale);
+            int y_center=cvRound((localDisplayRect.y+localDisplayRect.height/2.)/Scale);
+            visible=Rect(std::clamp(x_center-w()/2, 0, scaled_w-visible_w), std::clamp(y_center-h()/2, 0, scaled_h-visible_h), visible_w, visible_h);
+        }
+        visible&=Rect(0, 0, scaled_w, scaled_h);
+        visible.width=std::min(visible.width, w());
+        visible.height=std::min(visible.height, h());
+        if(visible.width<1 || visible.height<1)
+            visible=Rect(0, 0, std::min(w(), scaled_w), std::min(h(), scaled_h));
+
+        //Corresponding area of the original page, scaled to the visible size
+        Rect source(cvFloor(visible.x*Scale), cvFloor(visible.y*Scale), cvCeil(visible.width*Scale), cvCeil(visible.height*Scale));
+        source&=Rect(0, 0, image->cols, image->rows);
         Mat image_roi;
-        cv::resize(*image, image_roi, Size(cvFloor(image->cols/Scale), cvFloor(image->rows/Scale)), 0, 0, INTER_CUBIC);
+        cv::resize((*image)(source), image_roi, visible.size(), 0, 0, Scale>1 ? INTER_AREA : INTER_CUBIC);
 
         //Add a visual border around the current panel
-        if(localDisplayRect.width!=image->cols && Border && InContext)
+        if(panel_view && Border && InContext)
         {
-            Mat image_roi_rect;
-            image_roi.copyTo(image_roi_rect);
-            for (int i=1; i<12; i++)
-                cv::rectangle(image_roi_rect, Rect(localDisplayRect.x/Scale-i, localDisplayRect.y/Scale-i, localDisplayRect.width/Scale+2*i, localDisplayRect.height/Scale+2*i), Scalar(0,0,22*i), 1);
-            addWeighted(image_roi_rect, 0.5, image_roi, 0.5, 0.0, image_roi);
+            //Opaque dark frame (theme bars color) with a thin accent line against the panel (BGR)
+            Rect panel(cvFloor(localDisplayRect.x/Scale)-visible.x, cvFloor(localDisplayRect.y/Scale)-visible.y, cvFloor(localDisplayRect.width/Scale), cvFloor(localDisplayRect.height/Scale));
+            cv::rectangle(image_roi, Rect(panel.x-7, panel.y-7, panel.width+14, panel.height+14), Scalar(24, 24, 24, 255), 9);
+            cv::rectangle(image_roi, Rect(panel.x-2, panel.y-2, panel.width+4, panel.height+4), Scalar(212, 120, 0, 255), 2);
         }
 
+        //Centered if smaller than the widget
+        int xd0=std::max(0, (w()-image_roi.cols)/2), yd0=std::max(0, (h()-image_roi.rows)/2);
 
-        //Center of the display in resized image
-        int x_center=(localDisplayRect.x+localDisplayRect.width/2.)/Scale;
-        int y_center=(localDisplayRect.y+localDisplayRect.height/2.)/Scale;
-
-        //Display in context or not
-        if(!InContext && localDisplayRect.width!=image->cols)
-        {
-            image_roi(Rect(localDisplayRect.x/Scale, localDisplayRect.y/Scale, localDisplayRect.width/Scale, localDisplayRect.height/Scale)).copyTo(image_roi);
-        }
-
-
-        //Crop
-        //The top-left corner of the panel to display in the original image
-        int x0=fmax(0,floor(x_center-(float)w()/2.));
-        int y0=fmax(0,floor(y_center-(float)h()/2.));
-
-        //The bottom-right corner
-        int x1, y1;
-        //check if ideal image not enough on the left or on top
-        if(x0==0)
-            x1=fmin(floor(x_center-(float)w()/2.)+(float)w()-floor(x_center-(float)w()/2.), image_roi.cols);
-        else
-            x1=fmin(floor(x_center-(float)w()/2.)+(float)w(), image_roi.cols);
-        if(y0==0)
-            y1=fmin(floor(y_center-(float)h()/2.)+(float)h()-floor(y_center-(float)h()/2.), image_roi.rows);
-        else
-            y1=fmin(floor(y_center-(float)h()/2.)+(float)h(), image_roi.rows);
-
-        //same check if not enough on the bottom/right (except if already adjusted on the top/left)
-        if(x1==image_roi.cols && x0!=0)
-            x0=fmax(0, x0-(floor(x_center-(float)w()/2.)+(float)w()-image_roi.cols));
-        if(y1==image_roi.rows && y0!=0)
-            y0=fmax(0, y0-(floor(y_center-(float)h()/2.)+(float)h()-image_roi.rows));
-
-
-        //Check if original image is smaller than the destination image
-        int xd0=0, yd0=0;
-        if((x1-x0)<w())
-            xd0=(w()-(x1-x0))/2.;
-        if((y1-y0)<h())
-            yd0=(h()-(y1-y0))/2.;
-
-        fimage=Mat::zeros(h(), w(), image_roi.type());
-        //fimage=fimage+Scalar(255,255,255); //For white background
-        Mat fimageROI=fimage(Rect(xd0, yd0, (x1-x0), (y1-y0)));
-        image_roi(Rect(x0, y0, (x1-x0), (y1-y0))).copyTo(fimageROI);
+        //Background around the image: the widget color (BGR)
+        unsigned char bg_r, bg_g, bg_b;
+        Fl::get_color(color(), bg_r, bg_g, bg_b);
+        fimage=Mat(h(), w(), image_roi.type(), Scalar(bg_b, bg_g, bg_r, 255));
+        image_roi.copyTo(fimage(Rect(xd0, yd0, image_roi.cols, image_roi.rows)));
 
 
     //Apply and draw a magnifier rect
@@ -181,10 +174,10 @@ void Fl_ViewerCV::UpdateView()
         to_magnify.height=fmin(fimage.rows*rect_size_ratio, fimage.rows-to_magnify.y) ;
 
         //Zoom on it: multiply by 2
-        cv::resize(fimage(to_magnify), magnifier, Size(), zoom, zoom, CV_INTER_CUBIC);
+        cv::resize(fimage(to_magnify), magnifier, Size(), zoom, zoom, INTER_CUBIC);
 
         //Draw a frame on it
-        cv::rectangle(magnifier, Rect(1, 1, magnifier.cols-2, magnifier.rows-2), Scalar(0, 0, 150), 3);
+        cv::rectangle(magnifier, Rect(1, 1, magnifier.cols-2, magnifier.rows-2), Scalar(212, 120, 0), 3); //Accent blue (BGR)
 
         //Place it on current image
         Rect dest_magnified=to_magnify;
@@ -201,17 +194,17 @@ void Fl_ViewerCV::UpdateView()
     {
         //1 channel (GRAY):
         case 1:
-            cvtColor(fimage, fimage, CV_GRAY2RGB);
+            cvtColor(fimage, fimage, COLOR_GRAY2RGB);
         break;
 
         //3 channels (BGR):
         case 3:
-            cvtColor(fimage, fimage, CV_BGR2RGB);
+            cvtColor(fimage, fimage, COLOR_BGR2RGB);
         break;
 
         //4 channels (BGRA):
         case 4:
-            cvtColor(fimage, fimage, CV_BGRA2RGB);
+            cvtColor(fimage, fimage, COLOR_BGRA2RGB);
         break;
 
         //If invalid format
@@ -317,65 +310,11 @@ void Fl_ViewerCV::resize(int xx, int yy, int ww, int hh)
     }
 }
 
-//Convert the fltk mouse event into opencv ones (to be able to use open cv callback functions and events)
-int fl_event2cv_event(int fl_event)
-{
-    switch(fl_event)
-    {
-        //Mouse buttons down events
-        case FL_PUSH:
-            //Left, middle or right button ?
-            switch(Fl::event_button())
-            {
-                case FL_LEFT_MOUSE:
-                    return CV_EVENT_LBUTTONDOWN;
-                case FL_RIGHT_MOUSE:
-                    return CV_EVENT_RBUTTONDOWN;
-                case FL_MIDDLE_MOUSE:
-                    return CV_EVENT_MBUTTONDOWN;
-                default:
-                    return -1;
-            }
-        //Mouse buttons up events
-        case FL_RELEASE:
-            //Left, middle or right button ?
-            switch(Fl::event_button())
-            {
-                case FL_LEFT_MOUSE:
-                    return CV_EVENT_LBUTTONUP;
-                case FL_RIGHT_MOUSE:
-                    return CV_EVENT_RBUTTONUP;
-                case FL_MIDDLE_MOUSE:
-                    return CV_EVENT_MBUTTONUP;
-                default:
-                    return -1;
-            }
-
-        //Two mouse move events:
-        case FL_DRAG:
-            return CV_EVENT_MOUSEMOVE;
-        case FL_MOVE:
-            return CV_EVENT_MOUSEMOVE;
-
-        //Default: nothing
-        default:
-            return -1;
-    }
-}
 
 int Fl_ViewerCV::handle(int event)
 {
    if(Fl_Widget::active())
    {
-       //Mouse events are passed to opencv if an OpenCV callback function has been passed
-       if(mouse_cb!=NULL)
-       {
-           if (event == FL_PUSH || event ==FL_DRAG || event == FL_MOVE || event == FL_RELEASE) {
-             if(mouse_cb && image && (Fl::event_x()-x()) < image->cols && (Fl::event_y()-y()) <image->rows )
-                mouse_cb(fl_event2cv_event(event), Fl::event_x()-x(), Fl::event_y()-y(), 0, CVcb_param);
-           }
-       }
-
        switch(event)
        {
             case FL_PUSH:

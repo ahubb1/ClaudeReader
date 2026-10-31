@@ -38,7 +38,7 @@
 class Page_folder : public Page
 {
     public:
-        Page_folder(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, float display_ratio, int rotation, bool contrast, string imgname);
+        Page_folder(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, float display_ratio, int rotation, bool contrast, bool rtl, string imgname);
     protected:
         void Load(string imgname);
 };

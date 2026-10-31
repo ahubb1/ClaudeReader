@@ -18,6 +18,7 @@
 //    along with BDReader. If not, see <http://www.gnu.org/licenses/>.
 //
 //---------------------------------------------------------------------------
+#include <FL/fl_utf8.h>
 #include "Preferences.h"
 
 
@@ -53,6 +54,38 @@
 #endif
 
 
+const char *GetUserDataDir()
+{
+    static char dir[FL_PATH_MAX]="";
+    if(dir[0]=='\0')
+    {
+        #ifdef __WINDOWS__
+            char base[MAX_PATH];
+            if(SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, SHGFP_TYPE_CURRENT, base)!=S_OK)
+                snprintf(base, MAX_PATH, "%s", getenv("USERPROFILE"));
+            char old_dir[FL_PATH_MAX];
+            snprintf(dir, FL_PATH_MAX, "%s\\ClaudeReader", base);
+            snprintf(old_dir, FL_PATH_MAX, "%s\\BDReader", base);
+        #else
+            char old_dir[FL_PATH_MAX];
+            snprintf(dir, FL_PATH_MAX, "%s/.claudereader", getenv("HOME"));
+            snprintf(old_dir, FL_PATH_MAX, "%s/.bdreader", getenv("HOME"));
+        #endif
+
+        //Former BDReader folder: keep the preferences, reading history and thumbnails
+        if(fl_filename_isdir(dir)==0 && fl_filename_isdir(old_dir)!=0)
+        {
+            fl_rename(old_dir, dir);
+            char old_prefs[FL_PATH_MAX], prefs[FL_PATH_MAX];
+            snprintf(old_prefs, FL_PATH_MAX, "%s/bdreader.prefs", dir);
+            snprintf(prefs, FL_PATH_MAX, "%s/claudereader.prefs", dir);
+            fl_rename(old_prefs, prefs);
+        }
+        fl_make_path(dir);
+    }
+    return dir;
+}
+
 
 //! Constructor.
 Preferences::Preferences(const char windir[FL_PATH_MAX]):
@@ -67,6 +100,7 @@ Preferences::Preferences(const char windir[FL_PATH_MAX]):
     ReadingMode(CASE),
     InContext(true),
     Border(true),
+    RightToLeft(false),
     SavePref(true),
     LocalPref(true),
     WinW(1000),
@@ -131,13 +165,7 @@ Preferences::Preferences(const char windir[FL_PATH_MAX]):
 
 
     //Where to store pref:
-    #ifdef __WINDOWS__
-        sprintf(PrefDir, "%s", windir);
-    #else
-        //if the file (and the folder .bdreader) doesn't exist yet, create it
-        snprintf(PrefDir, FL_PATH_MAX, "%s/.bdreader", getenv("HOME"));
-        mkdir(PrefDir, 755);
-    #endif
+    snprintf(PrefDir, FL_PATH_MAX, "%s", GetUserDataDir());
 }
 
 //! Destructor (nothing).
@@ -186,7 +214,7 @@ void Preferences::ConvertPreferences()
                     DocPrefs->set("RotationIdx", tmpPref.GetRotationIdx());
                     //Use last modified time of pref file as the last read time:
                         struct stat info_pref;
-                        stat(fullfilename, &info_pref);
+                        fl_stat(fullfilename, &info_pref);
                         struct tm * time_info=localtime(&(info_pref.st_mtime));
                         char time_s[20];
                         strftime(time_s, 150, "%d/%m/%Y-%H:%M:%S", time_info);
@@ -228,7 +256,7 @@ int Preferences::LoadCompat(const char prefFilename[255], const char windir[FL_P
     #endif
 
     //Open the file
-    FILE *prefFile=fopen(Filename, "r");
+    FILE *prefFile=fl_fopen(Filename, "r");
     if(prefFile)
     {
         //The library folder
@@ -345,13 +373,13 @@ int Preferences::Load(const char filename[FL_PATH_MAX])
 {
     int ret=-1;
     snprintf(ShortFilename, FL_PATH_MAX, "%s", fl_filename_name(filename));fl_filename_setext(ShortFilename, FL_PATH_MAX, "");
-    GlobalPrefs = new Fl_Preferences(PrefDir, "bdreader", "bdreader");
+    GlobalPrefs = new Fl_Preferences(PrefDir, "claudereader", "claudereader");
 
     //For back compatibility: check if new preferences exists
     char new_pref_file[FL_PATH_MAX];
-    snprintf(new_pref_file, FL_PATH_MAX, "%s/bdreader.prefs", PrefDir);
+    snprintf(new_pref_file, FL_PATH_MAX, "%s/claudereader.prefs", PrefDir);
     struct stat info_pref;
-    if(stat(new_pref_file, &info_pref)!=0)
+    if(fl_stat(new_pref_file, &info_pref)!=0)
     {
         ConvertPreferences();
     }
@@ -402,6 +430,7 @@ int Preferences::Load(const char filename[FL_PATH_MAX])
                 DocPrefs->get("AdditionnalZoomIdx", AdditionnalZoomIdx, AdditionnalZoomIdx);
                 int n=(int)InContext;DocPrefs->get("InContext", n, n);InContext=(bool)n;
                 int b=(int)Border;DocPrefs->get("Border", b, b);Border=(bool)b;
+                int rtl=(int)RightToLeft;DocPrefs->get("RightToLeft", rtl, rtl);RightToLeft=(bool)rtl;
                 DocPrefs->get("RotationIdx", RotationIdx, RotationIdx);
                 char lastdate_s[20];
                 DocPrefs->get("LastDate", lastdate_s, "01/01/1980-00:00:00", 20);
@@ -440,6 +469,9 @@ int Preferences::Apply(Document *doc)
     //The preview/not preview
     doc->SetPagePreview(PagePreview);
 
+    //The panels reading order
+    doc->SetRightToLeft(RightToLeft);
+
     //Load previously openned page
     doc->LoadPage(LastPageNb);
     loaded=1;
@@ -454,7 +486,7 @@ void Preferences::SaveCompat(Document *doc)
     if(doc)
     {
         //Open the preferences file
-        FILE *prefFile=fopen(Filename, "w");
+        FILE *prefFile=fl_fopen(Filename, "w");
         if(prefFile)
         {
             //The library folder
@@ -504,7 +536,7 @@ void Preferences::Save(Document *doc)
 {
 
     //Global pref first
-    GlobalPrefs = new Fl_Preferences(PrefDir, "bdreader", "bdreader");
+    GlobalPrefs = new Fl_Preferences(PrefDir, "claudereader", "claudereader");
         GlobalPrefs->set("LibraryFolder", LibraryFolder);
         GlobalPrefs->set("UseLibrary", UseLibrary);
         GlobalPrefs->set("SavePref", SavePref);
@@ -551,6 +583,7 @@ void Preferences::Save(Document *doc)
             DocPrefs->set("AdditionnalZoomIdx", AdditionnalZoomIdx);
             DocPrefs->set("InContext", InContext);
             DocPrefs->set("Border", Border);
+            DocPrefs->set("RightToLeft", RightToLeft);
             DocPrefs->set("RotationIdx", RotationIdx);
             char time_s[150];time_t now=time(0);strftime(time_s, 150, "%d/%m/%Y-%H:%M:%S", localtime(&now));
             DocPrefs->set("LastDate", time_s);
@@ -567,7 +600,7 @@ void Preferences::Save(Document *doc)
 void Preferences::ForceSave()
 {
     //Global pref first
-    GlobalPrefs = new Fl_Preferences(PrefDir, "bdreader", "bdreaderTest");
+    GlobalPrefs = new Fl_Preferences(PrefDir, "claudereader", "claudereaderTest");
 
         char firstletters[2];strncpy(firstletters, ShortFilename, 1);firstletters[1]='\0';
         Fl_Preferences *LetterGroupPrefs = new Fl_Preferences(GlobalPrefs, firstletters);
@@ -579,6 +612,7 @@ void Preferences::ForceSave()
             DocPrefs->set("AdditionnalZoomIdx", AdditionnalZoomIdx);
             DocPrefs->set("InContext", InContext);
             DocPrefs->set("Border", Border);
+            DocPrefs->set("RightToLeft", RightToLeft);
             DocPrefs->set("RotationIdx", RotationIdx);
             char time_s[150];strftime(time_s, 150, "%d/%m/%Y-%H:%M:%S", &LastDate);
             DocPrefs->set("LastDate", time_s);
@@ -601,4 +635,5 @@ void Preferences::CopyLocalTo(Preferences *pref)
      pref->AdditionnalZoomIdx=AdditionnalZoomIdx;
      pref->InContext=InContext;
      pref->Border=Border;
+     //RightToLeft is not copied: manga mode is only a per comics setting (off by default)
 }

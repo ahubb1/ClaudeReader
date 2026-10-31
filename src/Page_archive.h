@@ -48,7 +48,7 @@ struct NameNb
 class Page_archive : public Page
 {
     public:
-        Page_archive(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, float display_ratio, int rotation, bool contrast, archive *arch, archive_entry *entry, int img_idx);
+        Page_archive(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, float display_ratio, int rotation, bool contrast, bool rtl, archive *arch, archive_entry *entry, int img_idx);
     protected:
         void Load(archive *arch, archive_entry *entry, int img_idx);
 };

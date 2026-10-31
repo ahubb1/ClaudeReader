@@ -1,0 +1,6 @@
+build/
+build-*/
+deps/src/
+deps/build-opencv/
+deps/opencv-static/
+dist/

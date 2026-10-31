@@ -31,9 +31,9 @@ Export_Document::Export_Document(Document *doc, const char *path, const char *fi
     Doc=doc;
     strcpy(PathToExport, path);
     #ifdef __WINDOWS__
-        sprintf(PathToExport, "%s\\", PathToExport);
+        strcat(PathToExport, "\\");
     #else
-        sprintf(PathToExport, "%s//", PathToExport);
+        strcat(PathToExport, "/");
     #endif
     strcpy(FilesExtension, fileext);
     PanelMode=panelmode;
@@ -167,7 +167,7 @@ int Export_Document::Export(Fl_Progress *progressbar)
                     Mat rendering(*Doc->RenderMat());
 
                     //Write it (extension already choosen)
-                    imwrite(filename, rendering);
+                    WriteImageUtf8(filename, rendering);
                     nbimages++;
 
                     casenb++;
@@ -199,14 +199,14 @@ int Export_Document::Export(Fl_Progress *progressbar)
                 Mat rendering(*Doc->RenderMat());
 
                 //Write it (extension already choosen)
-                imwrite(filename, rendering);
+                WriteImageUtf8(filename, rendering);
                 nbimages++;
 
                 //If we are in Panel but failed, double the page: easier for a user on another reader
                 if(PanelMode)
                 {
                     sprintf(filename, "%s%s_%s01%s", PathToExport, BaseFilename, longpagenb, FilesExtension);
-                    imwrite(filename, rendering);
+                    WriteImageUtf8(filename, rendering);
                     nbimages++;
                 }
             }

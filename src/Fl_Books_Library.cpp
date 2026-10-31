@@ -18,7 +18,10 @@
 //    along with BDReader. If not, see <http://www.gnu.org/licenses/>.
 //
 //---------------------------------------------------------------------------
+#include <FL/fl_utf8.h>
 #include "Fl_Books_Library.h"
+#include <map>
+#include <FL/Fl_Menu_Item.H>
 
 
 
@@ -136,13 +139,18 @@ Fl_Library_Element::Fl_Library_Element(int xx, int yy, int ww, int hh, const cha
     ShortFilenameLC[i]='\0';
     //Absolute one
     snprintf(AbsoluteFilename, FL_PATH_MAX, "%s%s%s", abs_lib_dir, relative_path, Filename);
+    snprintf(RelativeDir, FL_PATH_MAX, "%s", relative_path);
+    Library=NULL;
+    TagIds=Tags::OfComic(TagKey());
 
-    //Style
-    Fl_Button::labelsize(13);
-    //Fl_Button::labeltype(FL_EMBOSSED_LABEL);
-    Fl_Button::box(FL_EMBOSSED_BOX);
-    Fl_Button::align(FL_ALIGN_CENTER | FL_ALIGN_TOP | FL_ALIGN_INSIDE | FL_ALIGN_CLIP );
-    Fl_Button::color(FL_BACKGROUND_COLOR, FL_BACKGROUND2_COLOR);
+    //Style (drawn as a card, see draw())
+    Hover=false;
+    Img=NULL;
+    LastPage=0;
+    NbPages=0;
+    Fl_Button::box(FL_FLAT_BOX);
+    Fl_Button::color(THEME_EDITOR_BG, THEME_HOVER);
+    Fl_Button::clear_visible_focus();
 
     //Thumbnail:
         //Get md5sum and retrieve thumbnail if exists in .cache/thumbnails/large or .cache/thumbnails/normal
@@ -152,13 +160,7 @@ Fl_Library_Element::Fl_Library_Element(int xx, int yy, int ww, int hh, const cha
             sprintf(ThumbnailName, "%s/.cache/thumbnails/large/%s.png", getenv("HOME"), md5_hash.c_str());
         #else
             //Own thumbnails in pref directory
-            HRESULT hres = SHGetFolderPath(NULL, CSIDL_COMMON_APPDATA, NULL, SHGFP_TYPE_CURRENT, ThumbnailName);
-            if(hres!=S_OK)
-            {
-                printf("Error retrieving path. Using: ");
-                snprintf(ThumbnailName, FL_PATH_MAX, "%s", getenv("HOME"));
-            }
-            sprintf(ThumbnailName, "%s\\BDReader\\thumbnails\\%s.png", ThumbnailName, md5_hash.c_str());
+            snprintf(ThumbnailName, FL_PATH_MAX, "%s\\thumbnails\\%s.png", GetUserDataDir(), md5_hash.c_str());
         #endif
 
         //apply it to box
@@ -175,33 +177,17 @@ Fl_Library_Element::Fl_Library_Element(int xx, int yy, int ww, int hh, const cha
             if(Img->w()==0)
             {
                 delete Img;
-                Document *doc;
-                if(strstr(Filename, ".pdf" )!=NULL)
-                {
-                    doc = new Document_pdf(AbsoluteFilename);
-                }
-                else if( (strstr(Filename, ".cbr" )!=NULL) || (strstr(Filename, ".cbz" )!=NULL) || (strstr(Filename, ".cbt" )!=NULL) || (strstr(Filename, ".cb7" )!=NULL) || (strstr(Filename, ".epub" )!=NULL))
-                {
-                    doc = new Document_archive(AbsoluteFilename);
-                }
+                Img=NULL;
+                Document *doc=OpenPerExtension(AbsoluteFilename);
                 #ifndef __WINDOWS__
                     sprintf(ThumbnailName, "%s/.cache/thumbnails/large/%s.png", getenv("HOME"), md5_hash.c_str());
                 #else
                     //Own thumbnails in pref directory
-                    HRESULT hres = SHGetFolderPath(NULL, CSIDL_COMMON_APPDATA, NULL, SHGFP_TYPE_CURRENT, ThumbnailName);
-                    if(hres!=S_OK)
-                    {
-                        printf("Error retrieving path. Using: ");
-                        snprintf(ThumbnailName, FL_PATH_MAX, "%s", getenv("HOME"));
-                    }
-                    sprintf(ThumbnailName, "%s\\BDReader", ThumbnailName);
-                    mkdir(ThumbnailName);
-                    sprintf(ThumbnailName, "%s\\thumbnails", ThumbnailName);
-                    mkdir(ThumbnailName);
-                    sprintf(ThumbnailName, "%s\\%s.png", ThumbnailName, md5_hash.c_str());
-                    printf("Creating %s\n", ThumbnailName);
+                    snprintf(ThumbnailName, FL_PATH_MAX, "%s\\thumbnails", GetUserDataDir());
+                    CreateDirectory(ThumbnailName, NULL);
+                    snprintf(ThumbnailName, FL_PATH_MAX, "%s\\thumbnails\\%s.png", GetUserDataDir(), md5_hash.c_str());
                 #endif
-                if(doc->WriteDocumentThumbnail(ThumbnailName, 180)>=0)
+                if(doc && doc->WriteDocumentThumbnail(ThumbnailName, 180)>=0)
                 {
                     Img = new Fl_PNG_Image(ThumbnailName);
                 }
@@ -234,7 +220,7 @@ Fl_Library_Element::Fl_Library_Element(int xx, int yy, int ww, int hh, const cha
     //File info
         //Creation date (actually last modif but...)
         struct stat info_file;
-        stat(fileURI_s.c_str(), &info_file);
+        fl_stat(fileURI_s.c_str(), &info_file);
         struct tm *time_info=localtime(&(info_file.st_mtime));
         CreationTime = ((((((time_info->tm_year-80)*365)+time_info->tm_yday)*24+time_info->tm_hour)*60)+time_info->tm_min)*60+time_info->tm_sec; //Time in seconds since 1st january 1900...
         //Last access time: closer to the actual creation date on this filesystem
@@ -251,33 +237,242 @@ Fl_Library_Element::Fl_Library_Element(int xx, int yy, int ww, int hh, const cha
         int d=round((NowHour-LastTime/3600.)/24.);
         if(LastTime!=0)
         {
+            //Append to tmp (sprintf on its own buffer is undefined)
             if(d>0)
             {
-                sprintf(tmp, "%sLast read %d days ago", tmp, d);
+                sprintf(tmp+strlen(tmp), "Last read %d days ago", d);
             }
             else
             {
                 if(d==0)
                 {
-                    sprintf(tmp, "%sLast read %dh ago", tmp, h);
+                    sprintf(tmp+strlen(tmp), "Last read %dh ago", h);
                 }
                 else
                 {
-                    sprintf(tmp, "%sNot read yet", tmp);
+                    sprintf(tmp+strlen(tmp), "Not read yet");
                     LastTime=-1;
                 }
             }
 
             if(NbPages>0)
-                sprintf(tmp, "%s (Page %d/%d).", tmp, LastPage, NbPages);
+                sprintf(tmp+strlen(tmp), " (Page %d/%d).", LastPage, NbPages);
             else
-                sprintf(tmp, "%s (Page %d/??).", tmp, LastPage);
+                sprintf(tmp+strlen(tmp), " (Page %d/??).", LastPage);
         }
         else
         {
-            sprintf(tmp, "%sNot read yet", tmp);
+            sprintf(tmp+strlen(tmp), "Not read yet");
         }
         Fl_Button::copy_tooltip(tmp);
+}
+
+
+
+int Fl_Library_Element::handle(int event)
+{
+    if(event==FL_ENTER || event==FL_LEAVE)
+    {
+        Hover=(event==FL_ENTER);
+        redraw();
+    }
+    //Right button: tags menu (not an opening), shown when the button is released as the Windows context menus
+    if((event==FL_PUSH || event==FL_RELEASE) && Fl::event_button()==FL_RIGHT_MOUSE)
+    {
+        if(event==FL_RELEASE)
+            ShowTagsMenu();
+        return 1;
+    }
+    return Fl_Button::handle(event);
+}
+
+bool Fl_Library_Element::HasTag(int id)
+{
+    return std::find(TagIds.begin(), TagIds.end(), id)!=TagIds.end();
+}
+
+void Fl_Library_Element::ReloadTags()
+{
+    TagIds=Tags::OfComic(TagKey());
+    redraw();
+}
+
+//! Label usable in a menu (& and / are special)
+static std::string MenuText(const std::string &text)
+{
+    std::string out;
+    for(size_t i=0; i<text.size(); i++)
+    {
+        if(text[i]=='&')
+            out+='&';
+        out+=text[i];
+    }
+    return out;
+}
+
+//! Tick or untick the tags of the comic, create a tag, manage the tags
+void Fl_Library_Element::ShowTagsMenu()
+{
+    const std::vector<TagDef> all=Tags::All();
+    std::vector<std::string> labels;
+    for(size_t i=0; i<all.size(); i++)
+        labels.push_back(MenuText(all[i].Name));
+    std::vector<Fl_Menu_Item> menu(all.size()+3);
+    memset(menu.data(), 0, menu.size()*sizeof(Fl_Menu_Item));
+    for(size_t i=0; i<all.size(); i++)
+    {
+        menu[i].text=labels[i].c_str();
+        menu[i].flags=FL_MENU_TOGGLE|(HasTag(all[i].Id) ? FL_MENU_VALUE : 0)|(i+1==all.size() ? FL_MENU_DIVIDER : 0);
+    }
+    menu[all.size()].text="New tag...";
+    menu[all.size()+1].text="Manage tags...";
+
+    const Fl_Menu_Item *chosen=menu[0].popup(Fl::event_x(), Fl::event_y());
+    if(!chosen)
+        return;
+    size_t index=chosen-&menu[0];
+    if(index<all.size())
+        Tags::Toggle(TagKey(), all[index].Id);
+    else if(index==all.size())
+    {
+        const char *name=fl_input("New tag for \"%s\":", "", ShortFilename);
+        if(!name || !*name)
+            return;
+        int id=Tags::Create(name);
+        if(id>0 && !HasTag(id))
+            Tags::Toggle(TagKey(), id);
+    }
+    else
+    {
+        if(Library && Library->OnManageTags)
+            Library->OnManageTags();
+        return;
+    }
+    ReloadTags();
+    if(Library)
+        Library->refresh_tags();
+}
+
+//! Card: thumbnail, reading progress bar and title
+void Fl_Library_Element::draw()
+{
+    const int pad=8, title_h=34, bar_h=3, chips_h=16;
+
+    //Background, lighter when hovered
+    fl_color(Hover ? THEME_HOVER : THEME_EDITOR_BG);
+    fl_rectf(x(), y(), w(), h());
+
+    //Thumbnail, fitted in the image area
+    int ix=x()+pad, iy=y()+pad, iw=w()-2*pad, ih=h()-2*pad-title_h-chips_h;
+    if(HasThumbnail())
+    {
+        Img->scale(iw, ih, 1, 1);
+        Img->draw(ix+(iw-Img->w())/2, iy+ih-Img->h());
+    }
+    else
+    {
+        fl_color(THEME_INPUT_BG);
+        fl_rectf(ix, iy, iw, ih);
+        fl_color(THEME_FG_DIM);
+        fl_font(FL_HELVETICA, 12);
+        fl_draw("No preview", ix, iy, iw, ih, FL_ALIGN_CENTER);
+    }
+
+    //Reading progress
+    int by=iy+ih+4;
+    if(NbPages>0 && LastPage>0)
+    {
+        fl_color(THEME_BORDER);
+        fl_rectf(ix, by, iw, bar_h);
+        fl_color(THEME_ACCENT);
+        fl_rectf(ix, by, (int)(iw*fmin(1., LastPage/(double)NbPages)), bar_h);
+    }
+
+    //Title (file name without extension)
+    char title[FL_PATH_MAX];
+    snprintf(title, sizeof(title), "%s", Filename);
+    fl_filename_setext(title, sizeof(title), "");
+    fl_color(Hover ? THEME_FG_BRIGHT : THEME_FG);
+    fl_font(FL_HELVETICA, 12);
+    fl_push_clip(ix, by+bar_h+4, iw, title_h-bar_h-8);
+    fl_draw(title, ix, by+bar_h+4, iw, title_h-bar_h-8, FL_ALIGN_TOP_LEFT|FL_ALIGN_WRAP);
+    fl_pop_clip();
+
+    //Tags: colored dot and name
+    int cx=ix, cy=y()+h()-pad-chips_h;
+    fl_font(FL_HELVETICA, 11);
+    fl_push_clip(ix, cy, iw, chips_h);
+    for(size_t i=0; i<TagIds.size(); i++)
+    {
+        const TagDef *tag=Tags::Get(TagIds[i]);
+        if(!tag)
+            continue;
+        int tw=(int)fl_width(tag->Name.c_str());
+        fl_color(Tags::Color(tag->Color));
+        fl_pie(cx, cy+(chips_h-8)/2, 8, 8, 0, 360);
+        fl_color(THEME_FG_DIM);
+        fl_draw(tag->Name.c_str(), cx+11, cy, tw+2, chips_h, FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
+        cx+=11+tw+10;
+    }
+    fl_pop_clip();
+}
+
+
+//------------------------------------Folder card------------------------
+
+Fl_Library_Folder::Fl_Library_Folder(int ww, int hh, const std::string &name, const std::string &relative_dir, int count):
+    Fl_Button(0, 0, ww, hh),
+    Name(name),
+    RelativeDir(relative_dir),
+    Count(count),
+    Hover(false)
+{
+    box(FL_FLAT_BOX);
+    clear_visible_focus();
+    Icon=ThemeIcon(ICON_OPEN, THEME_FG_DIM, 96);
+    IconHover=ThemeIcon(ICON_OPEN, THEME_FG_BRIGHT, 96);
+    copy_tooltip(name.c_str());
+}
+
+Fl_Library_Folder::~Fl_Library_Folder()
+{
+    delete Icon;
+    delete IconHover;
+}
+
+int Fl_Library_Folder::handle(int event)
+{
+    if(event==FL_ENTER || event==FL_LEAVE)
+    {
+        Hover=(event==FL_ENTER);
+        redraw();
+    }
+    return Fl_Button::handle(event);
+}
+
+void Fl_Library_Folder::draw()
+{
+    const int pad=8, title_h=34, chips_h=16;
+    fl_color(Hover ? THEME_HOVER : THEME_EDITOR_BG);
+    fl_rectf(x(), y(), w(), h());
+
+    //Icon in the image area (as the comics covers)
+    int ix=x()+pad, iy=y()+pad, iw=w()-2*pad, ih=h()-2*pad-title_h-chips_h;
+    fl_color(THEME_BAR_BG);
+    fl_rectf(ix, iy, iw, ih);
+    Fl_SVG_Image *icon=Hover ? IconHover : Icon;
+    icon->draw(ix+(iw-icon->w())/2, iy+(ih-icon->h())/2);
+
+    //Name and number of comics
+    fl_font(FL_HELVETICA_BOLD, 12);
+    fl_color(Hover ? THEME_FG_BRIGHT : THEME_FG);
+    fl_push_clip(ix, iy+ih+7, iw, title_h-6);
+    fl_draw(Name.c_str(), ix, iy+ih+7, iw, title_h-6, FL_ALIGN_TOP_LEFT|FL_ALIGN_WRAP);
+    fl_pop_clip();
+    fl_font(FL_HELVETICA, 11);
+    fl_color(THEME_FG_DIM);
+    std::string count=std::to_string(Count)+(Count>1 ? " comics" : " comic");
+    fl_draw(count.c_str(), ix, y()+h()-pad-chips_h, iw, chips_h, FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
 }
 
 
@@ -303,6 +498,7 @@ void SelectLibFolder_cb(Fl_Widget * w, void* p)
     {
         bl->LibFolder_Input->value(chooser.filename());
         bl->apply_dir(bl->LibFolder_Input->value(), bl->windir);
+        bl->LibFolder_Input->parent()->redraw();
     }
 }
 
@@ -313,23 +509,31 @@ Fl_Books_Library::Fl_Books_Library(int xx, int yy, int ww, int hh, const char *l
     child_h=child_hh;
     _spacing=sp;
 
-    //Top bar
+    //Top bar (see layout_toolbar)
+    FoldersView=true;
     MenuBar = new Fl_Group(x(), y(), w(), 25);
-        //Space
-        Fl_Box emptyspace(x(), y(), 10, 30);
-        Main_Group = new Fl_Group(x()+10, y()+3, 110+w()/6.+50+80+40+70+15+60, 20);
-            //Lib folder
-            Fl_Group * grp = new Fl_Group(x()+10, y()+3, 110+w()/6., 20);
-                Fl_Button * label = new Fl_Button(grp->x(), grp->y(), 110, 20, "Library folder:");label->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
-                label->callback(SelectLibFolder_cb, (void*)this);
-                LibFolder_Input = new Fl_Input(label->x()+label->w(), grp->y(), w()/6., 20, "");
+        int main_w=4./5.*w()-15;
+        Main_Group = new Fl_Group(x()+10, y()+3, main_w, 20);
+            //Folders view or all the comics
+            View_Button = new Fl_Activity_Button(x()+10, y()+3, 26, 20, ICON_OPEN, 16);
+            View_Button->color(THEME_BAR_BG);
+            View_Button->tooltip("Folders view (on) or all the comics in one list (off)");
+            View_Button->SetToggled(true);
+            View_Button->callback(View_cb, this);
+            //Lib folder (what is left once the filters and sort are placed)
+            Fl_Group * grp = new Fl_Group(x()+10+31, y()+3, main_w-(31+5+50+80+5+40+70+5+35+110), 20);
+                //File explorer like path bar: folders, sub-folders menus, text edition and folder chooser
+                Fl_Path_Bar *path_bar = new Fl_Path_Bar(grp->x(), grp->y(), grp->w(), 20);
+                path_bar->browse_button()->tooltip("Choose the folder containing your comics");
+                path_bar->browse_button()->callback(SelectLibFolder_cb, (void*)this);
+                LibFolder_Input = path_bar->input();
                 LibFolder_Input->value("");
                 LibFolder_Input->callback(Fl_Books_Library::LibFolder_cb, this);
             grp->end();
-            grp->resizable(LibFolder_Input);
+            grp->resizable(path_bar);
             //Filter
             Fl_Group * grpp2 = new Fl_Group(grp->x()+grp->w()+5, grp->y(), 50+80, 20);
-                Fl_Box * label2 = new Fl_Box(grpp2->x(), grpp2->y(), 50, 20, "Filter:");label2->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
+                Fl_Box * label2 = new Fl_Box(grpp2->x(), grpp2->y(), 50, 20, "Filter:");label2->align(FL_ALIGN_RIGHT|FL_ALIGN_INSIDE);
                 Filter_Choice = new Fl_Choice(label2->x()+label2->w(), grpp2->y(), 80, 20, "");
                 Filter_Choice->add("All");
                 Filter_Choice->add("Unread");
@@ -339,8 +543,8 @@ Fl_Books_Library::Fl_Books_Library(int xx, int yy, int ww, int hh, const char *l
             grpp2->end();
             grpp2->resizable(NULL);
             //Sort
-            Fl_Group * grpp3 = new Fl_Group(grpp2->x()+grpp2->w()+5, grp->y(), 40+70+5+60, 20);
-                Fl_Box * label3 = new Fl_Box(grpp3->x(), grpp3->y(), 40, 20, "Sort:");label3->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
+            Fl_Group * grpp3 = new Fl_Group(grpp2->x()+grpp2->w()+5, grp->y(), 40+70, 20);
+                Fl_Box * label3 = new Fl_Box(grpp3->x(), grpp3->y(), 40, 20, "Sort:");label3->align(FL_ALIGN_RIGHT|FL_ALIGN_INSIDE);
                 Sort_Choice = new Fl_Choice(label3->x()+label3->w(), grpp3->y(), 70, 20, "");
                 Sort_Choice->add("Name");
                 Sort_Choice->add("Type");
@@ -348,29 +552,40 @@ Fl_Books_Library::Fl_Books_Library(int xx, int yy, int ww, int hh, const char *l
                 Sort_Choice->add("Read");
                 Sort_Choice->value(3);
                 Sort_Choice->callback(Fl_Books_Library::Sort_cb, this);
-                Sort_Invert_Button = new Fl_Check_Button(Sort_Choice->x()+Sort_Choice->w()+5, grpp3->y(), 60, 20, "Invert");
-                Sort_Invert_Button->value(0);
-                Sort_Invert_Button->tooltip("Inverse sorting order");
-                Sort_Invert_Button->callback(Fl_Books_Library::Sort_cb, this);
             grpp3->end();
             grpp3->resizable(NULL);
+            //Tag
+            Fl_Group * grpp4 = new Fl_Group(grpp3->x()+grpp3->w()+5, grp->y(), 35+110, 20);
+                Fl_Box * label4t = new Fl_Box(grpp4->x(), grpp4->y(), 35, 20, "Tag:");label4t->align(FL_ALIGN_RIGHT|FL_ALIGN_INSIDE);
+                Tag_Choice = new Fl_Choice(label4t->x()+label4t->w(), grpp4->y(), 110, 20, "");
+                Tag_Choice->tooltip("Only the comics with this tag (in the whole library)");
+                Tag_Choice->callback(Fl_Books_Library::Tag_cb, this);
+            grpp4->end();
+            grpp4->resizable(NULL);
         Main_Group->end();
         Main_Group->resizable(grp);
         //Search
-        Search_Group = new Fl_Group(w()-(60+w()/6.+100), grp->y(), 60+w()/6.+100, 20);
-            Fl_Box * label4 = new Fl_Box(Search_Group->x(), Search_Group->y(), 60, 20, "Search:");label4->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
-            Search_Input = new Fl_Input(w()-Search_Group->w()+label4->w(), Search_Group->y(), w()/6., 20, "");
+        Search_Group = new Fl_Group(x()+10+main_w+10, y()+3, w()-main_w-30, 20);
+            Search_Input = new Fl_Hint_Input(Search_Group->x(), Search_Group->y(), Search_Group->w()-80, 20);
+            Search_Input->Hint="Search   (#tag: tags only)";
+            //Backspace in the empty search: parent folder
+            Search_Input->OnEmptyBackspace=[this]()
+            {
+                if(CurrentDir.empty())
+                    return;
+                std::string parent=CurrentDir.substr(0, CurrentDir.size()-1);
+                size_t slash=parent.rfind('/');
+                open_folder(slash==std::string::npos ? "" : parent.substr(0, slash+1));
+            };
             Search_Input->value("");
             Search_Input->callback(Fl_Books_Library::Search_cb, this);
             Search_Input->when(FL_WHEN_CHANGED);
-            Search_Label = new Fl_Box(Search_Input->x()+Search_Input->w()-100, grp->y(), 100, 20, "0 results");
-            Search_Label->align(FL_ALIGN_RIGHT);
+            Search_Label = new Fl_Box(Search_Group->x()+Search_Group->w()-75, Search_Group->y(), 75, 20, "0 comics");
+            Search_Label->align(FL_ALIGN_RIGHT|FL_ALIGN_INSIDE);
         Search_Group->end();
         Search_Group->resizable(Search_Input);
-        //Space
-        Fl_Box * space = new Fl_Box(grpp3->x()+grpp3->w(), grp->y(), Search_Group->x()-(grpp3->x()+grpp3->w()), 20, "");
     MenuBar->end();
-    MenuBar->resizable(space);
+    MenuBar->resizable(NULL);
 
     Main_Scroll = new Fl_Scroll(xx, MenuBar->y()+MenuBar->h(), w(), h()-MenuBar->h());
         emptyboxtop = new Fl_Box(Main_Scroll->x(), Main_Scroll->y(), Main_Scroll->w()-20, 10); //Margin at the top of the main scroll
@@ -382,7 +597,7 @@ Fl_Books_Library::Fl_Books_Library(int xx, int yy, int ww, int hh, const char *l
         Main_Table->spacing(_spacing);
         Main_Table->box(FL_NO_BOX);
         Main_Table->type(Fl_Pack::VERTICAL);
-        Main_Table->color(FL_SELECTION_COLOR, FL_BACKGROUND2_COLOR);
+        Main_Table->color(THEME_EDITOR_BG, THEME_EDITOR_BG);
         _cols=(Main_Table->w()-spacing())/((child_w+spacing()));
         emptyboxbottom = new Fl_Box(Main_Scroll->x(), Main_Scroll->y()+Main_Scroll->h()-emptyboxtop->h(), Main_Scroll->w()-20, 5); //Margin at the top of the main scroll
         emptyboxbottom->box(FL_NO_BOX);
@@ -390,12 +605,33 @@ Fl_Books_Library::Fl_Books_Library(int xx, int yy, int ww, int hh, const char *l
     Main_Scroll->end();
     Main_Scroll->align(Fl_Scroll::VERTICAL_ALWAYS);//no effect...
     Main_Scroll->resizable(Main_Table);
-    Main_Scroll->color(FL_SELECTION_COLOR, FL_BACKGROUND2_COLOR);
+    Main_Scroll->color(THEME_EDITOR_BG, THEME_EDITOR_BG);
+    Main_Scroll->scrollbar.color(THEME_EDITOR_BG, fl_rgb_color(79, 79, 79));
+    Main_Scroll->hscrollbar.color(THEME_EDITOR_BG, fl_rgb_color(79, 79, 79));
+    Main_Scroll->scrollbar.box(FL_FLAT_BOX);
+    Main_Scroll->hscrollbar.box(FL_FLAT_BOX);
+    Main_Scroll->box(FL_FLAT_BOX);
+    MenuBar->box(FL_FLAT_BOX);
+    MenuBar->color(THEME_BAR_BG);
+    Fl_Choice *choices[]={Filter_Choice, Sort_Choice, Tag_Choice};
+    for(int i=0; i<3; i++)
+    {
+        choices[i]->box(THEME_INPUT_BOX);
+        choices[i]->color(THEME_INPUT_BG);
+        choices[i]->down_box(FL_FLAT_BOX);
+        choices[i]->textcolor(THEME_FG);
+    }
+    Search_Label->labelcolor(THEME_FG_DIM);
+    Search_Input->box(THEME_INPUT_BOX);
+    Search_Input->textcolor(THEME_FG);
+    Search_Input->textsize(12);
+    fill_tag_choice();
 
     end();
     resizable(Main_Scroll);
     //size_range(800, 300, 0, 0, 5, 5, 0);
-    color(FL_BACKGROUND_COLOR);
+    color(THEME_EDITOR_BG);
+    box(FL_FLAT_BOX);
     /*Set modal if independant window
     if(Fl_Double_Window::parent()==NULL)
         set_modal();
@@ -447,16 +683,13 @@ void Fl_Books_Library::add_subpack()
 bool Fl_Books_Library::add_element(const char *relative_path, const char *filename, const char *windir)
 {
     //List only 'true' comics files (not archives or folders)
-    if( strstr(fl_filename_ext(filename), ".pdf")!=NULL ||
-        strstr(fl_filename_ext(filename), ".cbz")!=NULL ||
-        strstr(fl_filename_ext(filename), ".cbr")!=NULL ||
-        strstr(fl_filename_ext(filename), ".cbt")!=NULL ||
-        strstr(fl_filename_ext(filename), ".cb7")!=NULL ||
-        strstr(fl_filename_ext(filename), ".epub")!=NULL)
+    DOCUMENT_TYPE type=GetDocumentType(filename);
+    if( type==DOC_MUPDF || (type==DOC_ARCHIVE && strncasecmp(fl_filename_ext(filename), ".cb", 3)==0) )
     {
         //Create a new element
         nb_visible_elem++;//visible by default
         Fl_Library_Element* new_elem = new Fl_Library_Element(0, 0, child_w, child_h, "", abs_lib_dir, relative_path, filename, windir);
+        new_elem->Library=this;
         elements.push_back(new_elem);
         new_elem->SetAlphaNumPosition(elements.size()-1);//Keep track of it's position in original alphanum sorting
         new_elem->callback(elem_callback, elem_callback_param);
@@ -532,50 +765,101 @@ void Fl_Books_Library::refresh()
         default:
             break;
     }
-    //Reverse sort if needed
-    if(Sort_Invert_Button->value())
-        std::reverse(elements.begin(), elements.end());
 
 
-    //Lower case before searching to be case insensitive
-    char searchtermlc[1024];
-    snprintf(searchtermlc, 1024, "%s", Search_Input->value());
-    for(int i=0; searchtermlc[i]; i++)
-        searchtermlc[i] = tolower(searchtermlc[i]);
+    //Search (case insensitive) in the names and the tags, or in the tags only with "#"
+    std::string search=Search_Input->value();
+    std::transform(search.begin(), search.end(), search.begin(), [](unsigned char c){ return (char)tolower(c); });
+    bool tags_only=!search.empty() && search[0]=='#';
+    if(tags_only)
+        search=search.substr(1);
+    int tag_filter=(Tag_Choice->value()>0 && Tag_Choice->value()-1<(int)TagChoiceIds.size()) ? TagChoiceIds[Tag_Choice->value()-1] : -1;
+    //Folders view, except when searching or filtering by tag: the whole library
+    bool flat=!FoldersView || !search.empty() || tags_only || tag_filter>0;
 
-    //Iterate through vector and test each elem with filters...:
-    nb_visible_elem=0;
-    for(int i=0; i<elements.size(); i++)
+    //Folder cards (rebuilt): the sub-folders of the current folder with comics inside
+    for(size_t i=0; i<folders.size(); i++)
+        Fl::delete_widget(folders[i]);
+    folders.clear();
+    std::vector<Fl_Widget*> visible;
+    if(!flat)
     {
-        if((strstr(elements[i]->GetShortFilenameLC(), searchtermlc)!=NULL || strlen(searchtermlc)==0) && //search filter
-           ( Filter_Choice->value()==0 || //Filter by: All
-            (Filter_Choice->value()==1 && elements[i]->GetLastTime()==0)|| //Filter by Unread (only)
-            (Filter_Choice->value()==2 && elements[i]->GetLastTime()>0) //Filter by Read (only)
-           )
-          )
+        std::map<std::string, int> subs;
+        for(size_t i=0; i<elements.size(); i++)
         {
-            nb_visible_elem++;
-            //create a new subpack if needed
-            if(nb_visible_elem>rows()*cols())
+            std::string rel=elements[i]->GetRelativeDir();
+            if(rel.size()>CurrentDir.size() && rel.compare(0, CurrentDir.size(), CurrentDir)==0)
             {
-                add_subpack();
+                std::string rest=rel.substr(CurrentDir.size());
+                subs[rest.substr(0, rest.find('/')+1)]++;
             }
-            //insert elem in the last subpack
-            sub_packs[sub_packs.size()-1]->add(elements[i]);
-            //show it
-            elements[i]->show();
+        }
+        std::vector< std::pair<std::string, int> > sorted(subs.begin(), subs.end());
+        std::sort(sorted.begin(), sorted.end(), [](const std::pair<std::string, int> &a, const std::pair<std::string, int> &b)
+        {
+            return strcasecmp(a.first.c_str(), b.first.c_str())<0;
+        });
+        Fl_Group *current=Fl_Group::current();
+        Fl_Group::current(NULL);
+        for(size_t i=0; i<sorted.size(); i++)
+        {
+            std::string name=sorted[i].first.substr(0, sorted[i].first.size()-1);
+            Fl_Library_Folder *folder=new Fl_Library_Folder(child_w, child_h, name, CurrentDir+sorted[i].first, sorted[i].second);
+            folder->callback(Folder_cb, this);
+            folders.push_back(folder);
+            visible.push_back(folder);
+        }
+        Fl_Group::current(current);
+    }
+
+    //Comics
+    int nb_comics=0;
+    for(size_t i=0; i<elements.size(); i++)
+    {
+        Fl_Library_Element *e=elements[i];
+        bool shown=flat || CurrentDir==e->GetRelativeDir();
+        //Search
+        if(shown && !search.empty())
+        {
+            bool found=!tags_only && strstr(e->GetShortFilenameLC(), search.c_str())!=NULL;
+            for(size_t t=0; t<e->GetTags().size() && !found; t++)
+            {
+                const TagDef *tag=Tags::Get(e->GetTags()[t]);
+                std::string name=tag ? tag->Name : "";
+                std::transform(name.begin(), name.end(), name.begin(), [](unsigned char c){ return (char)tolower(c); });
+                found=!name.empty() && name.find(search)!=std::string::npos;
+            }
+            shown=found;
+        }
+        //Read state
+        shown=shown && (Filter_Choice->value()==0 ||
+                        (Filter_Choice->value()==1 && e->GetLastTime()==0) ||
+                        (Filter_Choice->value()==2 && e->GetLastTime()>0));
+        //Tag
+        shown=shown && (tag_filter<0 || e->HasTag(tag_filter));
+        if(shown)
+        {
+            visible.push_back(e);
+            nb_comics++;
         }
         else
-        {
-            elements[i]->hide();
-        }
-        /*redraw();
-        Fl::wait(0.01); //Rigolo mais lent*/
+            e->hide();
+    }
+
+    //In rows
+    nb_visible_elem=0;
+    for(size_t i=0; i<visible.size(); i++)
+    {
+        nb_visible_elem++;
+        if(nb_visible_elem>rows()*cols())
+            add_subpack();
+        sub_packs[sub_packs.size()-1]->add(visible[i]);
+        visible[i]->show();
     }
 
     //Show nb of results
     char nb_txt[50];
-    sprintf(nb_txt, "%d results", nb_visible_elem);
+    snprintf(nb_txt, sizeof(nb_txt), nb_comics>1 ? "%d comics" : "%d comic", nb_comics);
     Search_Label->copy_label(nb_txt);
 
     //Reinit scroll position
@@ -589,10 +873,45 @@ void Fl_Books_Library::refresh()
 
 
 //!Reload everything based on directory and then call Refresh for filters, sort etc...
+//! Add a library entry: a comics file, or every comics in a folder (browsed recursively up to MAX_LIBRARY_DEPTH levels)
+//! \param relative_dir: folder of the entry, relative to the library folder ("" or ending with a separator)
+//! \param name: name of the entry, as listed by fl_filename_list (folders end with '/')
+void Fl_Books_Library::scan_entry(const char *relative_dir, const char *name, int depth)
+{
+    //Hidden files, current and parent folders
+    if(name[0]=='.')
+        return;
+
+    char full_name[FL_PATH_MAX];
+    snprintf(full_name, FL_PATH_MAX, "%s%s%s", abs_lib_dir, relative_dir, name);
+    if(fl_filename_isdir(full_name)==0)
+    {
+        add_element(relative_dir, name, windir);
+        return;
+    }
+
+    if(depth>=MAX_LIBRARY_DEPTH)
+        return;
+
+    char sub_relative_dir[FL_PATH_MAX];
+    snprintf(sub_relative_dir, FL_PATH_MAX, "%s%s", relative_dir, name);
+    //Make sure the folder ends with a separator
+    size_t len=strlen(sub_relative_dir);
+    if(len>0 && sub_relative_dir[len-1]!='/' && sub_relative_dir[len-1]!='\\' && len+1<FL_PATH_MAX)
+        strcat(sub_relative_dir, "/");
+
+    dirent **listing;
+    int nb=fl_filename_list(full_name, &listing, fl_casenumericsort);
+    for(int i=0; i<nb; i++)
+        scan_entry(sub_relative_dir, listing[i]->d_name, depth+1);
+    if(nb>0)
+        fl_filename_free_list(&listing, nb);
+}
+
 void Fl_Books_Library::reload()
 {
     //Be patient...
-    Fl_Window waiting_window(300, 80, "BDReader");
+    Fl_Window waiting_window(300, 80, "ClaudeReader");
     waiting_window.set_modal();
     waiting_window.callback((void (*) (Fl_Widget*))NULL);//no callback to prevent closing
     Fl_Box label(20, 10, 150, 20, "Loading comics library...");
@@ -624,41 +943,8 @@ void Fl_Books_Library::reload()
     //For each file/folder in library
     for (int i=0; i<nb_files; i++)
     {
-        char full_filename[FL_PATH_MAX];
-        sprintf(full_filename, "%s%s", abs_lib_dir, dir_listing[i]->d_name);
-        //If it'a dir, then do it again
-        if(dir_listing[i]->d_name[0]!='.' && fl_filename_isdir(full_filename)!=0)
-        {
-            dirent **sub_dir_listing;
-            char abs_sub_dir[FL_PATH_MAX];
-            sprintf(abs_sub_dir, "%s%s", abs_lib_dir, dir_listing[i]->d_name);
-            int nb_files2=fl_filename_list(abs_sub_dir, &sub_dir_listing, fl_casenumericsort);
-            for (int j=2; j<nb_files2; j++)
-            {
-                //If it'a dir again, then do it again
-                sprintf(full_filename, "%s%s", abs_sub_dir, sub_dir_listing[j]->d_name);
-                if(sub_dir_listing[j]->d_name[0]!='.' &&  fl_filename_isdir(sub_dir_listing[j]->d_name)!=0)
-                {
-                    dirent **sub_sub_dir_listing;
-                    char abs_sub_dir[FL_PATH_MAX];
-                    snprintf(abs_sub_dir, FL_PATH_MAX, "%s%s%s", abs_lib_dir, dir_listing[i]->d_name, sub_dir_listing[j]->d_name);
-                    int nb_files3=fl_filename_list(abs_sub_dir, &sub_sub_dir_listing, fl_casenumericsort);
-                    for (int k=0; k<nb_files3; k++)
-                    {
-                        char relativepath[FL_PATH_MAX];
-                        snprintf(relativepath, FL_PATH_MAX, "%s%s", dir_listing[i]->d_name, sub_dir_listing[j]->d_name);
-                        add_element(relativepath, sub_sub_dir_listing[k]->d_name, windir);
-                    }
-                    fl_filename_free_list(&sub_sub_dir_listing, nb_files3);
-                }
-                add_element(dir_listing[i]->d_name, sub_dir_listing[j]->d_name, windir);
-            }
-            fl_filename_free_list(&sub_dir_listing, nb_files2);
-        }
-        else
-        {
-            add_element("", dir_listing[i]->d_name, windir);
-        }
+        //Sub-folders are browsed recursively
+        scan_entry("", dir_listing[i]->d_name, 0);
         progress_bar->value(i/(float)nb_files);
         /*Exact values are inacurate: nb of files is not nb of comics: folders, other files etc...
         char progresstxt[12];
@@ -692,6 +978,9 @@ bool Fl_Books_Library::set_dir(const char * lib_dir, const char *wind)
             trailing_char='/';
         #endif // __WINDOWS__
 
+        //Another library folder: back to its top
+        std::string former_dir=abs_lib_dir;
+
         //Copy lib dir as absolute path
         char tmp_abs_lib_dir[FL_PATH_MAX];
         fl_filename_absolute(tmp_abs_lib_dir, FL_PATH_MAX, lib_dir);
@@ -714,8 +1003,9 @@ bool Fl_Books_Library::set_dir(const char * lib_dir, const char *wind)
             }
         }
         printf("%s\n", abs_lib_dir);
-        LibFolder_Input->value(abs_lib_dir);
-        LibFolder_Input->redraw();
+        if(former_dir!=abs_lib_dir)
+            CurrentDir.clear();
+        update_path_bar();
         Search_Input->value("");
         Search_Input->redraw();
 
@@ -744,6 +1034,7 @@ void Fl_Books_Library::apply_dir(const char * lib_dir, const char *wind)
     //Reload only when directory is valid
     if(new_valid_dir)
         reload();
+    update_path_bar();
 }
 
 
@@ -789,4 +1080,133 @@ int Fl_Books_Library::GetSuggestionNext(char current_filename[2048], char sugges
         else
             return i+1;
     }
+}
+
+
+//------------------------------------Folders, tags, toolbar------------------------
+
+void Fl_Books_Library::resize(int xx, int yy, int ww, int hh)
+{
+    int old_w=w(), old_h=h();
+    Fl_Group::resize(xx, yy, ww, hh);
+    layout_toolbar();
+    if(ww!=old_w || hh!=old_h)
+    {
+        emptyboxtop->resize(Main_Scroll->x(), Main_Scroll->y(), Main_Scroll->w()-20, 10);
+        Main_Table->resize(Main_Scroll->x(), Main_Scroll->y()+emptyboxtop->h(), Main_Scroll->w()-20, Main_Scroll->h()-emptyboxtop->h());
+        _cols=(Main_Table->w()-spacing())/((child_w+spacing()));
+        refresh();
+        Main_Scroll->init_sizes();
+        Main_Scroll->scroll_to(0, 0);
+    }
+}
+
+//! 4/5 of the width for the view, folder, filter, sort and tag, the rest for the search
+void Fl_Books_Library::layout_toolbar()
+{
+    int main_w=4./5.*w()-15;
+    MenuBar->resize(x(), y(), w(), 25);
+    Main_Group->resize(x()+10, y()+3, main_w, 20);
+    Search_Group->resize(x()+10+main_w+10, y()+3, w()-main_w-30, 20);
+}
+
+void Fl_Books_Library::update_path_bar()
+{
+    std::string path=std::string(abs_lib_dir)+CurrentDir;
+    LibFolder_Input->value(path.c_str());
+    LibFolder_Input->parent()->redraw();
+}
+
+//! Path bar: a folder in the library is shown, another one becomes the library folder
+void Fl_Books_Library::path_chosen(const char *path)
+{
+    auto normalize=[](std::string text)
+    {
+        for(size_t i=0; i<text.size(); i++)
+        {
+            if(text[i]=='\\')
+                text[i]='/';
+            #ifdef _WIN32
+                text[i]=(char)tolower((unsigned char)text[i]); //Case insensitive file system
+            #endif
+        }
+        if(text.empty() || text[text.size()-1]!='/')
+            text+='/';
+        return text;
+    };
+    std::string chosen=path, root=normalize(abs_lib_dir);
+    if(normalize(chosen).compare(0, root.size(), root)==0)
+    {
+        std::string rel=chosen.size()>root.size() ? chosen.substr(root.size()) : "";
+        std::replace(rel.begin(), rel.end(), '\\', '/');
+        if(!rel.empty() && rel[rel.size()-1]!='/')
+            rel+='/';
+        open_folder(rel);
+        return;
+    }
+    apply_dir(path, windir);
+}
+
+void Fl_Books_Library::open_folder(const std::string &relative_dir)
+{
+    CurrentDir=relative_dir;
+    refresh();
+    update_path_bar();
+}
+
+//! Backspace: parent folder
+int Fl_Books_Library::handle(int event)
+{
+    if((event==FL_SHORTCUT || event==FL_KEYBOARD) && Fl::event_key()==FL_BackSpace && visible_r() && !CurrentDir.empty()
+       && !(Fl::focus() && dynamic_cast<Fl_Input_*>(Fl::focus())))
+    {
+        std::string parent=CurrentDir.substr(0, CurrentDir.size()-1);
+        size_t slash=parent.rfind('/');
+        open_folder(slash==std::string::npos ? "" : parent.substr(0, slash+1));
+        return 1;
+    }
+    return Fl_Group::handle(event);
+}
+
+//! Tag filter choices: "Any" and the tags
+void Fl_Books_Library::fill_tag_choice()
+{
+    int selected=(Tag_Choice->value()>0 && Tag_Choice->value()-1<(int)TagChoiceIds.size()) ? TagChoiceIds[Tag_Choice->value()-1] : -1;
+    Tag_Choice->clear();
+    TagChoiceIds.clear();
+    Tag_Choice->add("Any");
+    int value=0;
+    const std::vector<TagDef> &all=Tags::All();
+    for(size_t i=0; i<all.size(); i++)
+    {
+        //Menu special characters
+        std::string label;
+        for(size_t c=0; c<all[i].Name.size(); c++)
+        {
+            char ch=all[i].Name[c];
+            if(ch=='/' || ch=='\\' || ch=='_')
+                label+='\\';
+            else if(ch=='&')
+                label+='&';
+            label+=ch;
+        }
+        Tag_Choice->add(label.c_str());
+        TagChoiceIds.push_back(all[i].Id);
+        if(all[i].Id==selected)
+            value=(int)i+1;
+    }
+    Tag_Choice->value(value);
+}
+
+void Fl_Books_Library::refresh_tags()
+{
+    for(size_t i=0; i<elements.size(); i++)
+        elements[i]->ReloadTags();
+    int former=Tag_Choice->value();
+    fill_tag_choice();
+    //The list changes only if it is filtered by tags (the chips are redrawn anyway)
+    if(former>0 || Search_Input->size()>0)
+        refresh();
+    else
+        redraw();
 }

@@ -1,11 +1,11 @@
 [Desktop Entry]
-Name=BDReader
+Name=ClaudeReader
 Comment=Comics reader
-TryExec=bdreader
-Exec=bdreader %u
+TryExec=ClaudeReader
+Exec=ClaudeReader %u
 Terminal=false
 Type=Application
 MimeType=application/pdf;application/x-rar;application/zip;application/x-7z-compressed;
-Icon=bdreader
+Icon=claudereader
 Categories=Graphics;Viewer;GNOME;
 

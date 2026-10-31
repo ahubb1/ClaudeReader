@@ -18,11 +18,10 @@
 //    along with BDReader. If not, see <http://www.gnu.org/licenses/>.
 //
 //---------------------------------------------------------------------------
+#include <FL/fl_utf8.h>
+#include <FL/filename.H>
 #include "Document_archive.h"
 
-//Initialize the list of supported formats
-const int NbSupportedImgExtensions=22;
-string SupportedImgExtensions[NbSupportedImgExtensions] = {".jpg", ".JPG", ".jpeg", ".JPEG", ".jpe", ".JPE", ".jp2", ".JP2", ".tiff", ".TIFF", ".tif", ".TIF", ".png", ".PNG", ".bmp", ".BMP", ".pbm", ".PBM", ".ppm", ".PPM", ".pgm", ".PGM"};
 
 
 //-----------------------Archive specific function---------------------
@@ -57,7 +56,14 @@ int Document_archive::Open()
 	Arch = archive_read_new();
 	archive_read_support_filter_all(Arch);
 	archive_read_support_format_all(Arch);
-	if (archive_read_open_filename(Arch, Filename, 2048) != ARCHIVE_OK)
+	#ifdef _WIN32
+	//Wide char version: the narrow one uses the ANSI code page, not UTF-8
+	wchar_t wFilename[FL_PATH_MAX];
+	fl_utf8towc(Filename, strlen(Filename), wFilename, FL_PATH_MAX);
+	if (archive_read_open_filename_w(Arch, wFilename, 10240) != ARCHIVE_OK)
+	#else
+	if (archive_read_open_filename(Arch, Filename, 10240) != ARCHIVE_OK)
+	#endif
         return -1;
     else
         return 0;
@@ -87,17 +93,7 @@ void Document_archive::Order()
 		if(size>0)
 		{
             //Then check if it's a supported image format (by extension)
-            bool SupportedFormat=false;
-            for(int k=0; k<NbSupportedImgExtensions; k++)
-            {
-                //Try to find each possible extension in the filename
-                if(buff_s.find(SupportedImgExtensions[k], buff_s.length()-5)!=string::npos)
-                {
-                    //This is a supported file extension, so break and say it's a valid image
-                    SupportedFormat=true;
-                    break;
-                }
-            }
+            bool SupportedFormat=IsPageImage(buff_s);
 
             //if image format ok, add it to the list
             if(SupportedFormat)
@@ -122,7 +118,7 @@ void Document_archive::Order()
 Page_archive *Document_archive::CreatePage(int pagenb)
 {
     Page_archive *page;
-    page=new Page_archive(pagenb, NbPages, ReadingMode, PagePreview, DisplayRatio, Rotation, ContrastEnhancement, Arch, Entry, ImgNames[pagenb-1].nb);
+    page=new Page_archive(pagenb, NbPages, ReadingMode, PagePreview, DisplayRatio, Rotation, ContrastEnhancement, RightToLeft, Arch, Entry, ImgNames[pagenb-1].nb);
     //If page creation have failed try re-open the document and re-try the page creation
     if(page->HasLoadingFailed())
     {
@@ -132,7 +128,7 @@ Page_archive *Document_archive::CreatePage(int pagenb)
         delete page;
         archive_read_close(Arch);
         Open();
-        page=new Page_archive(pagenb, NbPages, ReadingMode, PagePreview, DisplayRatio, Rotation, ContrastEnhancement, Arch, Entry, ImgNames[pagenb-1].nb);
+        page=new Page_archive(pagenb, NbPages, ReadingMode, PagePreview, DisplayRatio, Rotation, ContrastEnhancement, RightToLeft, Arch, Entry, ImgNames[pagenb-1].nb);
     }
     return page;
 }

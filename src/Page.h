@@ -30,15 +30,35 @@
 #ifndef PAGE_H
 #define PAGE_H
 
+#ifdef _WIN32
+    #include <windows.h> //Before the "using namespace": avoid std::byte and cv::ACCESS_MASK conflicts
+#endif
 #include <FL/Fl.H>          //For fl::wait
-#include <stlplus3/ntree.hpp>
-#include <opencv2/core/core.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/core.hpp>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/imgcodecs.hpp>
+#if CV_VERSION_MAJOR >= 5
+    #include <opencv2/geometry.hpp> //findContours, boundingRect
+#endif
+#include <vector>
+#include <string>
+#include <algorithm>
 
 using namespace cv;
-using namespace stlplus;
+using namespace std;
 
+//! Node of the tree used to order the cases of a page (see Page::DetectionOrganize)
+struct CaseNode
+{
+    Rect rect;
+    int parent;             //!< Index of the parent node, -1 for the root
+    vector<int> children;   //!< Indexes of the children nodes, ordered
+};
+typedef vector<CaseNode> CasesTree;
+
+
+//! Pages larger than this (pixels) are reduced for the panels detection (memory)
+#define DETECTION_MAX_PIXELS 12000000
 
 enum READINGMODE { PAGE, STRIP, CASE };
 
@@ -47,7 +67,7 @@ enum READINGMODE { PAGE, STRIP, CASE };
 class Page
 {
     public:
-        Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, float display_ratio, int rotation=0, bool contrast=false);
+        Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, float display_ratio, int rotation=0, bool contrast=false, bool rtl=false);
         ~Page();
 
         void LoadErrorPage();
@@ -73,12 +93,13 @@ class Page
         void SetReadingMode(READINGMODE val) {ReadingMode=val;}
         bool HasLoadingFailed() {return Failed;}
         bool HasDetectionFailed() {return DetectionFailed;}
+        void SetRightToLeft(bool val) {RightToLeft=val;}
         bool IsLoaded() {return Loaded;}
         void SetDisplayRatio(float val) {DisplayRatio=val;};
 
     private:
         void DetectionDetect(vector<Rect> *CasesTmp, Mat* src);
-        bool DetectionCheck(vector<Rect> *CasesTmp, Mat* src, int nbdetections);
+        bool DetectionCheck(vector<Rect> *CasesTmp, Mat* src, int nbdetections, const Mat &gray);
         bool DetectionOrganize(vector<Rect> *CasesTmp, Mat* src);
         void DetectionStripCutting();
 
@@ -98,6 +119,7 @@ class Page
         float DisplayRatio;
         unsigned int Rotation;
         bool ContrastEnhancement;
+        bool RightToLeft;           //!< Manga: panels read from right to left
 
         Mat PageRenderCv;
         Mat ImgRender;

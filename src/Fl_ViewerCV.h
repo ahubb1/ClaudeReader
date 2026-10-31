@@ -35,23 +35,22 @@ http://derindelimavi.blogspot.com/ bluekid70@gmail.com
 #ifndef Fl_ViewerCV_H
 #define Fl_ViewerCV_H
 
+#ifdef _WIN32
+    #include <windows.h> //Before the "using namespace": avoid cv::ACCESS_MASK conflict
+#endif
 #include <FL/Fl.H>
 #include <FL/fl_draw.H>
 #include <FL/Fl_Widget.H>
 #include <FL/fl_ask.H>
-#include <opencv2/core/core.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/core.hpp>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/imgcodecs.hpp>
 
 
 using namespace cv;
 
 
-IplImage *fl_LoadImage(char*filename,int iscolor);
-bool fl_SaveImage(char*filename,IplImage *image);
 
-//Convert the fltk mouse event into opencv ones (to be able to use open cv callback functions and events)
-int fl_event2cv_event(int fl_event);
 
 
 //! A widget displaying an image in OpenCv format (or a portion of it) and managing user interaction.
@@ -72,11 +71,6 @@ class FL_EXPORT Fl_ViewerCV : public Fl_Widget
         void resize(int x, int y, int ww, int hh);
 
         void SetHandleKeys(bool val){HandleKeys=val;}
-        void SetCVMouseCallback(CvMouseCallback on_mouse, void * param=0)
-        {
-          mouse_cb=on_mouse;
-          CVcb_param=param;
-        }
 
         friend void ResizingTimer_cb(void *flopencv);
         void SetResizing_cb(void (*cb)(Fl_Widget*, void *), void * param=NULL)
@@ -138,8 +132,6 @@ class FL_EXPORT Fl_ViewerCV : public Fl_Widget
         void *OnClick_cb_param;
         void (*OnRelease_cb)(Fl_Widget *, void *);
         void *OnRelease_cb_param;
-        CvMouseCallback mouse_cb;
-        void *CVcb_param;
         bool Resizing;
 
         Rect DisplayRect;

@@ -19,17 +19,21 @@
 //
 //---------------------------------------------------------------------------
 #include "Fl_Overlay_Arrow_Button.h"
-
+#include <FL/Fl_Group.H>
+#include <string>
+#include <algorithm>
 
 int Fl_Overlay_Arrow_Button::handle(int event)
 {
     int ret=0;
     if((Fl::belowmouse()==this && event==FL_MOVE) || event==FL_ENTER)
     {
-        //Make visible
-        is_visible=true;
-        //and redraw
-        redraw();
+        //Make visible (redraw only when appearing: the drawing is translucent)
+        if(!is_visible)
+        {
+            is_visible=true;
+            redraw();
+        }
         //The event has been handled
         ret=1;
     }
@@ -50,116 +54,58 @@ int Fl_Overlay_Arrow_Button::handle(int event)
         }
     }
 
+    //Pressed state is drawn differently: redraw what is under the button first
+    if((event==FL_PUSH || event==FL_RELEASE) && parent())
+        parent()->damage(FL_DAMAGE_ALL, x(), y(), w(), h());
+
     //Call the classical button callback event handler (return non zero if the event has been handled)
     int ret2 = Fl_Button::handle(event);
     if(ret2!=0)
         return ret2;
-
     return ret;
 }
 
+//! Chevron pointing in the button direction (r: 0 right, 180 left, 90 up, -90 down) in a translucent dark circle
+void Fl_Overlay_Arrow_Button::BuildIcons(int size)
+{
+    delete Icon;
+    delete IconPressed;
+    IconSize=size;
+
+    //SVG rotation is clockwise, FLTK one is counter-clockwise
+    char rotation[32];
+    snprintf(rotation, sizeof(rotation), "rotate(%d 20 20)", (int)-r);
+
+    for(int pressed=0; pressed<2; pressed++)
+    {
+        std::string svg="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'>";
+        svg+=pressed ? "<circle cx='20' cy='20' r='19' fill='#0078d4' fill-opacity='0.9'/>"
+                     : "<circle cx='20' cy='20' r='19' fill='#181818' fill-opacity='0.78' stroke='#ffffff' stroke-opacity='0.14' stroke-width='1'/>";
+        svg+="<path d='M17 12.5l7.5 7.5-7.5 7.5' fill='none' stroke='#e7e7e7' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round' transform='";
+        svg+=rotation;
+        svg+="'/></svg>";
+        Fl_SVG_Image *img=new Fl_SVG_Image(NULL, svg.c_str());
+        img->resize(size, size);
+        if(pressed)
+            IconPressed=img;
+        else
+            Icon=img;
+    }
+}
 
 void Fl_Overlay_Arrow_Button::draw()
 {
     //Draw only if really visible: if the mouse is above
-    if(is_visible)
-    {
-        //"Semi transparent" background color: fake transparency diplaying some pixels of the background color
-        if(color()!=FL_TRANS)
-        {
-            fl_color(color());
-            for(int i=0; i<w();i+=2)
-            {
-                for(int j=0; j<h(); j+=4)
-                {
-                    fl_point(x()+i, y()+j);
-                    fl_point(1+x()+i, y()+j+2);
-                }
-            }
-        }
+    if(!is_visible)
+        return;
 
-        //Draw the arrow
-        //Transformation matrix (for rotation)
-        fl_push_matrix();
-            //Apply the rotation
-            fl_translate(x()+w()/2., y()+h()/2.);//go to the center
-            fl_rotate(r);//rotate
-            fl_translate(-x()-w()/2., -y()-h()/2.);//go back
+    //Circle size fitted to the button (the buttons are thin strips along the display borders)
+    int size=std::min(44, std::min(w(), h())-6);
+    if(size<12)
+        return;
+    if(size!=IconSize)
+        BuildIcons(size);
 
-            //Compute the arrow coordinates and dimensions
-            int signha=1, signwa=1;
-            //Apply an horizontal symetrie to the arrow (=>the arrow way)
-            if( (r>90 && r<=180) || (r<=-90 && r>=-180) )
-            {
-                signwa=-1;
-            }
-            int realwa=signwa*fl_transform_dx(w()*(float)w_a, h()*(float)h_a);
-            int realha=signha*fl_transform_dy(w()*(float)w_a, h()*(float)h_a);
-            int realxa=x()+0.5*(w()-realwa);
-            int realya=y()+0.5*(h()-realha);
-
-            //inside
-            if(labelcolor()!=FL_TRANS)
-            {
-                fl_color(labelcolor());
-                fl_begin_complex_polygon(); //(complex polygon is needed instead of simple polygon since, depending on signwa, the shape can be not convex)
-                    //Draw the arrow according to the style choosen
-                    switch(style)
-                    {
-                        case 1:
-                            fl_vertex(realxa, realya);
-                            fl_vertex(realxa+realwa, realya+realha/2.);
-                            fl_vertex(realxa, realya+realha);
-                            fl_vertex(realxa+realwa*0.3, realya+realha/2.);
-                            break;
-
-                        case 2:
-                            fl_curve(realxa, realya, 0.6*realxa+ 0.4*(realxa+realwa), 0.75*realya+0.25*(realya+realha/2.), 0.25*realxa+0.75*(realxa+realwa), 0.3*realya+0.7*(realya+realha/2.), realxa+realwa, realya+realha/2.);
-                            fl_curve(realxa+realwa, realya+realha/2., 0.25*realxa+0.75*(realxa+realwa), 0.3*(realya+realha)+0.7*(realya+realha/2.), 0.6*realxa+0.4*(realxa+realwa), 0.75*(realya+realha)+0.25*(realya+realha/2.), realxa, realya+realha);
-                            fl_curve(realxa, realya+realha, 0.6*realxa+ 0.4*(realxa+realwa), realya+0.5*realha, 0.6*realxa+ 0.4*(realxa+realwa), realya+0.5*realha, realxa, realya);
-                            break;
-
-                        //O is the default one
-                        default:
-                            fl_vertex(realxa, realya);
-                            fl_vertex(realxa+realwa, realya+realha/2.);
-                            fl_vertex(realxa, realya+realha);
-                            break;
-                    }
-                fl_end_complex_polygon();
-            }
-            //line
-            if(selection_color()!=FL_TRANS)
-            {
-                fl_color(selection_color());
-                fl_line_style(0, 2, 0);
-                fl_begin_loop();
-                    //Draw the arrow according to the style choosen
-                    switch(style)
-                    {
-                        case 1:
-                            fl_vertex(realxa, realya);
-                            fl_vertex(realxa+realwa, realya+realha/2.);
-                            fl_vertex(realxa, realya+realha);
-                            fl_vertex(realxa+realwa*0.3, realya+realha/2.);
-                            break;
-
-                        case 2:
-                            fl_curve(realxa, realya, 0.6*realxa+ 0.4*(realxa+realwa), 0.75*realya+0.25*(realya+realha/2.), 0.25*realxa+0.75*(realxa+realwa), 0.3*realya+0.7*(realya+realha/2.), realxa+realwa, realya+realha/2.);
-                            fl_curve(realxa+realwa, realya+realha/2., 0.25*realxa+0.75*(realxa+realwa), 0.3*(realya+realha)+0.7*(realya+realha/2.), 0.6*realxa+0.4*(realxa+realwa), 0.75*(realya+realha)+0.25*(realya+realha/2.), realxa, realya+realha);
-                            fl_curve(realxa, realya+realha, 0.6*realxa+ 0.4*(realxa+realwa), realya+0.5*realha, 0.6*realxa+ 0.4*(realxa+realwa), realya+0.5*realha, realxa, realya);
-                            break;
-
-                        //O is the default one
-                        default:
-                            fl_vertex(realxa, realya);
-                            fl_vertex(realxa+realwa, realya+realha/2.);
-                            fl_vertex(realxa, realya+realha);
-                            break;
-                    }
-                fl_end_loop();
-                fl_line_style(0);
-            }
-        fl_pop_matrix();
-    }
+    Fl_SVG_Image *img=value() ? IconPressed : Icon;
+    img->draw(x()+(w()-size)/2, y()+(h()-size)/2);
 }

@@ -31,9 +31,6 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#ifndef __WINDOWS__
-    #include <X11/xpm.h> //To load icon xpm image
-#endif
 #include <FL/Fl.H>
 #include <FL/Fl_Window.H>
 #include <FL/Fl_Menu_Bar.H>
@@ -42,9 +39,14 @@
 #include <FL/Fl_Pack.H>
 #include <FL/Fl_Progress.H>
 #include <FL/Fl_Counter.H>
+#include <FL/Fl_Check_Button.H>
 
 
 #include "Fl_Books_Library.h"
+#include "Theme.h"
+#include "StoreView.h"
+#include "EndPage.h"
+#include "SettingsView.h"
 #include "Fl_Help_Window.h"
 #include "Fl_ViewerCV.h"
 #include "Fl_Overlay_Arrow_Button.h"
@@ -56,11 +58,9 @@
 #include "Export_Document.h"
 
 //Icon
-#ifndef __WINDOWS__
-    #include "Icon2_48.xpm"
-#else
-    #include "WinRC.h"
-#endif
+#include <FL/Fl_Pixmap.H>
+#include <FL/Fl_RGB_Image.H>
+#include "Icon2_48.xpm"
 
 
 void Fullscreen_cb(Fl_Widget* widget, void * param);
@@ -87,16 +87,32 @@ class MainWindow
 
         //File menu
         friend void Library_cb(Fl_Widget* widget, void * param);
+        friend void ToggleLibrary_cb(Fl_Widget* widget, void * param);
+        friend void LibraryView_cb(Fl_Widget* widget, void * param);
+        friend void ReaderView_cb(Fl_Widget* widget, void * param);
+        friend void ActivityMenu_cb(Fl_Widget* widget, void * param);
+        friend void CreateLibrary(MainWindow *mw);
+        friend void ShowLibrary(MainWindow *mw);
+        friend void ShowReader(MainWindow *mw);
+        friend void ShowStore(MainWindow *mw);
+        friend void ShowSettings(MainWindow *mw);
+        friend void SettingsView_cb(Fl_Widget* widget, void * param);
+        friend void StoreView_cb(Fl_Widget* widget, void * param);
+        friend void UpdateActivityBar(MainWindow *mw);
+        friend void UpdateWindowTitle(MainWindow *mw);
         friend void Open_cb(Fl_Widget* widget, void * param);
         friend void Close_cb(Fl_Widget* widget, void * param);
         friend void Quit_cb(Fl_Widget* widget, void * param);
-        friend void SuggestNextFile(void *param);
+        friend void ShowEndPage(MainWindow *mw);
+        friend void HideEndPage(MainWindow *mw);
 
         //View menu
         friend void Fullscreen_cb(Fl_Widget* widget, void * param);
         friend void PageMode_cb(Fl_Widget* widget, void * param);
         friend void StripMode_cb(Fl_Widget* widget, void * param);
         friend void CaseMode_cb(Fl_Widget* widget, void * param);
+        friend void MangaMode_cb(Fl_Widget* widget, void * param);
+        friend void ApplyReadingDirection(MainWindow *mw, bool rtl);
         friend void PagePreview_cb(Fl_Widget* widget, void * param);
         friend void Thumbnails_cb(Fl_Widget* widget, void * param);
         friend void MaxZoom_cb(Fl_Widget* widget, void * param);
@@ -138,6 +154,15 @@ class MainWindow
             Fl_Menu_Bar *MenuBar;
             Fl_Group *StatusBarGrp;
             Fl_Box *StatusBar, *StatusBarZoom;
+            Fl_Box *StatusBadge;             //!< Accent box at the left of the status bar
+            Fl_Group *ActivityBar;           //!< Icons bar on the left (views and main actions)
+            Fl_Activity_Button *LibraryButton, *StoreButton, *ReaderButton, *OpenButton, *PagesButton, *MangaButton, *FullscreenButton, *HelpButton, *SettingsButton;
+            Fl_Box *WelcomeBox;              //!< Hint displayed when there is neither a document nor a library
+            Fl_Store_View *Store;            //!< Comics and manga stores (sources scripts)
+            Fl_End_Page *EndPage;            //!< Shown after the last page: what to read next
+            Fl_Settings_View *Settings;      //!< Tags, library folder, store cache
+            std::string EndPageNext;         //!< Comic suggested by the end page
+            bool LibraryDirty;               //!< Chapters downloaded: the library must be scanned again
             Fl_Group *MainDisplayGrp, *ThumbDisplayGrp, *DisplayGrp;
             Fl_ViewerCV *Display, *ThumbDisplayCurrent, *ThumbDisplayPrev, *ThumbDisplayNext;
             Fl_Button *PrevCloseButton;
@@ -148,9 +173,6 @@ class MainWindow
             Fl_Books_Library *Library;
             //#endif
 
-         #ifndef __WINDOWS__
-            Pixmap icon_pix;
-         #endif
 
         //Other param
             char ExePath[FL_PATH_MAX];     //!< Executable path, used to store preferences file on Windows

@@ -20,9 +20,6 @@
 //---------------------------------------------------------------------------
 #include "Document_folder.h"
 
-//Initialize the list of supported formats
-const int NbSupportedFolderImgExtensions=22;
-string SupportedFolderImgExtensions[NbSupportedFolderImgExtensions] = {".jpg", ".JPG", ".jpeg", ".JPEG", ".jpe", ".JPE", ".jp2", ".JP2", ".tiff", ".TIFF", ".tif", ".TIF", ".png", ".PNG", ".bmp", ".BMP", ".pbm", ".PBM", ".ppm", ".PPM", ".pgm", ".PGM"};
 
 //! Image folder document constructor.
 //!First call the default Document constructor and then open and close the folder (to retrieve number of pages and get the pages order).
@@ -77,17 +74,7 @@ void Document_folder::Order()
 
 
         //Check if it's a supported image format (by extension)
-            bool SupportedFormat=false;
-            for(int k=0; k<NbSupportedFolderImgExtensions; k++)
-            {
-                //Try to find each possible extension in the filename
-                if(currentFilename.find(SupportedFolderImgExtensions[k], currentFilename.length()-5)!=string::npos)
-                {
-                    //This is a supported file extension, so break and say it's a valid image
-                    SupportedFormat=true;
-                    break;
-                }
-            }
+        bool SupportedFormat=IsPageImage(currentFilename);
 
         //if image format ok, add it to the list
         if(SupportedFormat)
@@ -114,5 +101,5 @@ void Document_folder::Order()
 //! Create a new Page_folder.
 Page_folder *Document_folder::CreatePage(int pagenb)
 {
-    return new Page_folder(pagenb, NbPages, ReadingMode, PagePreview, DisplayRatio, Rotation, ContrastEnhancement, ImgNames[pagenb-1]);
+    return new Page_folder(pagenb, NbPages, ReadingMode, PagePreview, DisplayRatio, Rotation, ContrastEnhancement, RightToLeft, ImgNames[pagenb-1]);
 }

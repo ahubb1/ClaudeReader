@@ -1,5 +1,41 @@
-BDReader - An e-comics reader
+ClaudeReader - A comics and manga reader
 
-See http://bdreader.sourceforge.net/ for more information.
+Based on BDReader, Vincent Crocher 2014-2016 (http://bdreader.sourceforge.net/), GPLv3 or later.
 
-Vincent Crocher 2014-2016
+Features: automatic panel detection (read a page panel by panel), strip and
+page modes, manga mode (right to left), comics library with thumbnails,
+resume where you left off, and a store to search and download comics and manga
+(MangaDex, Mangapill, Nyaa, and your own Lua store scripts). Opens PDF, EPUB, XPS, FB2, MOBI, CBZ, CBR, CB7, CBT,
+ZIP, RAR, 7Z, TAR and image folders.
+
+Building
+--------
+Dependencies: a C++17 compiler, CMake >= 3.20, FLTK 1.4, OpenCV (core, imgproc,
+imgcodecs; geometry for OpenCV 5), MuPDF, libarchive, libcurl, gumbo and Lua 5.4+
+(static library).
+
+Windows (MSYS2, https://www.msys2.org):
+    pacman -S mingw-w64-ucrt-x86_64-toolchain mingw-w64-ucrt-x86_64-cmake \
+              mingw-w64-ucrt-x86_64-ninja mingw-w64-ucrt-x86_64-pkgconf \
+              mingw-w64-ucrt-x86_64-fltk mingw-w64-ucrt-x86_64-opencv \
+              mingw-w64-ucrt-x86_64-mupdf mingw-w64-ucrt-x86_64-libarchive \
+              mingw-w64-ucrt-x86_64-curl mingw-w64-ucrt-x86_64-gumbo-parser mingw-w64-ucrt-x86_64-lua
+    ./build.sh
+The build/ folder then contains ClaudeReader.exe and every DLL it needs.
+Single exe without DLLs (what the release ships): build a static OpenCV once, then
+    deps/build-opencv.sh
+    ./build.sh --static
+and take build-static/ClaudeReader.exe.
+
+Linux:
+    cmake -S . -B build && cmake --build build && sudo cmake --install build
+
+Command line export (one image per panel), e.g. for a manga:
+    ClaudeReader -r -e Comics.cbz ./Exported/ .jpg
+
+Store from the command line:
+    ClaudeReader --store list
+    ClaudeReader --store mangadex search "yotsuba"
+    ClaudeReader --store mangadex chapters <manga id>
+    ClaudeReader --store mangadex download <manga id> <chapter id> cbz <library folder>
+Writing a store: see README.txt in %APPDATA%\ClaudeReader\sources (created on first use).

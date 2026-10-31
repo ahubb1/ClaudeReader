@@ -119,33 +119,25 @@ void SortAndMerge(vector<Rect> *CasesTmp, int counter)
         //Order them by area (smallest to largest)
         sort(CasesTmp->begin(), CasesTmp->end(), isSmaller);
 
-        //Merge them when necessary
-        std::vector<Rect>::iterator current=CasesTmp->end();
-        int currentIdx=0;
-        while(current>=CasesTmp->begin())
+        //Merge them when necessary: from the largest one, absorb the smaller ones mostly inside it
+        //(indexes: the former iterators were dereferencing end() and going before begin())
+        for(int current=(int)CasesTmp->size()-1; current>=0; current--)
         {
-            /*Give time to FLTK
-            Fl::check();*/
-
-            current=CasesTmp->end()-currentIdx;
-            std::vector<Rect>::iterator i=current-1;
-            while(i>=CasesTmp->begin())
+            for(int i=current-1; i>=0; i--)
             {
-                if(isIn(*i, *current) && (*i)!=(*current))
+                if(isIn((*CasesTmp)[i], (*CasesTmp)[current]) && (*CasesTmp)[i]!=(*CasesTmp)[current])
                 {
-                    Merge(&(*current), *i);
-                    i=CasesTmp->erase(i);
+                    Merge(&(*CasesTmp)[current], (*CasesTmp)[i]);
+                    CasesTmp->erase(CasesTmp->begin()+i);
+                    current--; //The current case moved down one place
                     //Not too much...
                     if(counter<5)
                     {
                         SortAndMerge(CasesTmp, counter);
                         return;
                     }
-                    //i--;
                 }
-                i--;
             }
-            currentIdx++;
         }
 
         //Re-order them by area (smallest to largest)=>their sizes could have changed due to merging
@@ -153,13 +145,116 @@ void SortAndMerge(vector<Rect> *CasesTmp, int counter)
     }
 }
 
+//! Next node of the tree in prefix (depth-first) order: first child if any, next sibling otherwise, next sibling of an ancestor otherwise.
+//! \return the index of the next node or -1 when the end of the tree is reached
+int NextPrefixNode(const CasesTree &tree, int node)
+{
+    if(!tree[node].children.empty())
+        return tree[node].children[0];
+
+    while(tree[node].parent>=0)
+    {
+        const vector<int> &siblings=tree[tree[node].parent].children;
+        vector<int>::const_iterator it=find(siblings.begin(), siblings.end(), node);
+        if(it+1!=siblings.end())
+            return *(it+1);
+        node=tree[node].parent;
+    }
+    return -1;
+}
+
 //---------------------------------------------------------------------------
 
 
 
+//! Split panels into groups separated by a gutter running across all of them.
+//! \param horizontalGutters: true to cut along horizontal gutters (groups are tiers, top to bottom),
+//! false to cut along vertical gutters (groups are columns, left to right)
+//! \param tolerance: overlap (pixels) still accepted as a gutter, detected panels can slightly overlap
+vector< vector<Rect> > CutPanels(const vector<Rect> &panels, bool horizontalGutters, int tolerance)
+{
+    vector<Rect> sorted(panels);
+    if(horizontalGutters)
+        sort(sorted.begin(), sorted.end(), [](const Rect &a, const Rect &b){ return a.y<b.y; });
+    else
+        sort(sorted.begin(), sorted.end(), [](const Rect &a, const Rect &b){ return a.x<b.x; });
+
+    vector< vector<Rect> > groups(1);
+    int groupEnd=0; //Lowest bottom (or rightmost right) of the current group
+    for(unsigned int i = 0; i < sorted.size(); i++ )
+    {
+        int start=horizontalGutters ? sorted[i].y : sorted[i].x;
+        int end=horizontalGutters ? sorted[i].br().y : sorted[i].br().x;
+        //Starts after everything of the current group: there is a gutter in between
+        if(!groups.back().empty() && start>=groupEnd-tolerance)
+            groups.push_back(vector<Rect>());
+        groupEnd=groups.back().empty() ? end : max(groupEnd, end);
+        groups.back().push_back(sorted[i]);
+    }
+    return groups;
+}
+
+//! Order panels in reading order with a recursive XY-cut: tiers from top to bottom, then
+//!inside a tier blocks from right to left (manga) or left to right, then again inside each block.
+//!So a stack of panels next to a tall one is read from top to bottom before crossing the gutter.
+void OrderPanels(const vector<Rect> &panels, bool rightToLeft, int toleranceX, int toleranceY, vector<Rect> *ordered)
+{
+    if(panels.size()<2)
+    {
+        ordered->insert(ordered->end(), panels.begin(), panels.end());
+        return;
+    }
+
+    //Tiers first, read from top to bottom
+    vector< vector<Rect> > groups=CutPanels(panels, true, toleranceY);
+    if(groups.size()<2)
+    {
+        //Then blocks separated by a vertical gutter, from the reading side
+        groups=CutPanels(panels, false, toleranceX);
+        if(rightToLeft)
+            reverse(groups.begin(), groups.end());
+
+        //Neighbour blocks sharing a horizontal gutter form rows (a grid): keep them together to read row by row
+        vector< vector<Rect> > blocks;
+        for(unsigned int i = 0; i < groups.size(); i++ )
+        {
+            if(!blocks.empty())
+            {
+                vector<Rect> merged(blocks.back());
+                merged.insert(merged.end(), groups[i].begin(), groups[i].end());
+                if(CutPanels(merged, true, toleranceY).size()>1)
+                {
+                    blocks.back()=merged;
+                    continue;
+                }
+            }
+            blocks.push_back(groups[i]);
+        }
+        groups=blocks;
+    }
+
+    if(groups.size()>1)
+    {
+        for(unsigned int i = 0; i < groups.size(); i++ )
+            OrderPanels(groups[i], rightToLeft, toleranceX, toleranceY, ordered);
+        return;
+    }
+
+    //No gutter crossing the whole group (overlapping layout): top first, then from the reading side
+    vector<Rect> sorted(panels);
+    int rowHeight=max(1, 2*toleranceY); //Tops in the same band are considered on the same row
+    sort(sorted.begin(), sorted.end(), [rightToLeft, rowHeight](const Rect &a, const Rect &b)
+    {
+        if(a.y/rowHeight!=b.y/rowHeight)
+            return a.y<b.y;
+        return rightToLeft ? a.br().x>b.br().x : a.x<b.x;
+    });
+    ordered->insert(ordered->end(), sorted.begin(), sorted.end());
+}
+
 //! Virtual constructor of the page
 /**Initialize values common to all page types.*/
-Page::Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, float display_ratio, int rotation, bool contrast):
+Page::Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, float display_ratio, int rotation, bool contrast, bool rtl):
     Failed(false), //Not failed yet...
     Loaded(false),
     DetectionFailed(false),
@@ -170,7 +265,8 @@ Page::Page(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, float di
     PageNb(page_nb),
     NbPages(nb_pages),
     Rotation(rotation),
-    ContrastEnhancement(contrast)
+    ContrastEnhancement(contrast),
+    RightToLeft(rtl)
 {
     //Init
     if(ReadingMode!=PAGE && !PreviewPage)
@@ -202,9 +298,9 @@ Page::~Page()
 void Page::LoadErrorPage()
 {
     //Display a red-cross image
-    PageRenderCv = Mat(200, 200, CV_8UC3, cvScalar(255,255,255));
-    line(PageRenderCv, cvPoint(0, 0), cvPoint(199, 199), cvScalar(0,0,255), 2);
-    line(PageRenderCv, cvPoint(199, 0), cvPoint(0, 199), cvScalar(0,0,255), 2);
+    PageRenderCv = Mat(200, 200, CV_8UC3, Scalar(255,255,255));
+    line(PageRenderCv, Point(0, 0), Point(199, 199), Scalar(0,0,255), 2);
+    line(PageRenderCv, Point(199, 0), Point(0, 199), Scalar(0,0,255), 2);
 }
 
 
@@ -234,8 +330,17 @@ void Page::DetectCases()
         vector<Rect> CasesTmp;
         //Binary image
         Mat srcG, src;
+        //Very large pages (long strips...) are analysed reduced: the detection works on several copies of the page
+        double detectScale=1.;
+        Mat detectImage=PageRenderCv;
+        if(PageRenderCv.total()>DETECTION_MAX_PIXELS)
+        {
+            detectScale=sqrt(DETECTION_MAX_PIXELS/(double)PageRenderCv.total());
+            resize(PageRenderCv, detectImage, Size(), detectScale, detectScale, INTER_AREA);
+        }
         //To gray level first
-        cvtColor(PageRenderCv, srcG, CV_BGR2GRAY);
+        cvtColor(detectImage, srcG, COLOR_BGR2GRAY);
+        detectImage.release();
         //Try the detection several times (if it's failed) with a different range of "white" detection
         bool detectionFailed=true;
         int nbdetections=0;
@@ -260,7 +365,7 @@ void Page::DetectCases()
             Fl::check();*/
 
             /*-------------------------------------------CHECK-----------------------------------------------------------*/
-            detectionFailed=DetectionCheck(&CasesTmp, &src, nbdetections);
+            detectionFailed=DetectionCheck(&CasesTmp, &src, nbdetections, srcG);
             /*-----------------------------------------------------------------------------------------------------------*/
 
             nbdetections+=5;
@@ -282,6 +387,15 @@ void Page::DetectCases()
             /*----------------------------------------------ORGANIZE-----------------------------------------------------*/
             DetectionFailed=DetectionOrganize(&CasesTmp, &src);
             /*-----------------------------------------------------------------------------------------------------------*/
+
+            //Back to the page size if it was reduced
+            if(!DetectionFailed && detectScale!=1.)
+            {
+                Rect page(0, 0, PageRenderCv.cols, PageRenderCv.rows);
+                for(unsigned int i = 0; i < Cases.size(); i++ )
+                    Cases[i]=Rect(cvFloor(Cases[i].x/detectScale), cvFloor(Cases[i].y/detectScale), cvCeil(Cases[i].width/detectScale), cvCeil(Cases[i].height/detectScale)) & page;
+                WithinRect=Rect(cvFloor(WithinRect.x/detectScale), cvFloor(WithinRect.y/detectScale), cvCeil(WithinRect.width/detectScale), cvCeil(WithinRect.height/detectScale)) & page;
+            }
         }
 
         //Release some memory
@@ -322,7 +436,7 @@ void Page::DetectionDetect(vector<Rect> *CasesTmp, Mat* src)
     //Contours detection
     vector<vector <Point> > contours;
     vector<Vec4i> hierarchy;
-    findContours(*src, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE );
+    findContours(*src, contours, hierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE );
 
     //Rectangle bounding box for each contour found
     for( int i = contours.size()-1; i >-1; i-- )
@@ -397,7 +511,7 @@ void Page::DetectionDetect(vector<Rect> *CasesTmp, Mat* src)
 \param src: An OpenCv Mat containing the binarized image
 \return true if the detection has failed (parts NOT covered)
 \return false if the detection succeed*/
-bool Page::DetectionCheck(vector<Rect> *CasesTmp, Mat* src, int nbdetections)
+bool Page::DetectionCheck(vector<Rect> *CasesTmp, Mat* src, int nbdetections, const Mat &gray)
 {
     //If covered by only one case (not likely to happen since too large cases have been removed)
     if(CasesTmp->size()<2)
@@ -413,8 +527,8 @@ bool Page::DetectionCheck(vector<Rect> *CasesTmp, Mat* src, int nbdetections)
 
     //Compute the "within area": the extreme total area covered by the detected cases and sum the actual cases areas
     Mat testCoveredArea; //Image representing the covered area in white
-    cvtColor(PageRenderCv, testCoveredArea, CV_BGR2GRAY);
-    rectangle(testCoveredArea, (*CasesTmp)[0], cvScalar(255), -1);
+    gray.copyTo(testCoveredArea); //The page in gray levels, at the detection size
+    rectangle(testCoveredArea, (*CasesTmp)[0], Scalar(255), -1);
     Rect withinRect((*CasesTmp)[0]); //Initilaize as the first case
     int coveredArea=(*CasesTmp)[0].width*(*CasesTmp)[0].height;
     for(unsigned int i = 1; i < CasesTmp->size(); i++ )
@@ -424,7 +538,7 @@ bool Page::DetectionCheck(vector<Rect> *CasesTmp, Mat* src, int nbdetections)
         //sum the cases area
         coveredArea+=(*CasesTmp)[i].width*(*CasesTmp)[i].height;
         //paint each case space in white (255)
-        rectangle(testCoveredArea, (*CasesTmp)[i], cvScalar(255), -1);
+        rectangle(testCoveredArea, (*CasesTmp)[i], Scalar(255), -1);
     }
 
     //If covered area is small (<65% of page), check if the total non-covered area is almost white
@@ -447,10 +561,10 @@ bool Page::DetectionCheck(vector<Rect> *CasesTmp, Mat* src, int nbdetections)
     }
 
     //Then paint the page "contour" (area outside the withinRect) in white (0)
-    rectangle(testCoveredArea, Rect(0, 0, withinRect.x, src->rows), cvScalar(255), -1);//left band
-    rectangle(testCoveredArea, Rect(withinRect.x+withinRect.width, 0, src->cols-(withinRect.x+withinRect.width), src->rows), cvScalar(255), -1);//right band
-    rectangle(testCoveredArea, Rect(0, 0, src->cols, withinRect.y), cvScalar(255), -1);//top band
-    rectangle(testCoveredArea, Rect(0, withinRect.y+withinRect.height, src->cols, src->rows-(withinRect.y+withinRect.height)), cvScalar(255), -1);//bottom band
+    rectangle(testCoveredArea, Rect(0, 0, withinRect.x, src->rows), Scalar(255), -1);//left band
+    rectangle(testCoveredArea, Rect(withinRect.x+withinRect.width, 0, src->cols-(withinRect.x+withinRect.width), src->rows), Scalar(255), -1);//right band
+    rectangle(testCoveredArea, Rect(0, 0, src->cols, withinRect.y), Scalar(255), -1);//top band
+    rectangle(testCoveredArea, Rect(0, withinRect.y+withinRect.height, src->cols, src->rows-(withinRect.y+withinRect.height)), Scalar(255), -1);//bottom band
 
     //compare the two values: if two large difference, it means that there are some internal part not covered by a case
     if(coveredArea<0.95*withinRect.width*withinRect.height)
@@ -503,40 +617,50 @@ bool Page::DetectionOrganize(vector<Rect> *CasesTmp, Mat *src)
         gap_hori=0.8*gap_hori;
         gap_verti=0.8*gap_verti;
 
+    //Manga reading order: right to left in a tier, tiers top to bottom, stacks read top to bottom
+    if(RightToLeft)
+    {
+        Cases.clear();
+        OrderPanels(*CasesTmp, true, 0.02*src->cols, 0.02*src->rows, &Cases);
+        CasesTmp->clear();
+        NbCases=Cases.size();
+        return false;
+    }
+
 
     //Create a cases tree to reprensent the page organization
-    ntree<Rect> CasesTree;
+    CasesTree Tree;
 
 
     //Create (and fill) the tree
         //First the root node: a band on the left of the covered part of the page
-        CasesTree.insert(Rect(WithinRect.x-gap_hori, WithinRect.y, gap_hori, WithinRect.height));
-        ntree<Rect>::prefix_iterator currentParentPre=CasesTree.prefix_begin();
+        Tree.push_back(CaseNode{Rect(WithinRect.x-gap_hori, WithinRect.y, gap_hori, WithinRect.height), -1, {}});
+        int currentParent=0;
 
         while (CasesTmp->size()>0)
         {
-            //Use the prefix iterator (updated at the end of the loop) as a simple iterator
-            ntree<Rect>::iterator currentParent=currentParentPre.simplify();
-
             //Get all the ones at the same vertical level (same value +10% of page width) and lower than parent
             //and order them
             for(unsigned int i = 0; i < CasesTmp->size(); i++ )
             {
                 //If just on the right and lower or equal to the parent
-                int currentParentRight=currentParent->x+currentParent->width+gap_hori;
-                int currentParentBottom=currentParent->y+currentParent->height+gap_verti;
+                const Rect &parent=Tree[currentParent].rect;
+                int currentParentRight=parent.x+parent.width+gap_hori;
+                int currentParentBottom=parent.y+parent.height+gap_verti;
                 if( (*CasesTmp)[i].x<currentParentRight && ((*CasesTmp)[i].y+(*CasesTmp)[i].height)<currentParentBottom)
                 {
                     //Order them according to their height in the page (lower first)
-                    int k=0;
-                    int nb_children=CasesTree.children(currentParent);
+                    vector<int> &children=Tree[currentParent].children;
+                    size_t k=0;
                     //look for the right position
-                    while(k<nb_children && ((*CasesTmp)[i].y+(*CasesTmp)[i].height>=CasesTree.child(currentParent, k)->y+CasesTree.child(currentParent, k)->height)) //tant qu'il y'a des feuilles a ce niveau de l'arbre et que la bottom val est + petite, on avance dans l'arbre a ce niveau
+                    while(k<children.size() && ((*CasesTmp)[i].y+(*CasesTmp)[i].height>=Tree[children[k]].rect.y+Tree[children[k]].rect.height))
                     {
                         k++;
                     }
                     //Insert the case at it's right "position" in the child list
-                    CasesTree.insert(currentParent, k, (*CasesTmp)[i]);
+                    int newNode=Tree.size();
+                    children.insert(children.begin()+k, newNode);
+                    Tree.push_back(CaseNode{(*CasesTmp)[i], currentParent, {}}); //push_back last: it invalidates the children reference
                     //Remove it from the tmp list
                     CasesTmp->erase(CasesTmp->begin()+i);
                     i--;
@@ -544,9 +668,9 @@ bool Page::DetectionOrganize(vector<Rect> *CasesTmp, Mat *src)
             }
 
             //Go to the next node in prefix mode: deeper if possible, neighbour otherwise, up otherwise
-            currentParentPre++;
+            currentParent=NextPrefixNode(Tree, currentParent);
             //Test if we have reached the end of the tree... (not supposed to happen if some cases left in CasesTmp)
-            if(currentParentPre==CasesTree.prefix_end())
+            if(currentParent<0)
             {
                 //Say organization has failed to fallback in strip mode
                 #ifdef DEBUG
@@ -558,9 +682,9 @@ bool Page::DetectionOrganize(vector<Rect> *CasesTmp, Mat *src)
 
         //Copy the cases from the tree to a list, in the right order (except the first one which is a fake case)
         Cases.clear();
-        for (ntree<Rect>::prefix_iterator i = ++CasesTree.prefix_begin(); i != CasesTree.prefix_end(); i++)
+        for (int n=NextPrefixNode(Tree, 0); n>=0; n=NextPrefixNode(Tree, n))
         {
-            Cases.push_back(*i);
+            Cases.push_back(Tree[n].rect);
         }
 
 
@@ -568,7 +692,7 @@ bool Page::DetectionOrganize(vector<Rect> *CasesTmp, Mat *src)
     NbCases=Cases.size();
 
     //Free some memory
-    CasesTree.empty();
+
 
     //Not failed
     return false;
@@ -675,16 +799,16 @@ void Page::Transform()
             merge(channels,equalized); //merge back the 3 channels
             cvtColor(equalized, equalized, CV_HSV2BGR); //change back the image from CIE Lab to BGR*/
 
-            cvtColor(equalized, equalized, CV_BGR2YCrCb);
+            cvtColor(equalized, equalized, COLOR_BGR2YCrCb);
             split(equalized,channels); //split the image into channels
             equalizeHist(channels[0], channels[0]); //equalize histogram on the L channel
             merge(channels,equalized); //merge back the 3 channels
-            cvtColor(equalized, equalized, CV_YCrCb2BGR);
+            cvtColor(equalized, equalized, COLOR_YCrCb2BGR);
 
             //Apply only on not white areas
-            cvtColor(PageRenderCv, white_mask, CV_BGR2GRAY);
-            threshold(white_mask, white_mask, whiteThreshold, 255, CV_THRESH_BINARY_INV);
-            cvtColor(white_mask, white_mask, CV_GRAY2BGR);
+            cvtColor(PageRenderCv, white_mask, COLOR_BGR2GRAY);
+            threshold(white_mask, white_mask, whiteThreshold, 255, THRESH_BINARY_INV);
+            cvtColor(white_mask, white_mask, COLOR_GRAY2BGR);
             PageRenderCv=Mat::ones(PageRenderCv.cols, PageRenderCv.rows, PageRenderCv.type())+Scalar(255,255,255,255);
             equalized.copyTo(PageRenderCv, white_mask);
             //equalized.copyTo(PageRenderCv);

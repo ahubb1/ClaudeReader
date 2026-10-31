@@ -49,6 +49,7 @@ int Document_pdf::Open()
 	{
 		fprintf(stderr, "mupdf error: %s\n", fz_caught_message(FzCtx));
 		fz_drop_context(FzCtx);
+		FzCtx=NULL;
 		return -1;
 	}
 
@@ -80,10 +81,12 @@ void Document_pdf::Close()
         fz_drop_document(FzCtx, FzDoc);
     if(FzCtx)
         fz_drop_context(FzCtx);
+    FzDoc=NULL;
+    FzCtx=NULL;
 }
 
 //! Create a new Page_pdf
 Page_pdf *Document_pdf::CreatePage(int pagenb)
 {
-    return new Page_pdf(pagenb, NbPages, ReadingMode, PagePreview, DisplayRatio, Rotation, ContrastEnhancement, FzCtx, FzDoc);
+    return new Page_pdf(pagenb, NbPages, ReadingMode, PagePreview, DisplayRatio, Rotation, ContrastEnhancement, RightToLeft, FzCtx, FzDoc);
 }

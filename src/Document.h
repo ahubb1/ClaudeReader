@@ -78,6 +78,8 @@ class Document
         int GetRotation(){return Rotation;}
         void SetContrast(bool cont){ContrastEnhancement=cont;}
         bool GetContrast(){return ContrastEnhancement;}
+        void SetRightToLeft(bool val);
+        bool GetRightToLeft(){return RightToLeft;}
 
         Page *currentPage, *nextPage, *previousPage;
 
@@ -90,11 +92,24 @@ class Document
         float DisplayRatio;
         unsigned int Rotation;
         bool ContrastEnhancement;
+        bool RightToLeft;
     private:
         Mat *ImgRender;
         Rect *RectRender;
         Mat *ThumbnailsImgRenderCurrent;
 };
+
+//! Kind of document, used to select the Document class able to open a file
+enum DOCUMENT_TYPE { DOC_UNSUPPORTED, DOC_MUPDF, DOC_ARCHIVE, DOC_FOLDER };
+DOCUMENT_TYPE GetDocumentType(const char *Filename);
+
+//! Is the file name (or archive entry) a page image, from its extension (case insensitive)
+bool IsPageImage(const std::string &name);
+
+//! Read a whole file. The path is UTF-8 (also on Windows, where the C/OpenCV functions use the ANSI code page)
+bool ReadFileUtf8(const char *path, vector<unsigned char> *data);
+//! Encode an image according to the path extension and write it. The path is UTF-8
+bool WriteImageUtf8(const char *path, const Mat &img);
 
 Document * OpenPerExtension(char *Filename);
 

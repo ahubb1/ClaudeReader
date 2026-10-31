@@ -57,6 +57,10 @@ struct IntOption
 };
 
 
+//! Per-user folder where preferences and thumbnails are stored (created if needed):
+//!%APPDATA%\ClaudeReader on Windows, ~/.claudereader otherwise (the BDReader ones are moved there)
+const char *GetUserDataDir();
+
 //! Class managing the user preferences (saving in files, loading, applying to the current document)
 class Preferences
 {
@@ -88,9 +92,11 @@ class Preferences
         int GetRotationIdx() { return RotationIdx; }
         void SetRotationIdx(int i) { RotationIdx = i; }
         bool GetInContext() { return InContext; }
-        void SetInContext(bool val) { Border = val; }
+        void SetInContext(bool val) { InContext = val; }
         bool GetBorder() { return Border; }
         void SetBorder(bool val) { Border = val; }
+        bool GetRightToLeft() { return RightToLeft; }
+        void SetRightToLeft(bool val) { RightToLeft = val; }
         bool GetSavePref() { return SavePref; }
         void SetSavePref(bool val) { SavePref = val; }
         bool GetLocalPref() { return LocalPref; }
@@ -138,6 +144,7 @@ class Preferences
         bool Thumbnails;
         bool InContext;
         bool Border;
+        bool RightToLeft;   //!< Manga reading order: panels ordered from right to left
         bool SavePref, LocalPref;
         int WinW, WinH;
         int WinX, WinY;

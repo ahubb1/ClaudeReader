@@ -19,11 +19,12 @@
 //
 //---------------------------------------------------------------------------
 #include "Page_folder.h"
+#include "Document.h"
 
 //! Constructor of the image folder page.
 //!Initialize, load a page, render it and call the cases detection if needed (not a
 //!first or last page).
-Page_folder::Page_folder(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, float display_ratio, int rotation, bool contrast, string imgname):Page(page_nb, nb_pages, rd_mode, page_p, display_ratio, rotation, contrast)
+Page_folder::Page_folder(int page_nb, int nb_pages, READINGMODE rd_mode, bool page_p, float display_ratio, int rotation, bool contrast, bool rtl, string imgname):Page(page_nb, nb_pages, rd_mode, page_p, display_ratio, rotation, contrast, rtl)
 {
     //Load the page=> to an OpenCv Mat
     Load(imgname);
@@ -39,7 +40,9 @@ Page_folder::Page_folder(int page_nb, int nb_pages, READINGMODE rd_mode, bool pa
 //! Load the page from the archive (render it and convert it to an OpenCv Mat)
 void Page_folder::Load(string imgname)
 {
-	PageRenderCv = imread(imgname.c_str(), CV_LOAD_IMAGE_COLOR);
+	vector<unsigned char> data;
+	if(ReadFileUtf8(imgname.c_str(), &data))
+		PageRenderCv = imdecode(data, IMREAD_COLOR);
 	if(!PageRenderCv.data )                              // Check for invalid input
     {
         LoadErrorPage();

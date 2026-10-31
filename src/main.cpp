@@ -31,6 +31,7 @@
 
 #include "MainWindow.h"
 #include "helpcmd.h"
+#include "StoreCli.h"
 #include "version.h"
 
 
@@ -38,14 +39,26 @@ int main(int argc, char **argv)
 {
     MainWindow *MW;
 
+    //Arguments as UTF-8 (on Windows they come in the ANSI code page: non-English filenames would be lost)
+    Fl::args_to_utf8(argc, argv);
+
+    //Threads (store downloads) can wake up the user interface
+    Fl::lock();
+
+    //Store command line: ClaudeReader --store ...
+    if(argc>1 && strcmp(argv[1], "--store")==0)
+        return StoreCommandLine(argc-2, argv+2);
+
     //POSIX comand-line options management (-v and -h)
     int OptionChar;             //Option character
+    bool rightToLeft=false;     //Manga reading order for export (-r before -e)
     while (1)
     {
         static struct option long_options[] =
         {
             //Supported options
             {"export", required_argument,  0, 'e'},
+            {"rtl", no_argument,           0, 'r'},
             {"version", no_argument,       0, 'v'},
             {"help",  no_argument,         0, 'h'},
             //{"output",    required_argument, 0, 'o'},
@@ -54,7 +67,7 @@ int main(int argc, char **argv)
         // getopt_long stores the option index here.
         int option_index = 0;
 
-        OptionChar = getopt_long (argc, argv, ":vhe:", long_options, &option_index);
+        OptionChar = getopt_long (argc, argv, ":vhre:", long_options, &option_index);
 
         // Detect the end of the options
         if (OptionChar == -1)
@@ -65,6 +78,11 @@ int main(int argc, char **argv)
          switch (OptionChar)
          {
              case 0:
+                break;
+
+             //Manga mode: panels read from right to left
+             case 'r':
+                rightToLeft=true;
                 break;
 
              //Display version (and license) and quit
@@ -86,24 +104,28 @@ int main(int argc, char **argv)
                 //Parse parameters is any
                 string export_folder, extension;
                 bool panelmode=true, pagepreview=true;
-                if(argc>3)
-                    export_folder=argv[3];
+                //Positional parameters following the filename
+                int nbparams=argc-optind;
+                char **params=argv+optind;
+                if(nbparams>0)
+                    export_folder=params[0];
                 else
                     export_folder="./";
-                if(argc>4)
-                    extension=argv[4];
+                if(nbparams>1)
+                    extension=params[1];
                 else
                     extension=".jpg";
-                if(argc>5)
-                    if(argv[5][0]='n')
+                if(nbparams>2)
+                    if(params[2][0]=='n')
                         panelmode=false;
-                if(argc>6)
-                    if(argv[6][0]='n')
+                if(nbparams>3)
+                    if(params[3][0]=='n')
                         pagepreview=false;
 
                 doc=OpenPerExtension(optarg);
                 if(doc && doc->GetNbOfPages()>0)
                 {
+                    doc->SetRightToLeft(rightToLeft);
                     doc->LoadPage(1);
                     Export_Document Export(doc, export_folder.c_str(), extension.c_str(), panelmode, pagepreview);
                     if(Export.Export()>0)
@@ -111,7 +133,7 @@ int main(int argc, char **argv)
                     else
                     {
                         printf("An error occured during export.\n");
-                        printf("Usage: bdreader -e filename export_folder [.jpg/.png/.bmp] [y/n] [y/n]\n");
+                        printf("Usage: ClaudeReader [-r] -e filename export_folder [.jpg/.png/.bmp] [y/n] [y/n]\n");
                     }
                     delete doc;
                 }
