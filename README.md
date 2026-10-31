@@ -96,7 +96,11 @@ File names in any language are supported.
 - Search and download manga from **MangaDex**, **Mangapill** and **Nyaa**. Nyaa gives magnet links for your torrent client.
 - Downloads go straight to the library, as CBZ, PDF, ZIP or a folder of images. You can queue several chapters, cancel downloads, and *Read* a chapter directly (it is downloaded first if needed).
 - Covers, pages and searches are cached so they load faster the next time.
-- New stores can be added as small Lua scripts. See the `README.txt` in the stores folder, which Settings → Store opens.
+- **More stores** in Settings → Stores:
+  - **Browse catalog**: ready-made stores from this repository ([`stores/`](stores/)), installed with one click. A newer version shows an **Update** button.
+  - **Add from file…** or **Add from link…**: any store script (`.lua`), checked before it is installed.
+  - **Remove**: delete a store you added, or go back to a built-in store you replaced.
+- Stores are small Lua scripts. Each script has a time limit and a memory limit, so a faulty store shows an error instead of freezing ClaudeReader. To write one, see the `README.txt` in the stores folder (Settings → Stores → Open folder) and [`stores/README.md`](stores/README.md) to add it to the catalog.
 
 ### Command line
 ```sh

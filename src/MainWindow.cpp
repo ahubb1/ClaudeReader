@@ -2364,6 +2364,12 @@ MainWindow::MainWindow(const char *exepath, const char *f)
         if(Doc && Doc->currentPage && Doc->currentPage->IsLoaded())
             Display->SetImage(Doc->RenderPage(), *Doc->Render());
     };
+    Settings->OnStoresChanged=[this]()
+    {
+        //The new stores in the Store view (now, or when it is first shown)
+        if(Store)
+            Fl_Store_View::ReloadSources_cb(NULL, Store);
+    };
     Settings->OnTagsChanged=[this]()
     {
         if(Library)

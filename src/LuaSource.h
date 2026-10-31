@@ -60,6 +60,14 @@ struct StorePage
     std::string CacheKey;   //!< Empty: the URL
 };
 
+//! Resources a store script may use: memory, and Lua instructions for each load or call
+//! (a script stuck in a loop stops with an error instead of freezing ClaudeReader)
+struct LuaLimits
+{
+    size_t Memory=0;        //!< Allocated by the Lua state
+    long long Budget=0;     //!< Instructions left for the current load or call
+};
+
 //! A store: one Lua script (thread safe, the calls to the script are serialized)
 class LuaSource
 {
@@ -85,6 +93,7 @@ class LuaSource
         void PushEntry(const StoreEntry &entry);
 
         lua_State *L;
+        LuaLimits Limits;
         std::mutex Lock;
         bool Valid;
         std::string Error;
@@ -95,5 +104,29 @@ std::vector<LuaSource*> LoadStoreSources(std::vector<std::string> *errors);
 
 //! Folder of the user sources (*.lua), created if needed
 std::string UserSourcesDir();
+
+//! A store of the catalog (stores/index.json of the ClaudeReader repository)
+struct StoreCatalogEntry
+{
+    std::string Id, Name, Version, Description, Url;
+};
+#define STORE_CATALOG_URL "https://raw.githubusercontent.com/ahubb1/ClaudeReader/modernize/stores/index.json"
+//! The catalog address: STORE_CATALOG_URL, or the CLAUDEREADER_STORE_CATALOG environment variable (to test a catalog)
+std::string StoreCatalogUrl();
+//! Read a catalog: {"stores": [{"id", "name", "version", "description", "url"}, ...]}, the urls relative to index_url
+bool ParseStoreCatalog(const std::string &json, const std::string &index_url, std::vector<StoreCatalogEntry> *entries, std::string *error);
+
+//! A store as installed: built-in, or a script of the user sources folder
+struct InstalledStore
+{
+    std::string Id, Name, Version, Origin;  //!< Origin: "built-in" or the script path
+    bool BuiltIn=false;
+    bool ReplacesBuiltIn=false;             //!< A user script with the id of a built-in store
+};
+std::vector<InstalledStore> ListStores(std::vector<std::string> *errors);
+//! Check a store script and save it in the user sources folder (<id>.lua): false and the error if it is not a valid store
+bool InstallStoreScript(const std::string &script, InstalledStore *installed, bool *replaced, std::string *error);
+//! Compare two versions ("1.10" > "1.9"): <0, 0 or >0
+int CompareVersions(const std::string &a, const std::string &b);
 
 #endif // LUASOURCE_H

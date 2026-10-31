@@ -7,6 +7,13 @@ ClaudeReader 1.1 (in progress, 1.1 beta 1: 31/10/2026)
 	-Scroll mode (W) for webtoons and manhwa: the pages one under the other at the same width, scrolled continuously
 	 (wheel, arrows, Page Up/Down, Space, dragging), Ctrl+wheel or +/- for the width, only the pages around the view in memory
 	-Settings: panel highlight style (frame, line, dim the rest, corners), thickness and color, with a preview
+	-Settings > Stores: the installed stores; add a store from the catalog (stores/index.json of the repository,
+	 with updates), from a .lua file or from a link (GitHub file pages work too); remove or restore a store.
+	 The catalog address can be changed with the CLAUDEREADER_STORE_CATALOG environment variable (to test a catalog)
+	-Store catalog: xkcd (every comic as a chapter)
+	-Store scripts have a time limit (instructions) and a memory limit (256 MB): a store stuck in a loop gives an error
+	 instead of freezing ClaudeReader (#3)
+	-Bug fixed: the Delete button of the tags in Settings did nothing
 	-Linux build again (CMake finds Lua and MuPDF as packaged by Debian/Ubuntu); GitHub Actions build of Linux and of
 	 the Windows single exe, with a panel detection check on a generated comic (tests/make_test_comic.py)
 ClaudeReader 1.0 (30/10/2026)

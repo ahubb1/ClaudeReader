@@ -19,11 +19,14 @@
 #include "LuaSource.h"
 #include "HtmlQuery.h"
 #include "Preferences.h" //GetUserDataDir
+#include "FileUtf8.h"
 #include <FL/filename.H>
 #include <FL/fl_utf8.h>
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <ctype.h>
+#include <algorithm>
 
 extern "C"
 {
@@ -513,12 +516,61 @@ static void RegisterModule(lua_State *L, const char *name, const luaL_Reg *funct
     (void)functions;
 }
 
+#define LUA_MEMORY_LIMIT    ((size_t)256<<20)   //!< Per store
+#define LUA_LOAD_BUDGET     200000000LL         //!< Instructions to load a script (a few tenths of a second)
+#define LUA_CALL_BUDGET     1000000000LL        //!< Instructions for a search, chapters or pages call (a few seconds)
+#define LUA_HOOK_STEP       100000
+
+//! Allocator of the stores: refuses to go over LUA_MEMORY_LIMIT (the script gets a "not enough memory" error)
+static void *LimitedAlloc(void *ud, void *ptr, size_t osize, size_t nsize)
+{
+    LuaLimits *limits=(LuaLimits*)ud;
+    if(!ptr)
+        osize=0;    //Then osize is the type of the new object
+    if(nsize==0)
+    {
+        free(ptr);
+        limits->Memory-=osize;
+        return NULL;
+    }
+    if(nsize>osize && limits->Memory+(nsize-osize)>LUA_MEMORY_LIMIT)
+        return NULL;
+    void *block=realloc(ptr, nsize);
+    if(block)
+        limits->Memory=limits->Memory-osize+nsize;
+    return block;
+}
+
+//! Called every LUA_HOOK_STEP instructions: stops a script that runs for too long
+static void BudgetHook(lua_State *L, lua_Debug *)
+{
+    void *ud;
+    lua_getallocf(L, &ud);
+    LuaLimits *limits=(LuaLimits*)ud;
+    limits->Budget-=LUA_HOOK_STEP;
+    if(limits->Budget<0)
+        luaL_error(L, "the script runs for too long (endless loop?)");
+}
+
+//! A Lua state with the limits of the stores
+static lua_State *NewLimitedState(LuaLimits *limits)
+{
+#if LUA_VERSION_NUM>=505
+    lua_State *L=lua_newstate(LimitedAlloc, limits, luaL_makeseed(NULL));
+#else
+    lua_State *L=lua_newstate(LimitedAlloc, limits);
+#endif
+    if(L)
+        lua_sethook(L, BudgetHook, LUA_MASKCOUNT, LUA_HOOK_STEP);
+    return L;
+}
+
 LuaSource::LuaSource(const std::string &script, const std::string &origin):
     Origin(origin),
     L(NULL),
     Valid(false)
 {
-    L=luaL_newstate();
+    L=NewLimitedState(&Limits);
     if(!L)
     {
         Error="Not enough memory for Lua";
@@ -557,6 +609,7 @@ LuaSource::LuaSource(const std::string &script, const std::string &origin):
     lua_pop(L, 1);
 
     //Run the script
+    Limits.Budget=LUA_LOAD_BUDGET;
     if(luaL_loadbuffer(L, script.data(), script.size(), origin.c_str())!=LUA_OK || lua_pcall(L, 0, 0, 0)!=LUA_OK)
     {
         Error=lua_tostring(L, -1) ? lua_tostring(L, -1) : "Unknown error";
@@ -636,6 +689,7 @@ bool LuaSource::CallEntries(const char *function, int nargs, std::vector<StoreEn
     int base=lua_gettop(L)-nargs;
     lua_pushcfunction(L, Traceback);
     lua_insert(L, base);
+    Limits.Budget=LUA_CALL_BUDGET;
     int ret=lua_pcall(L, nargs, 1, base);
     lua_remove(L, base);
     if(ret!=LUA_OK)
@@ -740,7 +794,8 @@ static const char *SourcesReadme=
 "ClaudeReader stores\n"
 "===================\n"
 "\n"
-"Each .lua file of this folder is a store (a tab of the Store view). A file with the same\n"
+"Each .lua file of this folder is a store (a tab of the Store view). Settings > Stores installs\n"
+"stores from the catalog, from a file or from a link, and removes them. A file with the same\n"
 "SOURCE.id as a built-in store (mangadex, mangapill, nyaa) replaces it: copy and fix a store\n"
 "when its web site changes, without waiting for a new ClaudeReader. Click the refresh button\n"
 "of the Store view after editing a file. Test from a command prompt:\n"
@@ -893,4 +948,149 @@ std::vector<LuaSource*> LoadStoreSources(std::vector<std::string> *errors)
     }
     sources.insert(sources.end(), user_sources.begin(), user_sources.end());
     return sources;
+}
+
+
+//------------------------------------Installation------------------------
+
+//! Field of the table at the top of the stack, as text ("" if missing)
+static std::string FieldText(lua_State *L, const char *name)
+{
+    lua_getfield(L, -1, name);
+    std::string text=lua_isstring(L, -1) ? lua_tostring(L, -1) : "";
+    lua_pop(L, 1);
+    return text;
+}
+
+bool ParseStoreCatalog(const std::string &json, const std::string &index_url, std::vector<StoreCatalogEntry> *entries, std::string *error)
+{
+    LuaLimits limits;
+    lua_State *L=NewLimitedState(&limits);
+    if(!L)
+    {
+        *error="Not enough memory";
+        return false;
+    }
+    limits.Budget=LUA_CALL_BUDGET;
+    lua_pushcfunction(L, l_json_decode);
+    lua_pushlstring(L, json.data(), json.size());
+    bool ok=lua_pcall(L, 1, 2, 0)==LUA_OK && lua_istable(L, -2);
+    if(!ok)
+        *error="The catalog is not valid: "+std::string(lua_isstring(L, -1) ? lua_tostring(L, -1) : "not a JSON object");
+    else
+    {
+        lua_pop(L, 1);
+        lua_getfield(L, -1, "stores");
+        if(!lua_istable(L, -1))
+        {
+            *error="The catalog has no \"stores\" list";
+            ok=false;
+        }
+        else
+        {
+            //Relative script addresses: from the folder of the catalog
+            std::string base=index_url.substr(0, index_url.find_last_of('/')+1);
+            entries->clear();
+            lua_Integer n=(lua_Integer)lua_rawlen(L, -1);
+            for(lua_Integer i=1; i<=n; i++)
+            {
+                lua_rawgeti(L, -1, i);
+                if(lua_istable(L, -1))
+                {
+                    StoreCatalogEntry entry;
+                    entry.Id=FieldText(L, "id");
+                    entry.Name=FieldText(L, "name");
+                    entry.Version=FieldText(L, "version");
+                    entry.Description=FieldText(L, "description");
+                    entry.Url=FieldText(L, "url");
+                    if(!entry.Url.empty() && entry.Url.compare(0, 7, "http://")!=0 && entry.Url.compare(0, 8, "https://")!=0)
+                        entry.Url=base+entry.Url;
+                    if(!entry.Id.empty() && !entry.Url.empty())
+                        entries->push_back(entry);
+                }
+                lua_pop(L, 1);
+            }
+        }
+    }
+    lua_close(L);
+    return ok;
+}
+
+std::vector<InstalledStore> ListStores(std::vector<std::string> *errors)
+{
+    std::vector<std::string> builtin_ids;
+    for(int i=0; BuiltinSources[i]; i++)
+    {
+        LuaSource source(BuiltinSources[i], "built-in");
+        if(source.IsValid())
+            builtin_ids.push_back(source.Id);
+    }
+    std::vector<InstalledStore> stores;
+    std::vector<LuaSource*> sources=LoadStoreSources(errors);
+    for(size_t i=0; i<sources.size(); i++)
+    {
+        InstalledStore store;
+        store.Id=sources[i]->Id;
+        store.Name=sources[i]->Name;
+        store.Version=sources[i]->Version;
+        store.Origin=sources[i]->Origin;
+        store.BuiltIn=store.Origin=="built-in";
+        store.ReplacesBuiltIn=!store.BuiltIn && std::find(builtin_ids.begin(), builtin_ids.end(), store.Id)!=builtin_ids.end();
+        stores.push_back(store);
+        delete sources[i];
+    }
+    return stores;
+}
+
+bool InstallStoreScript(const std::string &script, InstalledStore *installed, bool *replaced, std::string *error)
+{
+    LuaSource source(script, "new store");
+    if(!source.IsValid())
+    {
+        *error="Not a valid store: "+source.LoadError();
+        return false;
+    }
+    //The file name from the id: letters, digits, - and _ only
+    std::string file;
+    for(size_t i=0; i<source.Id.size(); i++)
+    {
+        char c=source.Id[i];
+        file+=(isalnum((unsigned char)c) || c=='-' || c=='_') ? c : '_';
+    }
+    std::string path=UserSourcesDir()+"/"+file+".lua";
+    *replaced=FileUtf8::Exists(path);
+    if(!FileUtf8::Write(path, script))
+    {
+        *error="Unable to write "+path;
+        return false;
+    }
+    installed->Id=source.Id;
+    installed->Name=source.Name;
+    installed->Version=source.Version;
+    installed->Origin=path;
+    return true;
+}
+
+std::string StoreCatalogUrl()
+{
+    const char *url=getenv("CLAUDEREADER_STORE_CATALOG");
+    return (url && *url) ? url : STORE_CATALOG_URL;
+}
+
+int CompareVersions(const std::string &a, const std::string &b)
+{
+    size_t i=0, j=0;
+    while(i<a.size() || j<b.size())
+    {
+        long x=0, y=0;
+        while(i<a.size() && a[i]!='.')
+            x=x*10+(isdigit((unsigned char)a[i]) ? a[i]-'0' : 0), i++;
+        while(j<b.size() && b[j]!='.')
+            y=y*10+(isdigit((unsigned char)b[j]) ? b[j]-'0' : 0), j++;
+        if(x!=y)
+            return x<y ? -1 : 1;
+        i++;
+        j++;
+    }
+    return 0;
 }

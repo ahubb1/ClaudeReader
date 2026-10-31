@@ -20,6 +20,9 @@
 #include "Tags.h"
 #include "Net.h"
 #include "LuaSource.h"
+#include "Async.h"
+#include "FileUtf8.h"
+#include <thread>
 #include <FL/Fl.H>
 #include <FL/fl_draw.H>
 #include <FL/fl_ask.H>
@@ -69,6 +72,16 @@ class Fl_Tag_Swatch : public Fl_Button
         }
         int Id;
 };
+
+//! Row of a widget in a list of rebuilt rows (per_row widgets each), -1 if not found.
+//! (Not argument(): it is the user data of the callback, replaced by callback(cb, this))
+static int RowOf(const std::vector<Fl_Widget*> &rows, Fl_Widget *w, int per_row)
+{
+    for(size_t i=0; i<rows.size(); i++)
+        if(rows[i]==w)
+            return (int)i/per_row;
+    return -1;
+}
 
 //! Choice styled as the inputs
 static Fl_Choice *SettingsChoice()
@@ -254,14 +267,31 @@ Fl_Settings_View::Fl_Settings_View(int X, int Y, int W, int H):Fl_Group(X, Y, W,
             UseLibraryCheck->callback(UseLibrary_cb, this);
 
             //Store
-            StoreTitle=Section("Store", "Covers, pages and searches are kept in a cache to read and download again faster.");
+            StoreTitle=Section("Stores", "Each store is a tab of the Store view. Add stores from the catalog, "
+                               "from a .lua file or from a link to one.");
+            StoresLabel=Text(12, THEME_FG, true);
+            StoresLabel->label("Installed");
+            AddFileButton=SettingsButton("Add from file...", false);
+            AddFileButton->tooltip("Install a store script (.lua) from your computer");
+            AddFileButton->callback(StoreAddFile_cb, this);
+            AddLinkButton=SettingsButton("Add from link...", false);
+            AddLinkButton->tooltip("Install a store script from its web address");
+            AddLinkButton->callback(StoreAddLink_cb, this);
+            SourcesButton=SettingsButton("Open folder", false);
+            SourcesButton->tooltip("The folder of your stores (see its README.txt to write one)");
+            SourcesButton->callback(SourcesFolder_cb, this);
+            StoresStatus=Text(12, THEME_FG_DIM);
+            CatalogLabel=Text(12, THEME_FG, true);
+            CatalogLabel->label("Catalog");
+            CatalogButton=SettingsButton("Browse catalog", true);
+            CatalogButton->tooltip("Stores ready to install, from the ClaudeReader repository");
+            CatalogButton->callback(Catalog_cb, this);
+            CatalogStatus=Text(12, THEME_FG_DIM);
             CacheInfo=Text(13, THEME_FG);
             ClearCacheButton=SettingsButton("Clear cache", false);
             ClearCacheButton->callback(ClearCache_cb, this);
-            SourcesInfo=Text(13, THEME_FG);
-            SourcesInfo->label("Your own stores: Lua scripts in the stores folder (see its README.txt).");
-            SourcesButton=SettingsButton("Open folder", false);
-            SourcesButton->callback(SourcesFolder_cb, this);
+            CatalogShown=false;
+            Installing=false;
         Content->end();
         Content->resizable(NULL);
     Scroll->end();
@@ -309,8 +339,9 @@ void Fl_Settings_View::Refresh()
     if(GetUseLibrary)
         UseLibraryCheck->value(GetUseLibrary());
     char size[64];
-    snprintf(size, sizeof(size), "Cache: %.1f MB", Net::CacheSize()/1048576.);
+    snprintf(size, sizeof(size), "Cache of the covers, pages and searches: %.1f MB", Net::CacheSize()/1048576.);
     CacheInfo->copy_label(size);
+    BuildStoreRows();
     Layout();
     redraw();
 }
@@ -341,7 +372,6 @@ void Fl_Settings_View::BuildTagRows()
         name->tooltip("Rename: type and press Enter");
         name->callback(TagName_cb, this);
         Fl_Button *remove=SettingsButton("Delete", false);
-        remove->argument(all[i].Id);
         remove->callback(TagDelete_cb, this);
         Fl_Box *spacer=Text(12, THEME_FG_DIM); //Keeps 4 widgets per row
         TagRows.push_back(swatch);
@@ -431,11 +461,40 @@ void Fl_Settings_View::Layout()
     cy+=76;
 
     section(StoreTitle);
+    StoresLabel->resize(cx, cy, cw, 20);
+    cy+=24;
+    for(size_t i=0; i+2<StoreRows.size(); i+=3)
+    {
+        StoreRows[i]->resize(cx, cy, 220, 26);              //Name
+        StoreRows[i+1]->resize(cx+228, cy, cw-228-90, 26);  //Version and origin
+        StoreRows[i+2]->resize(cx+cw-80, cy, 80, 26);       //Remove
+        cy+=ROW_H;
+    }
+    cy+=8;
+    AddFileButton->resize(cx, cy, 130, 26);
+    AddLinkButton->resize(cx+138, cy, 130, 26);
+    SourcesButton->resize(cx+276, cy, 110, 26);
+    cy+=32;
+    StoresStatus->resize(cx, cy, cw, 22);
+    cy+=34;
+
+    CatalogLabel->resize(cx, cy, cw-140, 26);
+    CatalogButton->resize(cx+cw-130, cy, 130, 26);
+    cy+=32;
+    CatalogStatus->resize(cx, cy, cw, CatalogStatus->label() && *CatalogStatus->label() ? 22 : 0);
+    cy+=CatalogStatus->h() ? 26 : 0;
+    for(size_t i=0; i+3<CatalogRows.size(); i+=4)
+    {
+        CatalogRows[i]->resize(cx, cy, 160, 26);                    //Name
+        CatalogRows[i+1]->resize(cx+164, cy, 60, 26);               //Version
+        CatalogRows[i+2]->resize(cx+228, cy, cw-228-100, 26);       //Description
+        CatalogRows[i+3]->resize(cx+cw-90, cy, 90, 26);             //Install
+        cy+=ROW_H+2;
+    }
+    cy+=24;
+
     CacheInfo->resize(cx, cy, cw-130, 26);
     ClearCacheButton->resize(cx+cw-120, cy, 120, 26);
-    cy+=36;
-    SourcesInfo->resize(cx, cy, cw-130, 26);
-    SourcesButton->resize(cx+cw-120, cy, 120, 26);
     cy+=36+SETTINGS_PAD;
 
     Content->size(Content->w(), cy-Content->y());
@@ -521,7 +580,8 @@ void Fl_Settings_View::TagName_cb(Fl_Widget *w, void *p)
 void Fl_Settings_View::TagDelete_cb(Fl_Widget *w, void *p)
 {
     Fl_Settings_View *v=(Fl_Settings_View*)p;
-    const TagDef *tag=Tags::Get((int)w->argument());
+    int row=RowOf(v->TagRows, w, 4);
+    const TagDef *tag=row<0 ? NULL : Tags::Get(((Fl_Tag_Swatch*)v->TagRows[row*4])->Id);
     if(!tag)
         return;
     if(fl_choice("Delete the tag \"%s\"?\nThe comics keep everything else.", "Cancel", "Delete", NULL, tag->Name.c_str())!=1)
@@ -570,6 +630,263 @@ void Fl_Settings_View::ClearCache_cb(Fl_Widget *w, void *p)
 {
     Net::ClearCache();
     ((Fl_Settings_View*)p)->Refresh();
+}
+
+void Fl_Settings_View::SetStoresStatus(const std::string &text, bool error)
+{
+    StoresStatus->copy_label(text.c_str());
+    StoresStatus->labelcolor(error ? fl_rgb_color(241, 76, 76) : THEME_FG_DIM);
+    StoresStatus->redraw();
+}
+
+//! The installed stores: name, version and origin, Remove for the user ones
+void Fl_Settings_View::BuildStoreRows()
+{
+    for(size_t i=0; i<StoreRows.size(); i++)
+    {
+        Content->remove(StoreRows[i]);
+        Fl::delete_widget(StoreRows[i]);
+    }
+    StoreRows.clear();
+    std::vector<std::string> errors;
+    Stores=ListStores(&errors);
+    Content->begin();
+    for(size_t i=0; i<Stores.size(); i++)
+    {
+        const InstalledStore &s=Stores[i];
+        Fl_Box *name=Text(13, THEME_FG);
+        name->copy_label(s.Name.c_str());
+        std::string info=(s.Version.empty() ? std::string("") : "version "+s.Version+"   \xc2\xb7   ")+
+                         (s.BuiltIn ? "built-in" : s.ReplacesBuiltIn ? "your version of a built-in store" : "added by you");
+        Fl_Box *details=Text(12, THEME_FG_DIM);
+        details->copy_label(info.c_str());
+        Fl_Widget *action;
+        if(s.BuiltIn)
+            action=Text(12, THEME_FG_DIM);
+        else
+        {
+            Fl_Button *remove=SettingsButton(s.ReplacesBuiltIn ? "Restore" : "Remove", false);
+            remove->tooltip(s.ReplacesBuiltIn ? "Remove your version: back to the built-in store" : "Remove this store");
+            remove->callback(StoreRemove_cb, this);
+            action=remove;
+        }
+        StoreRows.push_back(name);
+        StoreRows.push_back(details);
+        StoreRows.push_back(action);
+    }
+    Content->end();
+    if(!errors.empty())
+    {
+        std::string text="Not loaded: "+errors[0];
+        if(errors.size()>1)
+            text+=" (and "+std::to_string(errors.size()-1)+" more)";
+        SetStoresStatus(text, true);
+    }
+}
+
+//! The stores of the catalog: Install, Update or Installed
+void Fl_Settings_View::BuildCatalogRows()
+{
+    for(size_t i=0; i<CatalogRows.size(); i++)
+    {
+        Content->remove(CatalogRows[i]);
+        Fl::delete_widget(CatalogRows[i]);
+    }
+    CatalogRows.clear();
+    Content->begin();
+    for(size_t i=0; i<Catalog.size(); i++)
+    {
+        const StoreCatalogEntry &c=Catalog[i];
+        const InstalledStore *installed=NULL;
+        for(size_t k=0; k<Stores.size(); k++)
+            if(Stores[k].Id==c.Id)
+                installed=&Stores[k];
+        Fl_Box *name=Text(13, THEME_FG);
+        name->copy_label(c.Name.empty() ? c.Id.c_str() : c.Name.c_str());
+        Fl_Box *version=Text(12, THEME_FG_DIM);
+        version->copy_label(c.Version.c_str());
+        Fl_Box *description=Text(12, THEME_FG_DIM);
+        description->copy_label(c.Description.c_str());
+        description->tooltip(description->label());
+        Fl_Widget *action;
+        bool update=installed && !installed->BuiltIn && CompareVersions(installed->Version, c.Version)<0;
+        if(installed && !update && !installed->BuiltIn)
+        {
+            Fl_Box *done=Text(12, THEME_FG_DIM);
+            done->label("\xe2\x9c\x93 Installed");
+            action=done;
+        }
+        else
+        {
+            Fl_Button *install=SettingsButton(update ? "Update" : installed ? "Replace" : "Install", !installed || update);
+            install->tooltip(update ? "A newer version is available" : installed ? "Use this version instead of the built-in store" : "Add this store");
+            install->callback(CatalogInstall_cb, this);
+            action=install;
+        }
+        CatalogRows.push_back(name);
+        CatalogRows.push_back(version);
+        CatalogRows.push_back(description);
+        CatalogRows.push_back(action);
+    }
+    Content->end();
+}
+
+void Fl_Settings_View::InstallScript(const std::string &script, const std::string &from)
+{
+    if(Installing)
+        return;
+    Installing=true;
+    SetStoresStatus("Checking the store from "+from+"...");
+    //The script runs while it is checked: in a thread (its time and memory are limited)
+    std::thread([this, script]()
+    {
+        InstalledStore installed;
+        bool replaced=false;
+        std::string error;
+        bool ok=InstallStoreScript(script, &installed, &replaced, &error);
+        RunInUiThread([this, ok, installed, replaced, error]()
+        {
+            Installing=false;
+            if(!ok)
+            {
+                SetStoresStatus(error, true);
+                return;
+            }
+            SetStoresStatus((replaced ? "Updated: " : "Installed: ")+installed.Name+
+                            (installed.Version.empty() ? "" : " "+installed.Version)+". It is a tab of the Store view.");
+            BuildStoreRows();
+            if(CatalogShown)
+                BuildCatalogRows();
+            Layout();
+            redraw();
+            if(OnStoresChanged)
+                OnStoresChanged();
+        });
+    }).detach();
+}
+
+void Fl_Settings_View::InstallFromUrl(const std::string &url)
+{
+    if(Installing)
+        return;
+    Installing=true;
+    SetStoresStatus("Downloading "+url+"...");
+    std::thread([this, url]()
+    {
+        NetResponse r=Net::Get(url);
+        RunInUiThread([this, url, r]()
+        {
+            Installing=false;
+            if(!r.Ok())
+                SetStoresStatus("Unable to download "+url+": "+r.Error, true);
+            else
+                InstallScript(r.Body, url);
+        });
+    }).detach();
+}
+
+void Fl_Settings_View::StoreRemove_cb(Fl_Widget *w, void *p)
+{
+    Fl_Settings_View *v=(Fl_Settings_View*)p;
+    int index=RowOf(v->StoreRows, w, 3);
+    if(index<0 || index>=(int)v->Stores.size())
+        return;
+    InstalledStore store=v->Stores[index];
+    if(fl_choice("Remove the store \"%s\"?\n%s", "Cancel", "Remove", NULL, store.Name.c_str(),
+                 store.ReplacesBuiltIn ? "The built-in version is used again." : "Its file is deleted.")!=1)
+        return;
+    if(!FileUtf8::Remove(store.Origin))
+    {
+        v->SetStoresStatus("Unable to delete "+store.Origin, true);
+        return;
+    }
+    v->SetStoresStatus("Removed: "+store.Name);
+    v->BuildStoreRows();
+    if(v->CatalogShown)
+        v->BuildCatalogRows();
+    v->Layout();
+    v->redraw();
+    if(v->OnStoresChanged)
+        v->OnStoresChanged();
+}
+
+void Fl_Settings_View::StoreAddFile_cb(Fl_Widget *w, void *p)
+{
+    Fl_Settings_View *v=(Fl_Settings_View*)p;
+    Fl_Native_File_Chooser chooser;
+    chooser.title("Add a store");
+    chooser.type(Fl_Native_File_Chooser::BROWSE_FILE);
+    chooser.filter("Store scripts\t*.lua");
+    if(chooser.show()!=0 || !chooser.filename())
+        return;
+    std::string path=chooser.filename(), script;
+    if(!FileUtf8::Read(path, &script))
+    {
+        v->SetStoresStatus("Unable to read "+path, true);
+        return;
+    }
+    v->InstallScript(script, fl_filename_name(path.c_str()));
+}
+
+void Fl_Settings_View::StoreAddLink_cb(Fl_Widget *w, void *p)
+{
+    Fl_Settings_View *v=(Fl_Settings_View*)p;
+    const char *url=fl_input("Address of the store script (.lua):", "https://");
+    if(!url)
+        return;
+    std::string address=url;
+    address.erase(0, address.find_first_not_of(" \t"));
+    address.erase(address.find_last_not_of(" \t")+1);
+    if(address.compare(0, 8, "https://")!=0 && address.compare(0, 7, "http://")!=0)
+    {
+        v->SetStoresStatus("The address must start with https:// (or http://)", true);
+        return;
+    }
+    //GitHub page of a file: its raw content
+    const std::string blob="https://github.com/";
+    size_t b=address.find("/blob/");
+    if(address.compare(0, blob.size(), blob)==0 && b!=std::string::npos)
+        address="https://raw.githubusercontent.com/"+address.substr(blob.size(), b-blob.size())+"/"+address.substr(b+6);
+    v->InstallFromUrl(address);
+}
+
+void Fl_Settings_View::Catalog_cb(Fl_Widget *w, void *p)
+{
+    Fl_Settings_View *v=(Fl_Settings_View*)p;
+    v->CatalogShown=true;
+    v->CatalogButton->label("Refresh catalog");
+    v->CatalogStatus->label("Loading the catalog...");
+    v->Layout();
+    v->redraw();
+    std::thread([v]()
+    {
+        std::string url=StoreCatalogUrl();
+        NetResponse r=Net::Get(url);
+        std::vector<StoreCatalogEntry> entries;
+        std::string error;
+        bool ok=r.Ok() && ParseStoreCatalog(r.Body, url, &entries, &error);
+        if(!r.Ok())
+            error="Unable to load the catalog: "+r.Error;
+        RunInUiThread([v, ok, entries, error]()
+        {
+            v->Catalog=entries;
+            if(!ok)
+                v->CatalogStatus->copy_label(error.c_str());
+            else
+                v->CatalogStatus->copy_label(entries.empty() ? "The catalog is empty." : "");
+            v->BuildCatalogRows();
+            v->Layout();
+            v->redraw();
+        });
+    }).detach();
+}
+
+void Fl_Settings_View::CatalogInstall_cb(Fl_Widget *w, void *p)
+{
+    Fl_Settings_View *v=(Fl_Settings_View*)p;
+    int index=RowOf(v->CatalogRows, w, 4);
+    if(index>=0 && index<(int)v->Catalog.size())
+        v->InstallFromUrl(v->Catalog[index].Url);
 }
 
 void Fl_Settings_View::SourcesFolder_cb(Fl_Widget *w, void *p)

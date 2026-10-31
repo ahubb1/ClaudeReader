@@ -1,0 +1,11 @@
+{
+  "stores": [
+    {
+      "id": "xkcd",
+      "name": "xkcd",
+      "version": "2.0",
+      "description": "The xkcd webcomic by Randall Munroe: every comic, one chapter each",
+      "url": "xkcd.lua"
+    }
+  ]
+}

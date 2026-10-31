@@ -18,7 +18,7 @@
 //---------------------------------------------------------------------------
 /**
  * \file SettingsView.h
- * \brief Settings view: tags, panel highlight, library folder, store cache
+ * \brief Settings view: tags, panel highlight, library folder, stores (installed, catalog) and their cache
  *
  */
 #ifndef SETTINGSVIEW_H
@@ -35,6 +35,7 @@
 #include <FL/Fl_Choice.H>
 #include "Theme.h"
 #include "PanelHighlight.h"
+#include "LuaSource.h"
 
 //! The settings (shown instead of the library, the store or the reader)
 class Fl_Settings_View : public Fl_Group
@@ -53,6 +54,7 @@ class Fl_Settings_View : public Fl_Group
         std::function<void()> OnTagsChanged;                        //!< Tags added, renamed, recolored, removed
         std::function<PanelHighlight()> GetHighlight;
         std::function<void(const PanelHighlight &)> OnHighlight;    //!< Style, thickness or color of the panel highlight changed
+        std::function<void()> OnStoresChanged;                      //!< A store was added, updated or removed
 
         //Callbacks
         static void TagColor_cb(Fl_Widget *w, void *p);
@@ -63,6 +65,11 @@ class Fl_Settings_View : public Fl_Group
         static void UseLibrary_cb(Fl_Widget *w, void *p);
         static void ClearCache_cb(Fl_Widget *w, void *p);
         static void SourcesFolder_cb(Fl_Widget *w, void *p);
+        static void StoreRemove_cb(Fl_Widget *w, void *p);
+        static void StoreAddFile_cb(Fl_Widget *w, void *p);
+        static void StoreAddLink_cb(Fl_Widget *w, void *p);
+        static void Catalog_cb(Fl_Widget *w, void *p);
+        static void CatalogInstall_cb(Fl_Widget *w, void *p);
         static void Highlight_cb(Fl_Widget *w, void *p);
         static void HighlightColor_cb(Fl_Widget *w, void *p);
         static void HighlightCustom_cb(Fl_Widget *w, void *p);
@@ -90,8 +97,21 @@ class Fl_Settings_View : public Fl_Group
         Fl_Box *LibraryTitle, *LibraryPath;
         Fl_Button *LibraryButton;
         Fl_Check_Button *UseLibraryCheck;
-        Fl_Box *StoreTitle, *CacheInfo, *SourcesInfo;
-        Fl_Button *ClearCacheButton, *SourcesButton;
+        void BuildStoreRows();
+        void BuildCatalogRows();
+        //! Check a script and install it (in a thread), then show the result
+        void InstallScript(const std::string &script, const std::string &from);
+        //! Download a script (in a thread) and install it
+        void InstallFromUrl(const std::string &url);
+        void SetStoresStatus(const std::string &text, bool error=false);
+
+        Fl_Box *StoreTitle, *CacheInfo, *StoresLabel, *StoresStatus, *CatalogLabel, *CatalogStatus;
+        Fl_Button *ClearCacheButton, *SourcesButton, *AddFileButton, *AddLinkButton, *CatalogButton;
+        std::vector<Fl_Widget*> StoreRows;      //!< 3 widgets per installed store
+        std::vector<Fl_Widget*> CatalogRows;    //!< 4 widgets per store of the catalog
+        std::vector<InstalledStore> Stores;
+        std::vector<StoreCatalogEntry> Catalog;
+        bool CatalogShown, Installing;
         std::string LibraryText, CacheText;
 };
 
