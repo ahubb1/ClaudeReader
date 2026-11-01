@@ -151,6 +151,7 @@ class Fl_Library_Folder: public Fl_Button
 
 		std::string Name, RelativeDir;
 		int Count;  //!< Comics inside (sub-folders included)
+		Fl_Books_Library *Library=NULL;   //!< Context menu (find tags online)
 
 	private:
 		bool Hover;
@@ -270,6 +271,12 @@ class Fl_Books_Library: public Fl_Group//public Fl_Double_Window
         void open_folder(const std::string &relative_dir);
         //! The tags changed (settings, context menu): chips, tag filter
         void refresh_tags();
+        //! Tags from Anime News Network: a comic and the other volumes of its series in its folder
+        void find_tags_online(Fl_Library_Element *comic);
+        //! The comics of a folder (sub-folders included)
+        void find_tags_online(const std::string &relative_dir, const std::string &name);
+        //! All the comics of the folder shown, sure matches only, after asking genres, themes or both
+        void tag_all_online();
         int handle(int event);
 
         std::function<void()> OnManageTags;    //!< "Manage tags..." of the comics context menu
@@ -314,6 +321,10 @@ class Fl_Books_Library: public Fl_Group//public Fl_Double_Window
 		void update_path_bar();
 		void path_chosen(const char *path);
 		void update_browsing_ui();
+		std::vector<Fl_Library_Element*> comics_in(const std::string &relative_dir);
+		void find_tags_online(const std::vector<Fl_Library_Element*> &comics, const std::string &name, const std::string &scope);
+		void apply_online_tags(const std::vector<Fl_Library_Element*> &comics, const struct AnnTitle &title, int what);
+		Fl_Activity_Button *TagAll_Button;
 		static void Home_cb(Fl_Widget *w, void *p);
 		std::string HomeDir;            //!< The library folder while another folder is browsed, empty otherwise
 		bool Reloading=false;           //!< A scan is running (it lets FLTK handle the events)

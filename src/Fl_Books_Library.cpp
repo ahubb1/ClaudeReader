@@ -21,6 +21,10 @@
 #include <FL/fl_utf8.h>
 #include "Fl_Books_Library.h"
 #include <map>
+#include <thread>
+#include <atomic>
+#include <mutex>
+#include "AnnDialog.h"
 #include <FL/Fl_Menu_Item.H>
 
 
@@ -88,28 +92,25 @@ bool ElementsNameSort(Fl_Library_Element* a, Fl_Library_Element* b)
         return false;
 }
 
+//Equal values: by name (std::sort mixes them up otherwise: a library never read looked shuffled)
 bool ElementsTypeSort(Fl_Library_Element* a, Fl_Library_Element* b)
 {
-    if(strcmp(fl_filename_ext(a->GetFilename()),fl_filename_ext(b->GetFilename()))<0)
-        return true;
-    else
-        return false;
+    int c=strcmp(fl_filename_ext(a->GetFilename()), fl_filename_ext(b->GetFilename()));
+    return c!=0 ? c<0 : a->GetAlphaNumPosition()<b->GetAlphaNumPosition();
 }
 
 bool ElementsLastTimeSort(Fl_Library_Element* a, Fl_Library_Element* b)
 {
-    if(a->GetLastTime()>b->GetLastTime())
-        return true;
-    else
-        return false;
+    if(a->GetLastTime()!=b->GetLastTime())
+        return a->GetLastTime()>b->GetLastTime();
+    return a->GetAlphaNumPosition()<b->GetAlphaNumPosition();
 }
 
 bool ElementsCreationTimeSort(Fl_Library_Element* a, Fl_Library_Element* b)
 {
-    if(a->GetCreationTime()>b->GetCreationTime())
-        return true;
-    else
-        return false;
+    if(a->GetCreationTime()!=b->GetCreationTime())
+        return a->GetCreationTime()>b->GetCreationTime();
+    return a->GetAlphaNumPosition()<b->GetAlphaNumPosition();
 }
 
 bool ElementsAccessTimeSort(Fl_Library_Element* a, Fl_Library_Element* b)
@@ -327,7 +328,7 @@ void Fl_Library_Element::ShowTagsMenu()
     std::vector<std::string> labels;
     for(size_t i=0; i<all.size(); i++)
         labels.push_back(MenuText(all[i].Name));
-    std::vector<Fl_Menu_Item> menu(all.size()+3);
+    std::vector<Fl_Menu_Item> menu(all.size()+4);
     memset(menu.data(), 0, menu.size()*sizeof(Fl_Menu_Item));
     for(size_t i=0; i<all.size(); i++)
     {
@@ -335,7 +336,8 @@ void Fl_Library_Element::ShowTagsMenu()
         menu[i].flags=FL_MENU_TOGGLE|(HasTag(all[i].Id) ? FL_MENU_VALUE : 0)|(i+1==all.size() ? FL_MENU_DIVIDER : 0);
     }
     menu[all.size()].text="New tag...";
-    menu[all.size()+1].text="Manage tags...";
+    menu[all.size()+1].text="Find tags online...";
+    menu[all.size()+2].text="Manage tags...";
 
     const Fl_Menu_Item *chosen=menu[0].popup(Fl::event_x(), Fl::event_y());
     if(!chosen)
@@ -352,6 +354,12 @@ void Fl_Library_Element::ShowTagsMenu()
         int id=Tags::Create(name);
         if(id>0 && !HasTag(id))
             Tags::Toggle(TagKey(), id);
+    }
+    else if(index==all.size()+1)
+    {
+        if(Library)
+            Library->find_tags_online(this);
+        return;
     }
     else
     {
@@ -424,12 +432,22 @@ void Fl_Library_Element::draw()
     int cx=ix, cy=y()+h()-pad-chips_h;
     fl_font(FL_HELVETICA, 11);
     fl_push_clip(ix, cy, iw, chips_h);
+    std::vector<const TagDef*> tags;
     for(size_t i=0; i<TagIds.size(); i++)
+        if(Tags::Get(TagIds[i]))
+            tags.push_back(Tags::Get(TagIds[i]));
+    for(size_t i=0; i<tags.size(); i++)
     {
-        const TagDef *tag=Tags::Get(TagIds[i]);
-        if(!tag)
-            continue;
+        const TagDef *tag=tags[i];
         int tw=(int)fl_width(tag->Name.c_str());
+        //Not enough room for this chip (and the count of the others): "+N"
+        if(cx+11+tw>ix+iw || (i+1<tags.size() && cx+11+tw+10+fl_width("+99")>ix+iw))
+        {
+            std::string more="+"+std::to_string(tags.size()-i);
+            fl_color(THEME_FG_DIM);
+            fl_draw(more.c_str(), cx, cy, (int)fl_width(more.c_str())+2, chips_h, FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
+            break;
+        }
         fl_color(Tags::Color(tag->Color));
         fl_pie(cx, cy+(chips_h-8)/2, 8, 8, 0, 360);
         fl_color(THEME_FG_DIM);
@@ -468,6 +486,18 @@ int Fl_Library_Folder::handle(int event)
     {
         Hover=(event==FL_ENTER);
         redraw();
+    }
+    //Right button: menu (on release, as the comics)
+    if((event==FL_PUSH || event==FL_RELEASE) && Fl::event_button()==FL_RIGHT_MOUSE)
+    {
+        if(event==FL_RELEASE && Library)
+        {
+            Fl_Menu_Item menu[]={{"Find tags online..."}, {0}};
+            const Fl_Menu_Item *chosen=menu[0].popup(Fl::event_x(), Fl::event_y());
+            if(chosen)
+                Library->find_tags_online(RelativeDir, Name);
+        }
+        return 1;
     }
     return Fl_Button::handle(event);
 }
@@ -543,8 +573,13 @@ Fl_Books_Library::Fl_Books_Library(int xx, int yy, int ww, int hh, const char *l
             View_Button->tooltip("Folders view (on) or all the comics in one list (off)");
             View_Button->SetToggled(true);
             View_Button->callback(View_cb, this);
+            //Online tags for the comics of the folder shown
+            TagAll_Button = new Fl_Activity_Button(x()+10+31, y()+3, 26, 20, ICON_TAG, 16);
+            TagAll_Button->color(THEME_BAR_BG);
+            TagAll_Button->tooltip("Find tags online for all the comics of this folder (genres and themes from Anime News Network)");
+            TagAll_Button->callback([](Fl_Widget *, void *p) { ((Fl_Books_Library*)p)->tag_all_online(); }, this);
             //Lib folder (what is left once the filters and sort are placed)
-            Fl_Group * grp = new Fl_Group(x()+10+31, y()+3, main_w-(31+5+50+80+5+40+70+5+35+110), 20);
+            Fl_Group * grp = new Fl_Group(x()+10+62, y()+3, main_w-(62+5+50+80+5+40+70+5+35+110), 20);
                 //File explorer like path bar: folders, sub-folders menus, text edition and folder chooser
                 Home_Button = new Fl_Button(grp->x(), grp->y(), 96, 20, "\xe2\x86\x90  My library");
                 Home_Button->box(FL_FLAT_BOX);
@@ -838,6 +873,7 @@ void Fl_Books_Library::refresh()
         {
             std::string name=sorted[i].first.substr(0, sorted[i].first.size()-1);
             Fl_Library_Folder *folder=new Fl_Library_Folder(child_w, child_h, name, CurrentDir+sorted[i].first, sorted[i].second);
+            folder->Library=this;
             folder->callback(Folder_cb, this);
             folders.push_back(folder);
             visible.push_back(folder);
@@ -1332,6 +1368,193 @@ void Fl_Books_Library::update_browsing_ui()
     }
     grp->init_sizes();
     grp->redraw();
+}
+
+//------------------------------------Online tags (Anime News Network)------------------------
+
+std::vector<Fl_Library_Element*> Fl_Books_Library::comics_in(const std::string &relative_dir)
+{
+    std::string dir=relative_dir;
+    std::replace(dir.begin(), dir.end(), '\\', '/');
+    std::vector<Fl_Library_Element*> comics;
+    for(size_t i=0; i<elements.size(); i++)
+    {
+        std::string rel=elements[i]->GetRelativeDir();
+        std::replace(rel.begin(), rel.end(), '\\', '/');
+        if(rel.compare(0, dir.size(), dir)==0)
+            comics.push_back(elements[i]);
+    }
+    return comics;
+}
+
+void Fl_Books_Library::find_tags_online(Fl_Library_Element *comic)
+{
+    //The other volumes of the series: same folder, same series name
+    std::string series=Ann::SeriesName(comic->GetTitle());
+    std::string key=series;
+    std::transform(key.begin(), key.end(), key.begin(), [](unsigned char c){ return (char)tolower(c); });
+    std::vector<Fl_Library_Element*> comics;
+    for(size_t i=0; i<elements.size(); i++)
+    {
+        if(strcmp(elements[i]->GetRelativeDir(), comic->GetRelativeDir())!=0)
+            continue;
+        std::string other=Ann::SeriesName(elements[i]->GetTitle());
+        std::transform(other.begin(), other.end(), other.begin(), [](unsigned char c){ return (char)tolower(c); });
+        if(other==key)
+            comics.push_back(elements[i]);
+    }
+    if(comics.empty())
+        comics.push_back(comic);
+    std::string scope=comic->GetTitle();
+    if(comics.size()>1)
+        scope+=" and "+std::to_string(comics.size()-1)+" other comic"+(comics.size()>2 ? "s" : "")+" of this series";
+    find_tags_online(comics, series, scope);
+}
+
+void Fl_Books_Library::find_tags_online(const std::string &relative_dir, const std::string &name)
+{
+    std::vector<Fl_Library_Element*> comics=comics_in(relative_dir);
+    if(comics.empty())
+        return;
+    find_tags_online(comics, name, "the "+std::to_string(comics.size())+" comic"+(comics.size()>1 ? "s" : "")+" of the folder "+name);
+}
+
+void Fl_Books_Library::find_tags_online(const std::vector<Fl_Library_Element*> &comics, const std::string &name, const std::string &scope)
+{
+    AnnTitle title;
+    int what=FindTagsDialog(name, scope, &title);
+    if(what!=ANN_NONE)
+        apply_online_tags(comics, title, what);
+}
+
+void Fl_Books_Library::apply_online_tags(const std::vector<Fl_Library_Element*> &comics, const AnnTitle &title, int what)
+{
+    std::vector<int> ids;
+    std::vector<std::string> names=Ann::TagNames(title, what);
+    for(size_t i=0; i<names.size(); i++)
+    {
+        int id=Tags::Create(names[i]);
+        if(id>0)
+            ids.push_back(id);
+    }
+    for(size_t c=0; c<comics.size(); c++)
+    {
+        std::vector<int> tags=Tags::OfComic(comics[c]->TagKey());
+        for(size_t i=0; i<ids.size(); i++)
+            if(std::find(tags.begin(), tags.end(), ids[i])==tags.end())
+                tags.push_back(ids[i]);
+        Tags::SetComic(comics[c]->TagKey(), tags);
+    }
+    refresh_tags();
+}
+
+void Fl_Books_Library::tag_all_online()
+{
+    std::vector<Fl_Library_Element*> comics=comics_in(CurrentDir);
+    if(comics.empty())
+    {
+        (CenterNextMessage('i'), fl_message)("No comic in this folder.");
+        return;
+    }
+    //The comics by series: one search each
+    std::map<std::string, std::pair<std::string, std::vector<Fl_Library_Element*> > > series;
+    for(size_t i=0; i<comics.size(); i++)
+    {
+        std::string name=Ann::SeriesName(comics[i]->GetTitle());
+        std::string key=name;
+        std::transform(key.begin(), key.end(), key.begin(), [](unsigned char c){ return (char)tolower(c); });
+        series[key].first=name;
+        series[key].second.push_back(comics[i]);
+    }
+    std::string folder=CurrentDir.empty() ? std::string("your library") : "the folder "+CurrentDir.substr(0, CurrentDir.size()-1);
+    char message[1024];
+    snprintf(message, sizeof(message), "Find tags on Anime News Network for the %d series (%d comics) of %s?\n"
+             "About %d seconds (1 request per second, then cached for a week). Only sure matches are tagged: "
+             "use Find tags online (right click) for the others.",
+             (int)series.size(), (int)comics.size(), folder.c_str(), (int)series.size()+1);
+    int what=AskTagKind(message);
+    if(what==ANN_NONE)
+        return;
+
+    //Searches in a thread, with a progress window
+    std::vector<std::string> names;
+    for(auto it=series.begin(); it!=series.end(); ++it)
+        names.push_back(it->second.first);
+    std::vector<AnnTitle> found(names.size());
+    std::vector<bool> sure(names.size(), false);
+    std::atomic<int> done(0);
+    std::atomic<bool> cancel(false), finished(false);
+    std::thread worker([&]()
+    {
+        for(size_t i=0; i<names.size() && !cancel; i++)
+        {
+            std::string error;
+            sure[i]=Ann::FindSure(names[i], &found[i], &error);
+            done++;
+        }
+        finished=true;
+    });
+
+    Fl_Double_Window progress(440, 130, "Find tags online");
+    progress.color(THEME_EDITOR_BG);
+    Fl_Box label(20, 16, 400, 22, "Searching Anime News Network...");
+    label.labelcolor(THEME_FG);
+    label.labelsize(13);
+    label.align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE|FL_ALIGN_CLIP);
+    Fl_Progress bar(20, 48, 400, 8);
+    bar.box(FL_FLAT_BOX);
+    bar.color(THEME_BORDER, THEME_ACCENT);
+    bar.minimum(0);
+    bar.maximum((float)names.size());
+    Fl_Button stop(320, 82, 100, 28, "Cancel");
+    stop.box(FL_FLAT_BOX);
+    stop.color(THEME_INPUT_BG, THEME_HOVER);
+    stop.labelcolor(THEME_FG);
+    stop.callback([](Fl_Widget *, void *p) { *(std::atomic<bool>*)p=true; }, &cancel);
+    progress.end();
+    progress.set_modal();
+    progress.callback([](Fl_Widget *, void *p) { *(std::atomic<bool>*)p=true; }, &cancel);
+    progress.show();
+    std::string text;
+    while(!finished)
+    {
+        int n=done;
+        text="Series "+std::to_string(std::min(n+1, (int)names.size()))+" of "+std::to_string(names.size())+":   "+
+             names[std::min(n, (int)names.size()-1)];
+        label.copy_label(text.c_str());
+        bar.value((float)n);
+        Fl::wait(0.1);
+    }
+    worker.join();
+    progress.hide();
+
+    //The tags of the sure matches
+    int tagged_series=0, tagged_comics=0;
+    std::string missed;
+    int nb_missed=0;
+    for(size_t i=0; i<names.size(); i++)
+    {
+        std::string key=names[i];
+        std::transform(key.begin(), key.end(), key.begin(), [](unsigned char c){ return (char)tolower(c); });
+        if(i<(size_t)done && sure[i] && !Ann::TagNames(found[i], what).empty())
+        {
+            apply_online_tags(series[key].second, found[i], what);
+            tagged_series++;
+            tagged_comics+=(int)series[key].second.size();
+        }
+        else if(i<(size_t)done)
+        {
+            if(nb_missed<8)
+                missed+="\n   "+names[i];
+            nb_missed++;
+        }
+    }
+    std::string summary="Tagged "+std::to_string(tagged_series)+" series ("+std::to_string(tagged_comics)+" comics)"+
+                        (cancel ? " before canceling." : ".")+"\nData from Anime News Network.";
+    if(nb_missed>0)
+        summary+="\n\nNot found or not sure ("+std::to_string(nb_missed)+"), right click > Find tags online:"+missed+
+                 (nb_missed>8 ? "\n   ..." : "");
+    (CenterNextMessage('i'), fl_message)("%s", summary.c_str());
 }
 
 void Fl_Books_Library::Home_cb(Fl_Widget *w, void *p)

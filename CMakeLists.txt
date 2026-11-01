@@ -103,6 +103,8 @@ set(SOURCES
     src/SettingsView.cpp
     src/ReaderBar.cpp
     src/WebtoonView.cpp
+    src/AnnTags.cpp
+    src/AnnDialog.cpp
 )
 if(WIN32)
     list(APPEND SOURCES src/WinRC.rc)

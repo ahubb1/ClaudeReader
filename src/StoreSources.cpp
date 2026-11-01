@@ -31,7 +31,7 @@ extern const char *BuiltinSources[];
 //Official JSON API: https://api.mangadex.org/docs/
 static const char *MangaDex=R"lua(
 SOURCE = {
-    id = "mangadex", name = "MangaDex", version = "1.0", kind = "manga",
+    id = "mangadex", name = "MangaDex", version = "1.1", kind = "manga",
     site = "https://mangadex.org",
     headers = { Referer = "https://mangadex.org/" },
 }
@@ -66,8 +66,25 @@ local function pick_title(attributes)
     return "?"
 end
 
-function search(query, page)
+-- Genres and themes: the MangaDex tags (cached a week)
+function filters()
+    local list = {}
+    for _, tag in ipairs(get_json(API .. "/manga/tag", 604800).data) do
+        local group = tag.attributes.group
+        if group == "genre" or group == "theme" then
+            list[#list + 1] = { id = tag.id, name = value(tag.attributes.name.en) or tag.id,
+                                group = group == "genre" and "Genres" or "Themes" }
+        end
+    end
+    table.sort(list, function(a, b) return a.group == b.group and a.name < b.name or a.group < b.group end)
+    return list
+end
+
+function search(query, page, tags)
     local url = API .. "/manga?limit=24&offset=" .. ((page - 1) * 24) .. "&includes[]=cover_art" .. SEARCH_RATINGS
+    for _, id in ipairs(tags or {}) do
+        url = url .. "&includedTags[]=" .. util.urlencode(id)
+    end
     if query ~= "" then
         url = url .. "&title=" .. util.urlencode(query) .. "&order[relevance]=desc"
     else
@@ -141,7 +158,7 @@ end
 //Web pages (no API); the images server checks the Referer
 static const char *Mangapill=R"lua(
 SOURCE = {
-    id = "mangapill", name = "Mangapill", version = "1.1", kind = "manga",
+    id = "mangapill", name = "Mangapill", version = "1.2", kind = "manga",
     site = "https://mangapill.com",
     headers = { Referer = "https://mangapill.com/" },
 }
@@ -155,9 +172,25 @@ local function get_page(url)
     return html.parse(body)
 end
 
-function search(query, page)
+-- Genres: the checkboxes of the search page (cached a week)
+function filters()
+    local doc = html.parse((http.get(BASE .. "/search", { Referer = BASE .. "/" }, 604800)))
+    local list = {}
+    for _, input in ipairs(doc:select("input[name=genre]")) do
+        local name = input:attr("value")
+        if name and name ~= "" then list[#list + 1] = { id = name, name = name, group = "Genres" } end
+    end
+    return list
+end
+
+function search(query, page, tags)
     local doc
-    if query == "" then
+    tags = tags or {}
+    if #tags > 0 then
+        local url = BASE .. "/search?q=" .. util.urlencode(query) .. "&page=" .. page
+        for _, genre in ipairs(tags) do url = url .. "&genre=" .. util.urlencode(genre) end
+        doc = get_page(url)
+    elseif query == "" then
         -- No query: the trending titles of the home page (a single page)
         if page > 1 then return {} end
         doc = get_page(BASE .. "/")

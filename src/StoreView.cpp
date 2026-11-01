@@ -22,6 +22,7 @@
 #include <FL/fl_ask.H>
 #include <FL/filename.H>
 #include <memory>
+#include <algorithm>
 #include <thread>
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
@@ -224,8 +225,12 @@ Fl_Store_View::Fl_Store_View(int X, int Y, int W, int H):
 
     //Top bar: stores tabs, search, sources folder
     TopBar=new Fl_Group(X, Y, W, STORE_TOPBAR_H);
-        TabsGroup=new Fl_Group(X, Y, W-420, STORE_TOPBAR_H);
+        TabsGroup=new Fl_Group(X, Y, W-530, STORE_TOPBAR_H);
         TabsGroup->end();
+        FilterButton=FlatButton(X+W-522, Y+6, 102, STORE_TOPBAR_H-12, "Genres", false);
+        FilterButton->tooltip("Search by genres and themes");
+        FilterButton->callback(Filter_cb, this);
+        FilterButton->hide();
         SearchInput=new Fl_Hint_Input(X+W-412, Y+6, 300, STORE_TOPBAR_H-12);
         SearchInput->box(THEME_INPUT_BOX);
         SearchInput->color(THEME_INPUT_BG);
@@ -249,16 +254,19 @@ Fl_Store_View::Fl_Store_View(int X, int Y, int W, int H):
     TopBar->resizable(TabsGroup);
 
     //Results
-    Results=new Fl_Scroll(X, Y+STORE_TOPBAR_H, W, H-STORE_TOPBAR_H);
+    Results=new Fl_Infinite_Scroll(X, Y+STORE_TOPBAR_H, W, H-STORE_TOPBAR_H);
+    Results->OnNearEnd=[this]() { LoadMore(); };
         //Content of the scroll: the cards are placed relative to it (see LayoutCards)
         Canvas=new Fl_Group(X, Y+STORE_TOPBAR_H, W, H-STORE_TOPBAR_H);
             Message=new Fl_Box(X, Y+STORE_TOPBAR_H, W, 160);
             Message->labelcolor(THEME_FG_DIM);
             Message->labelsize(14);
             Message->align(FL_ALIGN_CENTER|FL_ALIGN_INSIDE|FL_ALIGN_WRAP);
-            MoreButton=FlatButton(X, Y, 180, 32, "Load more", false);
-            MoreButton->callback(More_cb, this);
-            MoreButton->hide();
+            MoreBox=new Fl_Box(X, Y, 180, 32, "Loading more...");
+            MoreBox->labelcolor(THEME_FG_DIM);
+            MoreBox->labelsize(12);
+            MoreBox->hide();
+            LoadingMore=false;
         Canvas->end();
         Canvas->resizable(NULL);
     Results->end();
@@ -420,6 +428,8 @@ void Fl_Store_View::SelectSource(int index)
     SearchInput->Hint="Search "+Sources[index]->Name;
     SearchInput->value("");
     SearchInput->redraw();
+    UpdateFilterButton();
+    LoadFilters();
     Search("", 1);
 }
 
@@ -465,21 +475,25 @@ void Fl_Store_View::Search(const std::string &query, int page)
     }
     Query=query;
     Page=page;
-    MoreButton->deactivate();
+    LoadingMore=page>1;
     SetStatus(source->Name+": searching...");
 
     unsigned generation=Generation;
     std::shared_ptr< std::vector<StoreEntry> > results(new std::vector<StoreEntry>());
     std::shared_ptr<std::string> error(new std::string());
     std::shared_ptr<bool> ok(new bool(false));
-    Tasks.Run([=]() { *ok=source->Search(query, page, results.get(), error.get()); },
+    std::vector<std::string> tags=Chosen[source];
+    Tasks.Run([=]() { *ok=source->Search(query, page, results.get(), error.get(), tags); },
               [=]()
     {
         if(generation!=Generation)
             return; //Another search was started
-        MoreButton->activate();
+        LoadingMore=false;
         if(!*ok)
         {
+            //No retry loop when scrolling: the end of the results
+            LastPage=true;
+            LayoutCards();
             if(page==1)
                 ShowMessage("The search failed:\n"+UserError(*error));
             SetStatus(source->Name+": search failed");
@@ -569,14 +583,15 @@ void Fl_Store_View::LayoutCards()
             bottom=sy+(row+1)*(CARD_H+CARD_GAP);
         }
     }
+    //While more results can come: the loading line, and room to scroll to it
     if(!Cards.empty() && !LastPage)
     {
-        MoreButton->resize(cx+(cw-180)/2, bottom+8, 180, 32);
-        MoreButton->show();
+        MoreBox->resize(cx+(cw-180)/2, bottom+8, 180, 32);
+        MoreBox->show();
         bottom+=48;
     }
     else
-        MoreButton->hide();
+        MoreBox->hide();
     Message->resize(cx, cy+40, cw, 160);
     //The canvas covers the content (the scroll range)
     Canvas->size(cw, std::max(bottom+STORE_PAD-cy, Results->h())); //Same position: the children do not move
@@ -852,10 +867,159 @@ void Fl_Store_View::Card_cb(Fl_Widget *w, void *p)
     ((Fl_Store_View*)p)->OpenDetail(((Fl_Store_Card*)w)->Index);
 }
 
-void Fl_Store_View::More_cb(Fl_Widget *w, void *p)
+//! The filters of the store shown (once, in a task)
+void Fl_Store_View::LoadFilters()
+{
+    if(Current<0 || !Sources[Current]->HasFilters() || Filters.count(Sources[Current]))
+        return;
+    LuaSource *source=Sources[Current];
+    Filters[source];    //Asked: not again
+    std::shared_ptr< std::vector<StoreEntry> > list(new std::vector<StoreEntry>());
+    std::shared_ptr<std::string> error(new std::string());
+    std::shared_ptr<bool> ok(new bool(false));
+    Tasks.Run([=]() { *ok=source->Filters(list.get(), error.get()); },
+              [=]()
+    {
+        if(*ok)
+            Filters[source]=*list;
+        else
+            Filters.erase(source);  //Tried again next time
+        UpdateFilterButton();
+    });
+}
+
+//! "Genres" (and the number chosen), for the stores with filters only
+void Fl_Store_View::UpdateFilterButton()
+{
+    if(Current<0 || !Sources[Current]->HasFilters())
+    {
+        FilterButton->hide();
+        TopBar->redraw();
+        return;
+    }
+    size_t chosen=Chosen[Sources[Current]].size();
+    FilterLabel=chosen ? "Genres ("+std::to_string(chosen)+")" : "Genres";
+    FilterButton->copy_label(FilterLabel.c_str());
+    FilterButton->color(chosen ? fl_rgb_color(4, 57, 94) : THEME_INPUT_BG);
+    FilterButton->show();
+    TopBar->redraw();
+}
+
+//! The genres and themes as check items (submenus per group): a choice searches again
+void Fl_Store_View::Filter_cb(Fl_Widget *w, void *p)
 {
     Fl_Store_View *v=(Fl_Store_View*)p;
-    v->Search(v->Query, v->Page+1);
+    if(v->Current<0)
+        return;
+    LuaSource *source=v->Sources[v->Current];
+    std::vector<StoreEntry> &filters=v->Filters[source];
+    std::vector<std::string> &chosen=v->Chosen[source];
+    if(filters.empty())
+    {
+        v->Filters.erase(source);
+        v->SetStatus(source->Name+": loading the genres...");
+        v->LoadFilters();
+        return;
+    }
+    //Menu: one submenu per group, then "Clear"
+    std::vector<std::string> labels;
+    labels.reserve(filters.size()+4);
+    std::vector<Fl_Menu_Item> menu;
+    std::vector<int> index_of;  //Menu item -> filter index (-1: none, -2: clear)
+    std::string group;
+    for(size_t i=0; i<filters.size(); i++)
+    {
+        std::string g=filters[i].Get("group", "Genres");
+        if(g!=group)
+        {
+            if(!group.empty())
+            {
+                menu.push_back(Fl_Menu_Item());
+                index_of.push_back(-1);
+            }
+            group=g;
+            labels.push_back(g);
+            Fl_Menu_Item sub={};
+            sub.flags=FL_SUBMENU;
+            menu.push_back(sub);
+            index_of.push_back(-1);
+            menu.back().text=NULL;      //Set below (the labels vector must not grow after)
+        }
+        Fl_Menu_Item item={};
+        bool on=std::find(chosen.begin(), chosen.end(), filters[i].Get("id"))!=chosen.end();
+        item.flags=FL_MENU_TOGGLE|(on ? FL_MENU_VALUE : 0);
+        menu.push_back(item);
+        index_of.push_back((int)i);
+        labels.push_back(filters[i].Get("name", filters[i].Get("id")));
+    }
+    menu.push_back(Fl_Menu_Item());     //End of the last submenu
+    index_of.push_back(-1);
+    Fl_Menu_Item clear={};
+    menu.push_back(clear);
+    index_of.push_back(-2);
+    labels.push_back(chosen.empty() ? "No genre chosen" : "Clear all ("+std::to_string(chosen.size())+")");
+    menu.push_back(Fl_Menu_Item());
+    index_of.push_back(-1);
+    //The labels (stable now)
+    size_t label=0;
+    for(size_t m=0; m<menu.size(); m++)
+    {
+        bool is_end=index_of[m]==-1 && !(menu[m].flags&FL_SUBMENU);
+        if(!is_end)
+            menu[m].text=labels[label++].c_str();
+    }
+    if(chosen.empty())
+        menu[menu.size()-2].flags|=FL_MENU_INACTIVE;
+    const Fl_Menu_Item *picked=menu[0].popup(w->x(), w->y()+w->h());
+    if(!picked)
+        return;
+    int index=index_of[picked-&menu[0]];
+    if(index==-2)
+        chosen.clear();
+    else if(index>=0)
+    {
+        std::string id=filters[index].Get("id");
+        std::vector<std::string>::iterator it=std::find(chosen.begin(), chosen.end(), id);
+        if(it==chosen.end())
+            chosen.push_back(id);
+        else
+            chosen.erase(it);
+    }
+    else
+        return;
+    v->UpdateFilterButton();
+    v->Search(v->SearchInput->value(), 1);
+}
+
+//! Near the end of the results (or they do not fill the view): the next page
+void Fl_Store_View::LoadMore()
+{
+    if(Current<0 || Cards.empty() || LastPage || LoadingMore || !visible_r())
+        return;
+    Search(Query, Page+1);
+}
+
+void Fl_Infinite_Scroll::draw()
+{
+    Fl_Scroll::draw();
+    //Content end: the bottom of the child (the canvas of the results)
+    if(children()<1 || !OnNearEnd)
+        return;
+    Fl_Widget *content=child(0);
+    int content_bottom=content->y()+content->h();
+    if(content_bottom-(y()+h())<std::max(400, h()))
+    {
+        //Not from draw(): the search adds widgets
+        Fl::remove_timeout(NearEnd_cb, this);
+        Fl::add_timeout(0.05, NearEnd_cb, this);
+    }
+}
+
+void Fl_Infinite_Scroll::NearEnd_cb(void *p)
+{
+    Fl_Infinite_Scroll *s=(Fl_Infinite_Scroll*)p;
+    if(s->OnNearEnd)
+        s->OnNearEnd();
 }
 
 void Fl_Store_View::CloseDetail_cb(Fl_Widget *w, void *p)

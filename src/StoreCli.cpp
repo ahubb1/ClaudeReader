@@ -40,7 +40,8 @@ static int Usage()
 {
     printf("Usage:\n"
            "  ClaudeReader --store list\n"
-           "  ClaudeReader --store <store> search \"<query>\" [page]\n"
+           "  ClaudeReader --store <store> search \"<query>\" [page] [filter id,filter id...]\n"
+           "  ClaudeReader --store <store> filters\n"
            "  ClaudeReader --store <store> chapters <manga id>\n"
            "  ClaudeReader --store <store> pages <chapter id>\n"
            "  ClaudeReader --store <store> download <manga id> <chapter id> [cbz|zip|pdf|images] [library folder]\n");
@@ -75,15 +76,37 @@ int StoreCommandLine(int argc, char **argv)
         fprintf(stderr, "Unknown store %s (see --store list)\n", id.c_str());
         return 1;
     }
+    std::string command=argc>1 ? argv[1] : "";
+    std::string error;
+    std::vector<StoreEntry> entries;
+    if(command=="filters")
+    {
+        if(!source->Filters(&entries, &error))
+        {
+            fprintf(stderr, "%s\n", error.c_str());
+            return 1;
+        }
+        for(size_t i=0; i<entries.size(); i++)
+            PrintEntry(entries[i]);
+        return 0;
+    }
     if(argc<3)
         return Usage();
 
-    std::string command=argv[1];
-    std::string error;
-    std::vector<StoreEntry> entries;
     if(command=="search")
     {
-        if(!source->Search(argv[2], argc>3 ? atoi(argv[3]) : 1, &entries, &error))
+        std::vector<std::string> tags;
+        std::string list=argc>4 ? argv[4] : "";
+        for(size_t start=0; start<list.size();)
+        {
+            size_t comma=list.find(',', start);
+            if(comma==std::string::npos)
+                comma=list.size();
+            if(comma>start)
+                tags.push_back(list.substr(start, comma-start));
+            start=comma+1;
+        }
+        if(!source->Search(argv[2], argc>3 ? atoi(argv[3]) : 1, &entries, &error, tags))
         {
             fprintf(stderr, "%s\n", error.c_str());
             return 1;

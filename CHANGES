@@ -1,4 +1,16 @@
 ClaudeReader changes (based on BDReader)
+ClaudeReader 1.1.3 (unreleased)
+	-Library: "Find tags online" (right-click a comic or a folder, or the tag menu of a card) looks the series up on
+	 the Anime News Network encyclopedia and tags it with its genres, themes or both (the series volumes of the
+	 folder too). The tag button of the toolbar tags every series found for sure, after asking genres, themes or
+	 both, with a progress window and the series not found at the end. Data from Anime News Network, at most one
+	 request per second, cached a week
+	-Store: the results load as you scroll (no "Load more" button)
+	-Store: Genres menu to search by genres and themes (MangaDex: genres and themes, Mangapill: genres), for the
+	 stores with a filters() function; search() gets the filters chosen as its third argument. Command line:
+	 --store <store> filters, and the filters after the page of a search
+	-Library: the comics with the same reading date, or the same type, are sorted by name
+	-Library cards: "+N" when the tags of a comic do not all fit
 ClaudeReader 1.1.2 (01/11/2026)
 	-Bug fixed: crash after the "Loading comics library" bar when the library scanned a folder again while folder
 	 cards were shown: opening a folder of comics (#15), back from a store download, another library folder chosen

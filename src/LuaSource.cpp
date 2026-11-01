@@ -645,6 +645,9 @@ LuaSource::LuaSource(const std::string &script, const std::string &origin):
         Error="SOURCE.id and SOURCE.name are required";
         return;
     }
+    lua_getglobal(L, "filters");
+    FiltersFunction=lua_isfunction(L, -1);
+    lua_pop(L, 1);
     const char *functions[]={"search", "chapters", "pages"};
     for(int i=0; i<(IsTorrent() ? 1 : 3); i++)
     {
@@ -757,13 +760,30 @@ bool LuaSource::CallEntries(const char *function, int nargs, std::vector<StoreEn
     return true;
 }
 
-bool LuaSource::Search(const std::string &query, int page, std::vector<StoreEntry> *results, std::string *error)
+bool LuaSource::Search(const std::string &query, int page, std::vector<StoreEntry> *results, std::string *error,
+                       const std::vector<std::string> &tags)
 {
     std::lock_guard<std::mutex> lock(Lock);
     lua_getglobal(L, "search");
     lua_pushstring(L, query.c_str());
     lua_pushinteger(L, page);
-    return CallEntries("search", 2, results, error);
+    lua_createtable(L, (int)tags.size(), 0);
+    for(size_t i=0; i<tags.size(); i++)
+    {
+        lua_pushstring(L, tags[i].c_str());
+        lua_rawseti(L, -2, (lua_Integer)i+1);
+    }
+    return CallEntries("search", 3, results, error);
+}
+
+bool LuaSource::Filters(std::vector<StoreEntry> *filters, std::string *error)
+{
+    filters->clear();
+    if(!FiltersFunction)
+        return true;
+    std::lock_guard<std::mutex> lock(Lock);
+    lua_getglobal(L, "filters");
+    return CallEntries("filters", 0, filters, error);
 }
 
 bool LuaSource::Chapters(const StoreEntry &manga, std::vector<StoreEntry> *chapters, std::string *error)
@@ -815,20 +835,25 @@ static const char *SourcesReadme=
 "when its web site changes, without waiting for a new ClaudeReader. Click the refresh button\n"
 "of the Store view after editing a file. Test from a command prompt:\n"
 "    ClaudeReader --store list\n"
-"    ClaudeReader --store <id> search \"query\"\n"
+"    ClaudeReader --store <id> search \"query\" [page] [filter id,filter id...]\n"
+"    ClaudeReader --store <id> filters\n"
 "    ClaudeReader --store <id> chapters <manga id>\n"
 "    ClaudeReader --store <id> pages <chapter id>\n"
 "\n"
 "A store defines:\n"
 "    SOURCE = { id=\"...\", name=\"...\", kind=\"manga\" (or \"torrent\"), site=\"https://...\",\n"
 "               headers={ Referer=\"https://...\" } }   -- headers: sent with the images\n"
-"    function search(query, page)  -- query \"\": popular titles; page: 1, 2...\n"
+"    function search(query, page, filters)  -- query \"\": popular titles; page: 1, 2...\n"
+"        -- filters: the ids chosen in the Genres menu ({} when none, see filters() below)\n"
 "        return { {id=, title=, cover=, description=, url=, status=, year=}, ... }\n"
 "        -- torrent stores: {id=, title=, magnet=, size=, seeders=, leechers=, date=}\n"
 "    function chapters(manga)      -- manga: a table returned by search()\n"
 "        return { {id=, title=, number=, volume=, group=, date=}, ... }  -- oldest first\n"
 "    function pages(chapter)       -- chapter: a table returned by chapters()\n"
 "        return { \"image url\", ... }  -- or { {url=, headers={...}, key=}, ... }\n"
+"Optional: search by genres or themes (a Genres menu in the Store view)\n"
+"    function filters()\n"
+"        return { {id=, name=, group=\"Genres\"}, ... }  -- group: a submenu (\"Genres\", \"Themes\"...)\n"
 "\n"
 "Available functions:\n"
 "    http.get(url [, headers [, cache_seconds]])  -> body, status   (nil, error on network failure)\n"

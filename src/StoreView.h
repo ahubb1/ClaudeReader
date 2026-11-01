@@ -27,6 +27,7 @@
 #include <string>
 #include <vector>
 #include <deque>
+#include <map>
 #include <atomic>
 #include <functional>
 #include <FL/Fl_Group.H>
@@ -44,6 +45,18 @@
 #include "Async.h"
 
 class Fl_Store_Card;
+
+//! Scroll telling when its end is near (shown or scrolled to): the next results are loaded then
+class Fl_Infinite_Scroll : public Fl_Scroll
+{
+    public:
+        Fl_Infinite_Scroll(int X, int Y, int W, int H):Fl_Scroll(X, Y, W, H) {}
+        ~Fl_Infinite_Scroll() { Fl::remove_timeout(NearEnd_cb, this); }
+        void draw();
+        std::function<void()> OnNearEnd;
+    private:
+        static void NearEnd_cb(void *p);
+};
 
 //! The store view (shown instead of the library or the reader)
 class Fl_Store_View : public Fl_Group
@@ -67,7 +80,6 @@ class Fl_Store_View : public Fl_Group
         static void Tab_cb(Fl_Widget *w, void *p);
         static void Search_cb(Fl_Widget *w, void *p);
         static void Card_cb(Fl_Widget *w, void *p);
-        static void More_cb(Fl_Widget *w, void *p);
         static void CloseDetail_cb(Fl_Widget *w, void *p);
         static void SelectAll_cb(Fl_Widget *w, void *p);
         static void SelectNone_cb(Fl_Widget *w, void *p);
@@ -109,10 +121,19 @@ class Fl_Store_View : public Fl_Group
         Fl_Group *TopBar, *TabsGroup;
         std::vector<Fl_Button*> Tabs;
         Fl_Hint_Input *SearchInput;
-        Fl_Scroll *Results;
+        Fl_Button *FilterButton;                            //!< Genres and themes, for the stores with filters
+        std::map<LuaSource*, std::vector<StoreEntry> > Filters;
+        std::map<LuaSource*, std::vector<std::string> > Chosen;    //!< Ids of the filters chosen, per store
+        std::string FilterLabel;
+        void LoadFilters();
+        void UpdateFilterButton();
+        static void Filter_cb(Fl_Widget *w, void *p);
+        Fl_Infinite_Scroll *Results;
         Fl_Group *Canvas;               //!< Content of Results
         Fl_Box *Message;
-        Fl_Button *MoreButton;
+        Fl_Box *MoreBox;                    //!< "Loading more..." under the results
+        bool LoadingMore;                   //!< The next page is being loaded
+        void LoadMore();
         std::vector<Fl_Store_Card*> Cards;
         Fl_Group *Detail, *MangaGroup, *TorrentGroup;
         Fl_Box *DetailCover, *DetailTitle, *DetailInfo, *DetailDescription, *ChaptersLabel, *DetailStatus;

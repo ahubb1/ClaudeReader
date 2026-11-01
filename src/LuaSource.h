@@ -80,7 +80,13 @@ class LuaSource
         bool IsValid() const {return Valid;}
         const std::string &LoadError() const {return Error;}
 
-        bool Search(const std::string &query, int page, std::vector<StoreEntry> *results, std::string *error);
+        //! tags: ids of the filters chosen (genres, themes), passed to search() as its third argument
+        bool Search(const std::string &query, int page, std::vector<StoreEntry> *results, std::string *error,
+                    const std::vector<std::string> &tags=std::vector<std::string>());
+        //! The script can filter its searches (genres, themes...): it has a filters() function
+        bool HasFilters() const {return FiltersFunction;}
+        //! The filters of the store: {id=, name=, group=} ("Genres", "Themes"...)
+        bool Filters(std::vector<StoreEntry> *filters, std::string *error);
         bool Chapters(const StoreEntry &manga, std::vector<StoreEntry> *chapters, std::string *error);
         bool Pages(const StoreEntry &chapter, std::vector<StorePage> *pages, std::string *error);
 
@@ -98,6 +104,7 @@ class LuaSource
 
         lua_State *L;
         std::string Script;
+        bool FiltersFunction=false;
         LuaLimits Limits;
         std::mutex Lock;
         bool Valid;

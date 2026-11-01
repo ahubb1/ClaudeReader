@@ -52,6 +52,8 @@ namespace Net
     //! GET a URL. The successful responses are cached for cache_ttl seconds (NET_CACHE_FOREVER: always reused)
     //! cache_key: identifies the content in the cache (default: the URL), for contents served by changing URLs
     NetResponse Get(const std::string &url, const NetHeaders &headers=NetHeaders(), int cache_ttl=NET_NO_CACHE, const std::string &cache_key="");
+    //! The cached content of a URL, if recent enough (no request)
+    bool FromCache(const std::string &url, int cache_ttl, std::string *body);
     //! POST a body (never cached)
     NetResponse Post(const std::string &url, const std::string &body, const NetHeaders &headers=NetHeaders());
 

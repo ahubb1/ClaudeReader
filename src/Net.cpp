@@ -211,6 +211,11 @@ NetResponse Net::Get(const std::string &url, const NetHeaders &headers, int cach
     return response;
 }
 
+bool Net::FromCache(const std::string &url, int cache_ttl, std::string *body)
+{
+    return ReadCache(url, cache_ttl, body);
+}
+
 NetResponse Net::Post(const std::string &url, const std::string &body, const NetHeaders &headers)
 {
     return Request(url, &body, headers);

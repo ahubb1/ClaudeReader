@@ -89,12 +89,15 @@ File names in any language are supported.
 - **Tags**:
   - Create, rename, recolor and delete tags in Settings.
   - Tag comics by right-clicking them.
+  - **Find tags online**: right-click a comic or a folder, or use the tag menu of a card, to look the series up on [Anime News Network](https://www.animenewsnetwork.com) and tag it with its genres, themes or both. The tag button of the library toolbar tags every series it finds at once (you choose genres, themes or both first). Series data comes from the Anime News Network encyclopedia.
   - Filter by tag, or search for `#tag`.
 - Search, filter by read or unread, and sort.
 - Open a folder of comics, such as the CBZ volumes of a series, with File → Open folder (or drag and drop). The library shows it in reading order (Vol 2 before Vol 10). If the folder is outside your library, a **My library** button takes you back.
 
 ### Store
 - Search and download manga from **MangaDex**, **Mangapill** and **Nyaa**. Nyaa gives magnet links for your torrent client.
+- Results load as you scroll.
+- **Genres** menu: search by genres (MangaDex and Mangapill) and themes (MangaDex). It shows for stores that support it.
 - Downloads go straight to the library, as CBZ, PDF, ZIP or a folder of images. You can queue several chapters, cancel downloads, and *Read* a chapter directly (it is downloaded first if needed).
 - Covers, pages and searches are cached so they load faster the next time.
 - **More stores** in Settings → Stores:
@@ -109,6 +112,8 @@ ClaudeReader comic.cbz                                # open a comic
 ClaudeReader -r -e comic.cbz exported/ .jpg           # export every panel as an image (-r: manga order)
 ClaudeReader --store list                             # the stores
 ClaudeReader --store mangadex search "yotsuba"
+ClaudeReader --store mangapill filters                # the genres of a store
+ClaudeReader --store mangapill search "" 1 Action,Comedy
 ClaudeReader --store mangadex chapters <manga id>
 ClaudeReader --store mangadex download <manga id> <chapter id> cbz <library folder>
 ```
