@@ -43,6 +43,7 @@ struct NetResponse
     std::string Error;      //!< Empty when Status is 2xx
     bool FromCache;
     bool Ok() const { return Status>=200 && Status<300; }
+    bool Redirected=false;  //!< Answered by another host (a bot challenge, a login page...): not cached
 };
 
 //! HTTP(S) requests (thread safe), with a disk cache and a polite delay between requests to the same host

@@ -27,7 +27,14 @@
 #include "md5.h"
 #include "Preferences.h" //GetUserDataDir
 
-#define NET_USER_AGENT "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36 ClaudeReader/1.1"
+//What ClaudeReader is: MangaDex (and other sites) send a bot challenge to a program presenting itself as a browser
+#ifndef CLAUDEREADER_VERSION
+    #define CLAUDEREADER_VERSION "1.1"
+#endif
+#define NET_USER_AGENT "ClaudeReader/" CLAUDEREADER_VERSION " (+https://github.com/ahubb1/ClaudeReader)"
+//2: drops the bot challenge pages cached by ClaudeReader 1.1 (it presented itself as a browser) in place of
+//MangaDex answers
+#define NET_CACHE_VERSION "2"
 #define NET_HOST_DELAY_MS 100   //Minimum delay between two requests to the same host (sites rate limits; HTTP 429 answers are retried)
 
 
@@ -45,8 +52,26 @@ std::string Net::CacheDir()
     {
         dir=std::string(GetUserDataDir())+"/cache";
         FileUtf8::MakeDirs(dir);
+        //A cache of an older format: started again
+        std::string version;
+        if(!FileUtf8::Read(dir+"/version", &version) || version!=NET_CACHE_VERSION)
+        {
+            std::vector<std::string> names=FileUtf8::List(dir);
+            for(size_t i=0; i<names.size(); i++)
+                FileUtf8::Remove(dir+"/"+names[i]);
+            FileUtf8::Write(dir+"/version", NET_CACHE_VERSION);
+        }
     });
     return dir;
+}
+
+//! Host of a URL ("https://api.example.org/x" -> "api.example.org")
+static std::string UrlHost(const std::string &url)
+{
+    size_t start=url.find("://");
+    start=start==std::string::npos ? 0 : start+3;
+    size_t end=url.find_first_of("/?#", start);
+    return url.substr(start, end==std::string::npos ? std::string::npos : end-start);
 }
 
 static std::string CacheFile(const std::string &url)
@@ -147,6 +172,10 @@ static NetResponse Request(const std::string &url, const std::string *post_body,
         curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response.Status);
         if(!response.Ok())
             response.Error="HTTP error "+std::to_string(response.Status);
+        //Redirected to another host: a bot challenge or a login page, not the content asked for
+        char *final_url=NULL;
+        curl_easy_getinfo(curl, CURLINFO_EFFECTIVE_URL, &final_url);
+        response.Redirected=final_url && UrlHost(final_url)!=UrlHost(url);
     }
     else
     {
@@ -177,7 +206,7 @@ NetResponse Net::Get(const std::string &url, const NetHeaders &headers, int cach
         response=Request(url, NULL, headers);
     }
 
-    if(response.Ok() && cache_ttl!=NET_NO_CACHE)
+    if(response.Ok() && !response.Redirected && cache_ttl!=NET_NO_CACHE)
         WriteCache(key, response.Body);
     return response;
 }
@@ -204,6 +233,7 @@ void Net::ClearCache()
     std::vector<std::string> names=FileUtf8::List(dir);
     for(size_t i=0; i<names.size(); i++)
         FileUtf8::Remove(dir+"/"+names[i]);
+    FileUtf8::Write(dir+"/version", NET_CACHE_VERSION);
 }
 
 std::string Net::UrlEncode(const std::string &text)

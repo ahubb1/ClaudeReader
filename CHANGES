@@ -1,4 +1,9 @@
 ClaudeReader changes (based on BDReader)
+ClaudeReader 1.1.1 (unreleased)
+	-MangaDex: "json.decode: Unexpected character" on every search. MangaDex now sends a bot challenge to programs
+	 presenting themselves as a browser: ClaudeReader identifies itself (ClaudeReader/<version>), as the MangaDex
+	 API asks. The pages of another host (a challenge after a redirection) are not cached any more, and the cache
+	 is started again once (it could hold such pages)
 ClaudeReader 1.1 (31/10/2026)
 	-Reader bar above the page: back to the library, comic title and position, reading mode (Panels, Page, Strip,
 	 Scroll), right to left, pages side bar and fullscreen; hidden in fullscreen
