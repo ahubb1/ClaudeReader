@@ -1,5 +1,7 @@
 ClaudeReader changes (based on BDReader)
 ClaudeReader 1.1.3 (unreleased)
+	-Manga mode (right to left) is a user preference: kept for every comic and volume opened, after a restart
+	 and after a crash (saved when it is switched, ON or OFF). It was a per comic setting, OFF for each new comic (#17)
 	-Library: "Find tags online" (right-click a comic or a folder, or the tag menu of a card) looks the series up on
 	 the Anime News Network encyclopedia and tags it with its genres, themes or both (the series volumes of the
 	 folder too). The tag button of the toolbar tags every series found for sure, after asking genres, themes or

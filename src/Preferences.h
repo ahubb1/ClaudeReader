@@ -98,6 +98,7 @@ class Preferences
         void SetBorder(bool val) { Border = val; }
         bool GetRightToLeft() { return RightToLeft; }
         void SetRightToLeft(bool val) { RightToLeft = val; }
+        void SaveRightToLeft();
         bool GetSavePref() { return SavePref; }
         void SetSavePref(bool val) { SavePref = val; }
         bool GetLocalPref() { return LocalPref; }
@@ -148,7 +149,7 @@ class Preferences
         bool Thumbnails;
         bool InContext;
         bool Border;
-        bool RightToLeft;   //!< Manga reading order: panels ordered from right to left
+        bool RightToLeft;   //!< Manga reading order: panels ordered from right to left (for every comic)
         bool SavePref, LocalPref;
         int WinW, WinH;
         int WinX, WinY;

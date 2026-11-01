@@ -415,6 +415,8 @@ int Preferences::Load(const char filename[FL_PATH_MAX])
             int n=(int)InContext;GlobalPrefs->get("InContext", n, n);InContext=(bool)n;
             int b=(int)Border;GlobalPrefs->get("Border", b, b);Border=(bool)b;
             GlobalPrefs->get("RotationIdx", RotationIdx, RotationIdx);
+        //Manga mode: a user preference for every comic (not per comic)
+        int rtl=(int)RightToLeft;GlobalPrefs->get("RightToLeft", rtl, rtl);RightToLeft=(bool)rtl;
     }
 
     //Get doc specific pref if any (and overwrite global ones if needed)
@@ -433,7 +435,6 @@ int Preferences::Load(const char filename[FL_PATH_MAX])
                 DocPrefs->get("AdditionnalZoomIdx", AdditionnalZoomIdx, AdditionnalZoomIdx);
                 int n=(int)InContext;DocPrefs->get("InContext", n, n);InContext=(bool)n;
                 int b=(int)Border;DocPrefs->get("Border", b, b);Border=(bool)b;
-                int rtl=(int)RightToLeft;DocPrefs->get("RightToLeft", rtl, rtl);RightToLeft=(bool)rtl;
                 DocPrefs->get("RotationIdx", RotationIdx, RotationIdx);
                 char lastdate_s[20];
                 DocPrefs->get("LastDate", lastdate_s, "01/01/1980-00:00:00", 20);
@@ -574,6 +575,7 @@ void Preferences::Save(Document *doc)
         GlobalPrefs->set("InContext", InContext);
         GlobalPrefs->set("Border", Border);
         GlobalPrefs->set("RotationIdx", RotationIdx);
+        GlobalPrefs->set("RightToLeft", RightToLeft);
 
 
     //If a doc exists write specific prefs
@@ -589,7 +591,6 @@ void Preferences::Save(Document *doc)
             DocPrefs->set("AdditionnalZoomIdx", AdditionnalZoomIdx);
             DocPrefs->set("InContext", InContext);
             DocPrefs->set("Border", Border);
-            DocPrefs->set("RightToLeft", RightToLeft);
             DocPrefs->set("RotationIdx", RotationIdx);
             char time_s[150];time_t now=time(0);strftime(time_s, 150, "%d/%m/%Y-%H:%M:%S", localtime(&now));
             DocPrefs->set("LastDate", time_s);
@@ -602,6 +603,14 @@ void Preferences::Save(Document *doc)
     delete GlobalPrefs;
 }
 
+
+//! Write the manga mode at once (kept after a restart or a crash)
+void Preferences::SaveRightToLeft()
+{
+    Fl_Preferences prefs(PrefDir, "claudereader", "claudereader");
+    prefs.set("RightToLeft", RightToLeft);
+    prefs.flush();
+}
 
 void Preferences::ForceSave()
 {
@@ -618,7 +627,6 @@ void Preferences::ForceSave()
             DocPrefs->set("AdditionnalZoomIdx", AdditionnalZoomIdx);
             DocPrefs->set("InContext", InContext);
             DocPrefs->set("Border", Border);
-            DocPrefs->set("RightToLeft", RightToLeft);
             DocPrefs->set("RotationIdx", RotationIdx);
             char time_s[150];strftime(time_s, 150, "%d/%m/%Y-%H:%M:%S", &LastDate);
             DocPrefs->set("LastDate", time_s);
@@ -641,5 +649,5 @@ void Preferences::CopyLocalTo(Preferences *pref)
      pref->AdditionnalZoomIdx=AdditionnalZoomIdx;
      pref->InContext=InContext;
      pref->Border=Border;
-     //RightToLeft is not copied: manga mode is only a per comics setting (off by default)
+     pref->RightToLeft=RightToLeft;
 }

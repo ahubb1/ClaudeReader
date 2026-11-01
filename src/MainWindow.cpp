@@ -1470,8 +1470,11 @@ void MangaMode_cb(Fl_Widget* widget, void * param)
 
     bool rtl=!mw->Doc->GetRightToLeft();
     mw->Doc->SetRightToLeft(rtl);
+    //A user preference: the next comics open in this direction too, saved now (kept after a crash)
     if(mw->PrefDoc)
         mw->PrefDoc->SetRightToLeft(rtl);
+    mw->Pref->SetRightToLeft(rtl);
+    mw->Pref->SaveRightToLeft();
     ApplyReadingDirection(mw, rtl);
 
     mw->Display->SetImage(mw->Doc->RenderPage(), *mw->Doc->Render());

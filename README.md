@@ -61,7 +61,7 @@ Every push builds and tests both versions; see [`.github/workflows/build.yml`](.
 
 ### Reading
 - **Panel by panel**: the panels of each page are found automatically and shown one after the other, enlarged to fit the window. You can see the panel alone or highlighted in its page. Settings let you choose the highlight: a frame, a line, corners, or dimming the rest of the page, in any thickness and color.
-- **Manga mode**: right-to-left reading order, starting with the top right panel and reading each row right to left. It is remembered for each comic.
+- **Manga mode**: right-to-left reading order, starting with the top right panel and reading each row right to left. It stays on (or off) for every comic you open, and after restarting ClaudeReader.
 - **Four reading modes**:
   - **Panels**: one panel at a time.
   - **Page**: the whole page.
