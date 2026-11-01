@@ -22,6 +22,7 @@
 #include <FL/fl_draw.H>
 #include <FL/Fl_Tooltip.H>
 #include <FL/fl_ask.H>
+#include <algorithm>
 #include <string>
 #ifdef _WIN32
     #include <FL/platform.H>
@@ -121,8 +122,37 @@ void ApplyDarkTitleBar(Fl_Window *win)
 }
 
 
-void CenterNextMessage()
+//! Icon of the message boxes: a flat colored circle with a white sign (36x36)
+static Fl_SVG_Image *MessageIcon(char kind)
 {
+    static Fl_SVG_Image *icons[3]={NULL, NULL, NULL};
+    int index=kind=='?' ? 1 : kind=='i' ? 2 : 0;
+    if(!icons[index])
+    {
+        //Red for the errors, the accent color for the questions and the information
+        const char *circle=index==0 ? "<circle cx='24' cy='24' r='22' fill='#f14c4c'/>" : "<circle cx='24' cy='24' r='22' fill='#0078d4'/>";
+        const char *signs[3]={
+            "<rect x='21' y='10' width='6' height='19' rx='3' fill='#fff'/><circle cx='24' cy='35.5' r='3.5' fill='#fff'/>",
+            "<path d='M17 18.5a7 7 0 1 1 10.4 6.1c-2.2 1.3-3.4 2.5-3.4 4.9v1' fill='none' stroke='#fff' stroke-width='5' stroke-linecap='round'/>"
+            "<circle cx='24' cy='37' r='3.2' fill='#fff'/>",
+            "<circle cx='24' cy='13' r='3.5' fill='#fff'/><rect x='21' y='19.5' width='6' height='19' rx='3' fill='#fff'/>"};
+        std::string svg=std::string("<svg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'>")+
+                        circle+signs[index]+"</svg>";
+        icons[index]=new Fl_SVG_Image(NULL, svg.c_str());
+        icons[index]->resize(36, 36);
+    }
+    return icons[index];
+}
+
+void CenterNextMessage(char kind)
+{
+    //The icon in the theme: an image, the sign FLTK writes on it hidden (in the background color).
+    //The message boxes copy the icon of fl_message_icon() when they are created
+    Fl_Widget *icon=fl_message_icon();
+    icon->box(FL_NO_BOX);
+    icon->labelcolor(FL_BACKGROUND_COLOR);
+    icon->image(MessageIcon(kind));
+
     Fl_Window *w=Fl::first_window();
     while(w && w->window())
         w=w->window();

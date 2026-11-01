@@ -1,5 +1,12 @@
 ClaudeReader changes (based on BDReader)
-ClaudeReader 1.1.1 (unreleased)
+ClaudeReader 1.1.1 (01/11/2026)
+	-A folder of comics (the CBZ volumes of a series...) opens as a collection: File > Open folder, drag and drop,
+	 command line. In the library folder, the library shows it; elsewhere the library browses it, in reading order
+	 (Vol 2 before Vol 10), with a "My library" button to go back (the library folder stays the same). A folder of
+	 images still opens as a comic; an empty folder gives a clear message (#15)
+	-End of a comic outside the library: "Read next" offers the next comic of its folder
+	-Message boxes: flat icons in the theme colors (error, question, information)
+	-Bug fixed: the library could list comics twice when a folder was opened at start (two scans at once)
 	-MangaDex: "json.decode: Unexpected character" on every search. MangaDex now sends a bot challenge to programs
 	 presenting themselves as a browser: ClaudeReader identifies itself (ClaudeReader/<version>), as the MangaDex
 	 API asks. The pages of another host (a challenge after a redirection) are not cached any more, and the cache

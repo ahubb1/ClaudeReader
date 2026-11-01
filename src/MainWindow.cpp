@@ -518,7 +518,7 @@ void ShowStore(MainWindow *mw)
         mw->SavePref();
 
     //Downloads go to the library folder
-    mw->Store->SetLibraryFolder(mw->Library ? mw->Library->get_absolute_dir() : mw->Pref->GetLibraryFolder());
+    mw->Store->SetLibraryFolder(mw->Library ? mw->Library->home_dir() : mw->Pref->GetLibraryFolder());
     mw->DisplayGrp->hide();
     if(mw->Library)
         mw->Library->hide();
@@ -813,7 +813,7 @@ void ExportDoc_cb(Fl_Widget* widget, void * param)
             //Ask if export panels or pages
             bool panel, preview;
             fl_message_title("Export");
-            int panelchoice=(CenterNextMessage(), fl_choice)("Export as ?\n -One image for each Page\n -One image for each Panel\n -One image for each Panel+Page preview", "Panel+Preview", "Panel", "Page");
+            int panelchoice=(CenterNextMessage('?'), fl_choice)("Export as ?\n -One image for each Page\n -One image for each Panel\n -One image for each Panel+Page preview", "Panel+Preview", "Panel", "Page");
             switch(panelchoice)
             {
                 case 0:
@@ -836,7 +836,7 @@ void ExportDoc_cb(Fl_Widget* widget, void * param)
             //Select the image format
             char fileext[5];
             fl_message_title("Export");
-            int formatchoice=(CenterNextMessage(), fl_choice)("Select an image format to export to:", "Jpeg", "Png", "Bmp");
+            int formatchoice=(CenterNextMessage('?'), fl_choice)("Select an image format to export to:", "Jpeg", "Png", "Bmp");
             switch(formatchoice)
             {
                 case 0:
@@ -854,7 +854,7 @@ void ExportDoc_cb(Fl_Widget* widget, void * param)
 
             //Ask for confirmation first
             fl_message_title("Export");
-            if((CenterNextMessage(), fl_choice)("Export %s to %s as images (%s) ?", "Cancel", "Export", NULL, fl_filename_name(mw->Doc->GetFilename()), chooser.filename(), fileext)!=1)
+            if((CenterNextMessage('?'), fl_choice)("Export %s to %s as images (%s) ?", "Cancel", "Export", NULL, fl_filename_name(mw->Doc->GetFilename()), chooser.filename(), fileext)!=1)
                 return;
 
             //Go to document first page
@@ -1005,7 +1005,20 @@ void ShowEndPage(MainWindow *mw)
         if(mw->Library->GetSuggestionNext(mw->Filename, suggestion_filename, suggestion_short_filename)>=0)
         {
             mw->EndPageNext=suggestion_filename;
+            fl_filename_setext(suggestion_short_filename, sizeof(suggestion_short_filename), "");
             next_title=suggestion_short_filename;
+        }
+    }
+    //Not in the library: the next comic of its folder (the next volume of a series)
+    if(mw->EndPageNext.empty())
+    {
+        mw->EndPageNext=NextComicInFolder(mw->Filename);
+        if(!mw->EndPageNext.empty())
+        {
+            char name[FL_PATH_MAX];
+            snprintf(name, sizeof(name), "%s", fl_filename_name(mw->EndPageNext.c_str()));
+            fl_filename_setext(name, sizeof(name), "");
+            next_title=name;
         }
     }
     char title[FL_PATH_MAX];
@@ -1652,7 +1665,7 @@ void GoToPage_cb(Fl_Widget* widget, void * param)
     //Ask the user which page he wants to go to:
     char disp[5];
     sprintf(disp, "%d", mw->Doc->GetCurrentPageNb());
-    CenterNextMessage();
+    CenterNextMessage('?');
     const char *ret=fl_input("Go to page: ", disp);
     //If not Cancel
     if(ret!=NULL)
@@ -1775,7 +1788,7 @@ void About_cb(Fl_Widget* widget, void * param)
     //MainWindow *mw=(MainWindow*)param;
 
     fl_message_title("About");
-    (CenterNextMessage(), fl_message)(ABOUT_STRING);
+    (CenterNextMessage('i'), fl_message)(ABOUT_STRING);
 }
 //-----------------------------------------------------------------------------
 
@@ -2336,7 +2349,7 @@ MainWindow::MainWindow(const char *exepath, const char *f)
     Settings = new Fl_Settings_View(DisplayGrp->x(), DisplayGrp->y(), DisplayGrp->w(), DisplayGrp->h());
     window->add(Settings);
     Settings->hide();
-    Settings->GetLibraryFolder=[this]() { return std::string(Library ? Library->get_absolute_dir() : Pref->GetLibraryFolder()); };
+    Settings->GetLibraryFolder=[this]() { return std::string(Library ? Library->home_dir() : Pref->GetLibraryFolder()); };
     Settings->GetUseLibrary=[this]() { return Pref->GetUseLibrary(); };
     Settings->OnLibraryFolder=[this](const std::string &folder)
     {
@@ -2344,8 +2357,11 @@ MainWindow::MainWindow(const char *exepath, const char *f)
         snprintf(path, sizeof(path), "%s", folder.c_str());
         Pref->SetLibraryFolder(path);
         if(Library)
+        {
+            Library->stop_browsing();
             Library->apply_dir(path, ExePath);
-        Store->SetLibraryFolder(Library ? Library->get_absolute_dir() : folder);
+        }
+        Store->SetLibraryFolder(Library ? Library->home_dir() : folder);
     };
     Settings->OnUseLibrary=[this](bool use)
     {
@@ -2429,6 +2445,35 @@ void MainWindow::Init(char *filename)
         {
            //Save the preferences in files
            SavePref();
+        }
+
+        //A folder of comics (the volumes of a series...): a collection, shown in the library (issue #15).
+        //A folder of images stays a comic
+        if(fl_filename_isdir(Filename))
+        {
+            int images, comics;
+            CountFolderContent(Filename, &images, &comics);
+            if(images<2 && comics>0)
+            {
+                ShowLibrary(this);
+                Library->browse(Filename);
+                UpdateWindowTitle(this);
+                StatusBarUpdate(this);
+                //The open document (if any) stays the current one
+                if(Doc)
+                    snprintf(Filename, FL_PATH_MAX, "%s", Doc->GetFilename());
+                return;
+            }
+            if(images<2)
+            {
+                (CenterNextMessage(), fl_alert)("\"%s\" has nothing to read: no comic file (PDF, EPUB, CBZ, CBR...) and fewer than two page images.",
+                                                fl_filename_name(Filename));
+                if(Doc)
+                    snprintf(Filename, FL_PATH_MAX, "%s", Doc->GetFilename());
+                if(Library)
+                    Library->activate();
+                return;
+            }
         }
 
         //Create a document using the new filename
@@ -2600,7 +2645,7 @@ void MainWindow::SavePref()
      }
      //The Library path if active
      if(Library)
-        Pref->SetLibraryFolder(Library->get_absolute_dir());
+        Pref->SetLibraryFolder((char*)Library->home_dir());
 
      /*The preferences preferences
      Pref->SetSavePref(((Fl_Menu_Item*)MenuBar->find_item("&Preferences/Save preferences\t"))->value());

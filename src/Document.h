@@ -107,6 +107,12 @@ DOCUMENT_TYPE GetDocumentType(const char *Filename);
 
 //! Is the file name (or archive entry) a page image, from its extension (case insensitive)
 bool IsPageImage(const std::string &name);
+//! A file ClaudeReader opens as a comic (PDF, EPUB... or comic archive), from its name
+bool IsComicFile(const char *name);
+//! Page images and comic files directly in a folder (a folder of images is a comic, a folder of comics a collection)
+void CountFolderContent(const char *dir, int *images, int *comics);
+//! The comic file after this one in its folder, in natural order (Vol 2 before Vol 10), "" if none
+std::string NextComicInFolder(const char *path);
 
 //! Read a whole file. The path is UTF-8 (also on Windows, where the C/OpenCV functions use the ANSI code page)
 bool ReadFileUtf8(const char *path, vector<unsigned char> *data);

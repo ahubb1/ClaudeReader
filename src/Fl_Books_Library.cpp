@@ -345,7 +345,7 @@ void Fl_Library_Element::ShowTagsMenu()
         Tags::Toggle(TagKey(), all[index].Id);
     else if(index==all.size())
     {
-        CenterNextMessage();
+        CenterNextMessage('?');
         const char *name=fl_input("New tag for \"%s\":", "", ShortFilename);
         if(!name || !*name)
             return;
@@ -519,6 +519,7 @@ void SelectLibFolder_cb(Fl_Widget * w, void* p)
     if(ret !=1 && ret!=-1)
     {
         bl->LibFolder_Input->value(chooser.filename());
+        bl->stop_browsing();
         bl->apply_dir(bl->LibFolder_Input->value(), bl->windir);
         bl->LibFolder_Input->parent()->redraw();
     }
@@ -545,7 +546,17 @@ Fl_Books_Library::Fl_Books_Library(int xx, int yy, int ww, int hh, const char *l
             //Lib folder (what is left once the filters and sort are placed)
             Fl_Group * grp = new Fl_Group(x()+10+31, y()+3, main_w-(31+5+50+80+5+40+70+5+35+110), 20);
                 //File explorer like path bar: folders, sub-folders menus, text edition and folder chooser
+                Home_Button = new Fl_Button(grp->x(), grp->y(), 96, 20, "\xe2\x86\x90  My library");
+                Home_Button->box(FL_FLAT_BOX);
+                Home_Button->color(THEME_ACCENT, fl_rgb_color(2, 106, 192));
+                Home_Button->labelcolor(FL_WHITE);
+                Home_Button->labelsize(12);
+                Home_Button->clear_visible_focus();
+                Home_Button->tooltip("Back to your library folder");
+                Home_Button->callback(Home_cb, this);
+                Home_Button->hide();
                 Fl_Path_Bar *path_bar = new Fl_Path_Bar(grp->x(), grp->y(), grp->w(), 20);
+                PathBar=path_bar;
                 path_bar->browse_button()->tooltip("Choose the folder containing your comics");
                 path_bar->browse_button()->callback(SelectLibFolder_cb, (void*)this);
                 LibFolder_Input = path_bar->input();
@@ -985,6 +996,17 @@ void Fl_Books_Library::mark_duplicate_names()
 
 void Fl_Books_Library::reload()
 {
+    //The first scan, scheduled by the constructor, is not needed any more
+    Fl::remove_timeout(reload_cb, this);
+    //Asked while scanning (the scan handles the events: timers, clicks...): after this one, not inside it,
+    //which listed the comics twice
+    if(Reloading)
+    {
+        ReloadAgain=true;
+        return;
+    }
+    Reloading=true;
+
     //Be patient...
     Fl_Window waiting_window(300, 80, "ClaudeReader");
     waiting_window.set_modal();
@@ -1038,6 +1060,13 @@ void Fl_Books_Library::reload()
     fl_cursor(FL_CURSOR_DEFAULT);
     activate();
     redraw();
+
+    Reloading=false;
+    if(ReloadAgain)
+    {
+        ReloadAgain=false;
+        reload();
+    }
 }
 
 
@@ -1211,6 +1240,12 @@ void Fl_Books_Library::path_chosen(const char *path)
         return text;
     };
     std::string chosen=path, root=normalize(abs_lib_dir);
+    //While browsing: another folder is browsed too (or the library, when it is in it)
+    if(is_browsing() && normalize(chosen).compare(0, root.size(), root)!=0)
+    {
+        browse(path);
+        return;
+    }
     if(normalize(chosen).compare(0, root.size(), root)==0)
     {
         std::string rel=chosen.size()>root.size() ? chosen.substr(root.size()) : "";
@@ -1221,6 +1256,86 @@ void Fl_Books_Library::path_chosen(const char *path)
         return;
     }
     apply_dir(path, windir);
+}
+
+//! Same folder test as the path bar: separators and (on Windows) case
+static std::string NormalizedDir(std::string text)
+{
+    for(size_t i=0; i<text.size(); i++)
+    {
+        if(text[i]=='\\')
+            text[i]='/';
+        #ifdef _WIN32
+            text[i]=(char)tolower((unsigned char)text[i]);
+        #endif
+    }
+    if(text.empty() || text[text.size()-1]!='/')
+        text+='/';
+    return text;
+}
+
+void Fl_Books_Library::browse(const char *dir)
+{
+    std::string home=home_dir(), folder=dir;
+    std::string home_n=NormalizedDir(home), folder_n=NormalizedDir(folder);
+    //In the library: the library, at this folder
+    if(folder_n.compare(0, home_n.size(), home_n)==0)
+    {
+        if(is_browsing())
+        {
+            HomeDir.clear();
+            apply_dir(home.c_str(), windir);
+            update_browsing_ui();
+        }
+        std::string rel=folder.size()>home.size() ? folder.substr(home.size()) : "";
+        std::replace(rel.begin(), rel.end(), '\\', '/');
+        while(!rel.empty() && rel[0]=='/')
+            rel.erase(0, 1);
+        if(!rel.empty() && rel[rel.size()-1]!='/')
+            rel+='/';
+        open_folder(rel);
+        return;
+    }
+    //Elsewhere: browsed, in reading order (natural sort: Vol 2 before Vol 10)
+    if(!is_browsing())
+        HomeDir=abs_lib_dir;
+    Sort_Choice->value(0);
+    apply_dir(dir, windir);
+    update_browsing_ui();
+}
+
+void Fl_Books_Library::stop_browsing()
+{
+    HomeDir.clear();
+    update_browsing_ui();
+}
+
+//! "My library" shown left of the path bar while browsing
+void Fl_Books_Library::update_browsing_ui()
+{
+    Fl_Group *grp=PathBar->parent();
+    if(is_browsing())
+    {
+        Home_Button->resize(grp->x(), grp->y(), 96, 20);
+        Home_Button->show();
+        PathBar->resize(grp->x()+100, grp->y(), grp->w()-100, 20);
+    }
+    else
+    {
+        Home_Button->hide();
+        PathBar->resize(grp->x(), grp->y(), grp->w(), 20);
+    }
+    grp->init_sizes();
+    grp->redraw();
+}
+
+void Fl_Books_Library::Home_cb(Fl_Widget *w, void *p)
+{
+    Fl_Books_Library *bl=(Fl_Books_Library*)p;
+    std::string home=bl->HomeDir;
+    bl->HomeDir.clear();
+    bl->apply_dir(home.c_str(), bl->windir);
+    bl->update_browsing_ui();
 }
 
 void Fl_Books_Library::open_folder(const std::string &relative_dir)

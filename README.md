@@ -91,6 +91,7 @@ File names in any language are supported.
   - Tag comics by right-clicking them.
   - Filter by tag, or search for `#tag`.
 - Search, filter by read or unread, and sort.
+- Open a folder of comics, such as the CBZ volumes of a series, with File → Open folder (or drag and drop). The library shows it in reading order (Vol 2 before Vol 10). If the folder is outside your library, a **My library** button takes you back.
 
 ### Store
 - Search and download manga from **MangaDex**, **Mangapill** and **Nyaa**. Nyaa gives magnet links for your torrent client.

@@ -29,7 +29,7 @@
 
 //What ClaudeReader is: MangaDex (and other sites) send a bot challenge to a program presenting itself as a browser
 #ifndef CLAUDEREADER_VERSION
-    #define CLAUDEREADER_VERSION "1.1"
+    #define CLAUDEREADER_VERSION "1.1.1"
 #endif
 #define NET_USER_AGENT "ClaudeReader/" CLAUDEREADER_VERSION " (+https://github.com/ahubb1/ClaudeReader)"
 //2: drops the bot challenge pages cached by ClaudeReader 1.1 (it presented itself as a browser) in place of

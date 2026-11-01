@@ -586,6 +586,58 @@ bool WriteImageUtf8(const char *path, const Mat &img)
     return ok;
 }
 
+bool IsComicFile(const char *name)
+{
+    size_t len=strlen(name);
+    if(len==0 || name[len-1]=='/' || name[len-1]=='\\')
+        return false;
+    DOCUMENT_TYPE type=GetDocumentType(name);
+    return type==DOC_MUPDF || type==DOC_ARCHIVE;
+}
+
+void CountFolderContent(const char *dir, int *images, int *comics)
+{
+    *images=*comics=0;
+    dirent **listing;
+    int nb=fl_filename_list(dir, &listing, fl_casenumericsort);
+    for(int i=0; i<nb; i++)
+    {
+        const char *name=listing[i]->d_name;
+        size_t len=strlen(name);
+        if(len==0 || name[len-1]=='/' || name[0]=='.')
+            continue;
+        if(IsPageImage(name))
+            (*images)++;
+        else if(IsComicFile(name))
+            (*comics)++;
+    }
+    if(nb>0)
+        fl_filename_free_list(&listing, nb);
+}
+
+std::string NextComicInFolder(const char *path)
+{
+    std::string dir(path, fl_filename_name(path)-path);
+    const char *current=fl_filename_name(path);
+    if(dir.empty() || !*current)
+        return "";
+    dirent **listing;
+    int nb=fl_filename_list(dir.c_str(), &listing, fl_casenumericsort);
+    std::string next;
+    bool found=false;
+    for(int i=0; i<nb && next.empty(); i++)
+    {
+        const char *name=listing[i]->d_name;
+        if(found && IsComicFile(name) && name[0]!='.')
+            next=dir+name;
+        else if(strcasecmp(name, current)==0)
+            found=true;
+    }
+    if(nb>0)
+        fl_filename_free_list(&listing, nb);
+    return next;
+}
+
 bool IsPageImage(const std::string &name)
 {
     static const char *extensions[]={".jpg", ".jpeg", ".jpe", ".jp2", ".png", ".webp", ".gif", ".tif", ".tiff", ".bmp", ".pbm", ".ppm", ".pgm", NULL};

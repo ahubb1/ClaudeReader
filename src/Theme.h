@@ -65,7 +65,7 @@ void ApplyDarkTitleBar(Fl_Window *win);
 
 //! The next message box (fl_alert, fl_choice, fl_input...) centered on the ClaudeReader window
 //! instead of under the mouse, where it could be cut by the screen edge (issue #7)
-void CenterNextMessage();
+void CenterNextMessage(char kind='!');  //!< kind: '!' error, '?' question, 'i' information
 
 //! Icons (24x24 SVG, stroke drawn) of the user interface
 enum THEME_ICON { ICON_LIBRARY, ICON_READER, ICON_OPEN, ICON_PAGES, ICON_MANGA, ICON_FULLSCREEN, ICON_HELP, ICON_CLOSE, ICON_BOOK,

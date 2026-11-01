@@ -257,6 +257,14 @@ class Fl_Books_Library: public Fl_Group//public Fl_Double_Window
         void apply_dir(const char * lib_dir=0, const char *wind=0);
 
         char *get_absolute_dir() {return abs_lib_dir;}
+        //! Show a folder of comics (a series, a collection): the library at that folder if it is in the library,
+        //! otherwise the library browses it until "My library" (issue #15)
+        void browse(const char *dir);
+        bool is_browsing() {return !HomeDir.empty();}
+        //! The library folder of the user (not the folder browsed): saved in the preferences, store downloads
+        const char *home_dir() {return HomeDir.empty() ? abs_lib_dir : HomeDir.c_str();}
+        //! The library folder changed (Settings, folder chooser): browsing ends
+        void stop_browsing();
 
         //! Show a folder of the library ("" for the library folder, else ending with '/')
         void open_folder(const std::string &relative_dir);
@@ -305,6 +313,13 @@ class Fl_Books_Library: public Fl_Group//public Fl_Double_Window
 		void layout_toolbar();
 		void update_path_bar();
 		void path_chosen(const char *path);
+		void update_browsing_ui();
+		static void Home_cb(Fl_Widget *w, void *p);
+		std::string HomeDir;            //!< The library folder while another folder is browsed, empty otherwise
+		bool Reloading=false;           //!< A scan is running (it lets FLTK handle the events)
+		bool ReloadAgain=false;         //!< A scan was asked during it: done after it
+		Fl_Button *Home_Button;         //!< Back to the library folder (shown while browsing)
+		Fl_Path_Bar *PathBar;
 		void fill_tag_choice();
 };
 
