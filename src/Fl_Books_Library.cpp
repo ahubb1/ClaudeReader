@@ -1021,15 +1021,20 @@ void Fl_Books_Library::reload()
     deactivate();
     redraw();
 
-    //Clear everything
-    for(int i=0; i<sub_packs.size(); i++)
-    {
-        //IS IT NEEDED SINCE CALL MAIN_TABLE CLEAR AFTER ???? Sub-children ???
-        sub_packs[i]->clear();
-    }
+    //Clear everything, each card deleted once: the rows hold the visible cards only (comics and folders) and
+    //are emptied without deleting them; then the folder cards (also listed in folders, which refresh() deletes:
+    //deleted by the rows before, they crashed the next refresh) and all the comic cards (the hidden ones too)
+    for(size_t i=0; i<sub_packs.size(); i++)
+        for(int j=sub_packs[i]->children()-1; j>=0; j--)
+            sub_packs[i]->remove(j);
+    for(size_t i=0; i<folders.size(); i++)
+        Fl::delete_widget(folders[i]);
+    folders.clear();
+    for(size_t i=0; i<elements.size(); i++)
+        Fl::delete_widget(elements[i]);
+    elements.clear();
     Main_Table->clear();
     sub_packs.clear();
-    elements.clear();
     nb_visible_elem=0;
 
 

@@ -1,4 +1,9 @@
 ClaudeReader changes (based on BDReader)
+ClaudeReader 1.1.2 (01/11/2026)
+	-Bug fixed: crash after the "Loading comics library" bar when the library scanned a folder again while folder
+	 cards were shown: opening a folder of comics (#15), back from a store download, another library folder chosen
+	 in Settings or in the path bar. The folder cards were deleted twice. The comics of the other folders are freed
+	 too at each scan (they were kept in memory)
 ClaudeReader 1.1.1 (01/11/2026)
 	-A folder of comics (the CBZ volumes of a series...) opens as a collection: File > Open folder, drag and drop,
 	 command line. In the library folder, the library shows it; elsewhere the library browses it, in reading order
