@@ -1,5 +1,5 @@
 ClaudeReader changes (based on BDReader)
-ClaudeReader 1.1.3 (unreleased)
+ClaudeReader 1.2.0 (01/11/2026)
 	-Windows installer (ClaudeReader-windows-x64-setup.exe): installs for the current user without administrator
 	 rights, Start menu entry, optional desktop shortcut and comic file types (.cbz, .cbr, .cb7, .cbt, and Open with
 	 for PDF and EPUB), uninstaller in Apps & features (the library, settings and tags are kept). The portable exe
