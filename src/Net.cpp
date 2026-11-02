@@ -211,6 +211,93 @@ NetResponse Net::Get(const std::string &url, const NetHeaders &headers, int cach
     return response;
 }
 
+namespace
+{
+    struct DownloadState
+    {
+        FILE *File;
+        const std::function<bool(long long, long long)> *Progress;
+        bool WriteError=false;
+    };
+
+    size_t WriteToFile(char *data, size_t size, size_t nmemb, void *p)
+    {
+        DownloadState *state=(DownloadState*)p;
+        if(fwrite(data, 1, size*nmemb, state->File)!=size*nmemb)
+        {
+            state->WriteError=true;
+            return 0;
+        }
+        return size*nmemb;
+    }
+
+    int DownloadProgress(void *p, curl_off_t total, curl_off_t done, curl_off_t, curl_off_t)
+    {
+        DownloadState *state=(DownloadState*)p;
+        return (*state->Progress && !(*state->Progress)((long long)done, (long long)total)) ? 1 : 0;
+    }
+}
+
+NetResponse Net::Download(const std::string &url, const std::string &path, const std::function<bool(long long, long long)> &progress)
+{
+    std::call_once(CurlInit, [](){ curl_global_init(CURL_GLOBAL_DEFAULT); });
+
+    NetResponse response;
+    response.Status=0;
+    response.FromCache=false;
+    DownloadState state;
+    state.Progress=&progress;
+    state.File=FileUtf8::Open(path, "wb");
+    if(!state.File)
+    {
+        response.Error="Cannot write "+path;
+        return response;
+    }
+    CURL *curl=curl_easy_init();
+    if(!curl)
+    {
+        fclose(state.File);
+        response.Error="Unable to initialize the network";
+        return response;
+    }
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_USERAGENT, NET_USER_AGENT);
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+    curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 10L);
+    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 20L);
+    curl_easy_setopt(curl, CURLOPT_LOW_SPEED_LIMIT, 1L);   //Stalled: less than 1 byte/s...
+    curl_easy_setopt(curl, CURLOPT_LOW_SPEED_TIME, 60L);   //...for a minute
+    curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
+    curl_easy_setopt(curl, CURLOPT_SSL_OPTIONS, (long)CURLSSLOPT_NATIVE_CA);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteToFile);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &state);
+    curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, DownloadProgress);
+    curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &state);
+    curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
+    CURLcode res=curl_easy_perform(curl);
+    if(res==CURLE_OK)
+    {
+        curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response.Status);
+        if(!response.Ok())
+            response.Error="HTTP error "+std::to_string(response.Status);
+    }
+    else if(res==CURLE_ABORTED_BY_CALLBACK)
+        response.Error="Canceled";
+    else if(state.WriteError)
+        response.Error="Cannot write "+path+" (disk full?)";
+    else
+        response.Error=curl_easy_strerror(res);
+    curl_easy_cleanup(curl);
+    if(fclose(state.File)!=0 && response.Ok())
+    {
+        response.Status=0;
+        response.Error="Cannot write "+path;
+    }
+    if(!response.Ok())
+        FileUtf8::Remove(path);
+    return response;
+}
+
 bool Net::FromCache(const std::string &url, int cache_ttl, std::string *body)
 {
     return ReadCache(url, cache_ttl, body);

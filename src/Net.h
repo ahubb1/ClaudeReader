@@ -27,6 +27,7 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <functional>
 
 //! Cache durations (seconds) for Net::Get
 #define NET_NO_CACHE        0
@@ -56,6 +57,12 @@ namespace Net
     bool FromCache(const std::string &url, int cache_ttl, std::string *body);
     //! POST a body (never cached)
     NetResponse Post(const std::string &url, const std::string &body, const NetHeaders &headers=NetHeaders());
+
+    //! Download a big file (an update) to path, never cached. progress(done, total) is called often from the
+    //! downloading thread (total: 0 if unknown) and cancels the download by returning false.
+    //! No overall time limit: fails only when nothing is received for a minute
+    NetResponse Download(const std::string &url, const std::string &path,
+                         const std::function<bool(long long, long long)> &progress=std::function<bool(long long, long long)>());
 
     //! Folder of the cache (created if needed)
     std::string CacheDir();

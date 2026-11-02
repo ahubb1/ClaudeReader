@@ -10,13 +10,20 @@ ClaudeReader runs on Windows and Linux. It is based on [BDReader](http://bdreade
 
 ### Windows
 
-ClaudeReader for Windows is a single file with nothing to install (Windows 10 or 11, 64-bit).
+Windows 10 or 11, 64-bit. Download one of these from the latest release (the **Releases** page of the repository):
 
-1. Download `ClaudeReader-windows-x64.exe` from the latest release (the **Releases** page of the repository).
-2. Put it anywhere, for example in `Documents\ClaudeReader`, and run it.
-3. To open comics by double-clicking them, choose ClaudeReader in *Open with* for `.cbz`, `.cbr` or `.pdf` files.
+- **Installer** (recommended): `ClaudeReader-windows-x64-setup.exe`. It installs ClaudeReader for your Windows account, with no administrator rights needed. You get a Start menu entry, an optional desktop shortcut, and optionally `.cbz`, `.cbr`, `.cb7` and `.cbt` files opening in ClaudeReader. Uninstall it from *Settings → Apps* like any other program.
+- **Portable**: `ClaudeReader-windows-x64.exe`. A single file with nothing to install: put it anywhere and run it. To open comics by double-clicking them, choose ClaudeReader in *Open with*.
 
-Settings, reading positions and thumbnails are kept in `%APPDATA%\ClaudeReader`. To uninstall, delete the exe and that folder.
+Windows SmartScreen may warn that the publisher is unknown, because the files are not code-signed. Choose *More info → Run anyway*.
+
+**Updates**: ClaudeReader checks GitHub for a new release when it starts. When there is one, it shows what changed and offers to update:
+- The installed version downloads the new installer, installs it and starts again.
+- The portable exe replaces itself.
+
+You can also check from *Help → Check for updates*, and turn off the check at startup in *Settings → Updates*. Each download is checked against the SHA-256 digest GitHub publishes for it.
+
+Settings, reading positions and thumbnails are kept in `%APPDATA%\ClaudeReader`. Uninstalling keeps them; delete that folder to remove them too.
 
 ### Linux
 
@@ -42,6 +49,8 @@ pacman -S mingw-w64-ucrt-x86_64-{toolchain,cmake,ninja,pkgconf,fltk,opencv,mupdf
 ./build.sh                  # build/ClaudeReader.exe and the DLLs it needs
 deps/build-opencv.sh        # once: a small static OpenCV, for the single exe
 ./build.sh --static         # build-static/ClaudeReader.exe, no DLLs
+pacman -S mingw-w64-ucrt-x86_64-nsis
+installer/build-installer.sh  # dist/ClaudeReader-windows-x64-setup.exe, from the single exe
 ```
 
 **Linux (Debian, Ubuntu).** FLTK 1.4 is required. If your distribution only has 1.3, build [FLTK](https://github.com/fltk/fltk) first. Then:

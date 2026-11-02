@@ -73,6 +73,8 @@ class Fl_Settings_View : public Fl_Group
         static void Highlight_cb(Fl_Widget *w, void *p);
         static void HighlightColor_cb(Fl_Widget *w, void *p);
         static void HighlightCustom_cb(Fl_Widget *w, void *p);
+        static void CheckUpdates_cb(Fl_Widget *w, void *p);
+        static void CheckNow_cb(Fl_Widget *w, void *p);
 
     private:
         void Layout();
@@ -97,6 +99,10 @@ class Fl_Settings_View : public Fl_Group
         Fl_Box *LibraryTitle, *LibraryPath;
         Fl_Button *LibraryButton;
         Fl_Check_Button *UseLibraryCheck;
+        Fl_Box *UpdatesTitle, *VersionInfo;
+        Fl_Check_Button *CheckUpdatesCheck;
+        Fl_Button *CheckNowButton;
+        std::string VersionText;
         void BuildStoreRows();
         void BuildCatalogRows();
         //! Check a script and install it (in a thread), then show the result

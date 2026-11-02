@@ -22,6 +22,7 @@
 #include "LuaSource.h"
 #include "Async.h"
 #include "FileUtf8.h"
+#include "Updater.h"
 #include <thread>
 #include <FL/Fl.H>
 #include <FL/fl_draw.H>
@@ -266,6 +267,19 @@ Fl_Settings_View::Fl_Settings_View(int X, int Y, int W, int H):Fl_Group(X, Y, W,
             UseLibraryCheck->clear_visible_focus();
             UseLibraryCheck->callback(UseLibrary_cb, this);
 
+            //Updates
+            UpdatesTitle=Section("Updates", "New versions come from the ClaudeReader releases on GitHub. "
+                                 "An update is downloaded, installed and ClaudeReader starts again, when you choose to.");
+            VersionInfo=Text(13, THEME_FG);
+            CheckNowButton=SettingsButton("Check now", false);
+            CheckNowButton->callback(CheckNow_cb, this);
+            CheckUpdatesCheck=new Fl_Check_Button(0, 0, 400, 26, " Check for updates when ClaudeReader starts");
+            CheckUpdatesCheck->labelsize(13);
+            CheckUpdatesCheck->labelcolor(THEME_FG);
+            CheckUpdatesCheck->selection_color(THEME_ACCENT);
+            CheckUpdatesCheck->clear_visible_focus();
+            CheckUpdatesCheck->callback(CheckUpdates_cb, this);
+
             //Store
             StoreTitle=Section("Stores", "Each store is a tab of the Store view. Add stores from the catalog, "
                                "from a .lua file or from a link to one.");
@@ -338,6 +352,13 @@ void Fl_Settings_View::Refresh()
     LibraryPath->copy_label(LibraryText.c_str());
     if(GetUseLibrary)
         UseLibraryCheck->value(GetUseLibrary());
+#ifdef _WIN32
+    VersionText="ClaudeReader "+Updater::CurrentVersion()+(Updater::IsInstalled() ? " (installed)" : " (portable)");
+#else
+    VersionText="ClaudeReader "+Updater::CurrentVersion();
+#endif
+    VersionInfo->copy_label(VersionText.c_str());
+    CheckUpdatesCheck->value(Updater::CheckAtStartup());
     char size[64];
     snprintf(size, sizeof(size), "Cache of the covers, pages and searches: %.1f MB", Net::CacheSize()/1048576.);
     CacheInfo->copy_label(size);
@@ -458,6 +479,13 @@ void Fl_Settings_View::Layout()
     LibraryButton->resize(cx+cw-120, cy, 120, 26);
     cy+=36;
     UseLibraryCheck->resize(cx, cy, cw, 26);
+    cy+=76;
+
+    section(UpdatesTitle);
+    VersionInfo->resize(cx, cy, cw-130, 26);
+    CheckNowButton->resize(cx+cw-120, cy, 120, 26);
+    cy+=36;
+    CheckUpdatesCheck->resize(cx, cy, cw, 26);
     cy+=76;
 
     section(StoreTitle);
@@ -624,6 +652,16 @@ void Fl_Settings_View::UseLibrary_cb(Fl_Widget *w, void *p)
     Fl_Settings_View *v=(Fl_Settings_View*)p;
     if(v->OnUseLibrary)
         v->OnUseLibrary(v->UseLibraryCheck->value()!=0);
+}
+
+void Fl_Settings_View::CheckUpdates_cb(Fl_Widget *w, void *p)
+{
+    Updater::SetCheckAtStartup(((Fl_Settings_View*)p)->CheckUpdatesCheck->value()!=0);
+}
+
+void Fl_Settings_View::CheckNow_cb(Fl_Widget *w, void *p)
+{
+    Updater::CheckNow();
 }
 
 void Fl_Settings_View::ClearCache_cb(Fl_Widget *w, void *p)

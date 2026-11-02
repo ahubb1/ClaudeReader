@@ -105,6 +105,7 @@ set(SOURCES
     src/WebtoonView.cpp
     src/AnnTags.cpp
     src/AnnDialog.cpp
+    src/Updater.cpp
 )
 if(WIN32)
     list(APPEND SOURCES src/WinRC.rc)
@@ -128,6 +129,7 @@ target_link_libraries(ClaudeReader PRIVATE
     ${LUA_STATIC_LIBRARY} ${CMAKE_DL_LIBS}   # Lua loads C modules with dlopen on Linux
     Threads::Threads
     $<$<PLATFORM_ID:Windows>:dwmapi>
+    $<$<PLATFORM_ID:Windows>:bcrypt>     # SHA-256 of the downloaded updates
 )
 if(TARGET mupdf_libraries)
     # The static libmupdf.a of Debian/Ubuntu and the shared libraries used by it and by OpenCV (libjpeg, libopenjp2...):

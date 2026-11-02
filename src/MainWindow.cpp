@@ -25,6 +25,7 @@
 //Help and about window strings
 #include "help.h"
 #include "about.h"
+#include "Updater.h"
 
 
 //Defined further down, used before
@@ -1786,6 +1787,12 @@ void Help_cb(Fl_Widget* widget, void * param)
     mw->HelpDlg->show();
 }
 //! Show the about information window
+//! Help > Check for updates
+void CheckUpdates_cb(Fl_Widget* widget, void * param)
+{
+    Updater::CheckNow();
+}
+
 void About_cb(Fl_Widget* widget, void * param)
 {
     //MainWindow *mw=(MainWindow*)param;
@@ -2074,6 +2081,7 @@ MainWindow::MainWindow(const char *exepath, const char *f)
                 { "&Help",              0, 0, 0, FL_SUBMENU },
                     { "Help\t", FL_F + 1, (Fl_Callback *)Help_cb, this },
                     { "Help2\t", FL_COMMAND + 'h', (Fl_Callback *)Help_cb, this, FL_MENU_INVISIBLE },
+                    { "Check for updates...\t", 0, (Fl_Callback *)CheckUpdates_cb, this },
                     { "About\t", 0, (Fl_Callback *)About_cb, this },
                     { 0 },
                 { 0 }
@@ -2413,6 +2421,15 @@ MainWindow::MainWindow(const char *exepath, const char *f)
         sprintf(Filename, "%s", "\0");
     }
     Init(Filename);
+
+    //Updates: checked in the background; an update closes ClaudeReader (preferences saved) to replace it
+    Updater::Start([this]()
+    {
+        SavePref();
+        Fl_Window *open;
+        while((open=Fl::first_window()))
+            open->hide();
+    });
 }
 
 //! Destructor.
